@@ -17,5 +17,9 @@ Official deadline: **Oct 21, 2026, 9:00 AM PT**. Personal target: Oct 20. Expect
 - Only commit/push when asked.
 - Prefer simple and thoughtful over complex. Pick one specific user journey and go deep.
 
+## Key docs
+- `docs/design-principles.md` — Dinakar's design principles (don't change without proposing first)
+- `docs/product-vision.md` — intended experience and features
+
 ## Repo layout
 See `README.md`.

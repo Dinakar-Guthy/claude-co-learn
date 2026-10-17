@@ -10,6 +10,8 @@ Prototype + design rationale for the Anthropic Education Labs take-home.
 | Path | Purpose |
 |------|---------|
 | `docs/assignment-brief.md` | Summary of the assignment, deliverables, and evaluation criteria |
+| `docs/design-principles.md` | Design principles (authored by Dinakar) |
+| `docs/product-vision.md` | Intended experience and feature set |
 | `docs/design-rationale.md` | Written design doc (required deliverable) — draft |
 | `docs/decision-log.md` | Running log of design decisions and *why* — feeds the rationale doc and video |
 | `docs/plan.md` | Timeline and task checklist |
