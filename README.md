@@ -18,6 +18,7 @@ Prototype + design rationale for the Anthropic Education Labs take-home.
 | `reference/` | Reference sheets (Claude API notes, learning-science principles, etc.) |
 | `transcripts/` | Exported Claude / Claude Code transcripts (required for submission) |
 | `app/` | Prototype source code |
+| `alternative-projects/` | Ideas not built for the submission, preserved for later |
 | `CLAUDE.md` | Context and working agreements for Claude Code |
 
 ## Deliverables checklist
