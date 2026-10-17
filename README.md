@@ -3,7 +3,7 @@
 Prototype + design rationale for the Anthropic Education Labs take-home.
 
 - **Official deadline:** Oct 21, 2026, 9:00 AM PT (personal target: Oct 20)
-- **Status:** Planning
+- **Status:** Planning. Direction: Option B, "Co-learn"
 
 ## Repo layout
 
@@ -11,7 +11,8 @@ Prototype + design rationale for the Anthropic Education Labs take-home.
 |------|---------|
 | `docs/assignment-brief.md` | Summary of the assignment, deliverables, and evaluation criteria |
 | `docs/design-principles.md` | Design principles (authored by Dinakar) |
-| `docs/product-vision.md` | Intended experience and feature set |
+| `docs/product-vision.md` | Co-learn experience and feature set |
+| `docs/context-persistence.md` | Storage and model-context plan |
 | `docs/design-rationale.md` | Written design doc (required deliverable) — draft |
 | `docs/decision-log.md` | Running log of design decisions and *why* — feeds the rationale doc and video |
 | `docs/plan.md` | Timeline and task checklist |

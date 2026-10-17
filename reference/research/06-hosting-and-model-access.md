@@ -67,3 +67,13 @@ Engineering effort, building with Claude Code:
 Model-side "effort" (Claude's `effort` setting, which trades thinking depth for speed/cost): start with medium for
 curriculum/planning calls and low for per-turn generation and grading; tune by testing latency and quality.
 Exact parameter support per model to be verified against the docs during the build.
+
+## Alternatives to Vercel (added 2026-10-17)
+| Host | Fit | Caveat |
+|---|---|---|
+| **Vercel** (recommended) | Built for Next.js; deploy on git push; 300s streaming on the free plan | Free plan is "personal/non-commercial" (an interview demo likely fits) |
+| Netlify | Similar git-push flow | ~10s default function timeout on free; risky for streaming LLM responses |
+| Cloudflare Pages/Workers | Fast, generous free tier | Next.js needs an adapter (OpenNext); more setup friction |
+| Render | Simple, supports long-running servers | Free tier sleeps after 15 min idle (~1 min cold start for reviewers) |
+| Railway / Fly.io | Run any server/container | Little to no free tier now (unverified); more ops |
+| Streamlit Cloud / Hugging Face Spaces | Easiest if writing Python | Apps sleep; limited UI control (hurts the cozy/game UX) |

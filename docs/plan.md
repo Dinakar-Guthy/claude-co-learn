@@ -4,7 +4,7 @@ Official deadline: Oct 21, 9:00 AM PT · Target: Oct 20
 
 ## Day 1 — Sat Oct 17
 - [x] Repo + tooling setup
-- [ ] Choose Option A or B; define target user and one specific user journey
+- [x] Choose Option A or B (B: Co-learn); define target user (working professional) and journey (training an ML model)
 - [ ] Sketch the core interaction; pick stack and hosting
 
 ## Day 2 — Sun Oct 18
