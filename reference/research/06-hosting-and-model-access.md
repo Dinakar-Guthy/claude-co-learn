@@ -49,3 +49,21 @@ API gotchas: Opus 5.5 thinking can't be disabled (effort only); Sonnet 5.5 `thin
 6. Console spend limit
 7. Test in private window
 8. Every push to main auto-deploys; PRs get preview URLs
+
+## Effort estimate (added 2026-10-17 after review)
+Engineering effort, building with Claude Code:
+
+| Piece | Effort | Notes |
+|---|---|---|
+| Server route + key in env + streaming via AI SDK | 0.5–1 h | Key never leaves the server |
+| Per-task model routing (Opus / Sonnet / Haiku) | ~0.5 h | One config map |
+| Upstash Redis via Vercel Marketplace | ~0.5 h | Env vars auto-provisioned |
+| Rate limit + daily spend cap per browser/IP | 1–1.5 h | `@upstash/ratelimit` + token counter keyed by anon ID and IP |
+| Anthropic Console spend limit / dedicated workspace | ~10 min | Manual step for Dinakar |
+| **P0 total** | **~3–3.5 h** | |
+| P1: bring-your-own-key fallback | ~1 h | |
+| P1: second provider (model-agnostic proof) | ~1 h | Mostly a provider swap if the AI SDK is used from day 1 |
+
+Model-side "effort" (Claude's `effort` setting, which trades thinking depth for speed/cost): start with medium for
+curriculum/planning calls and low for per-turn generation and grading; tune by testing latency and quality.
+Exact parameter support per model to be verified against the docs during the build.

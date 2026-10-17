@@ -21,8 +21,13 @@ Authored by Dinakar (2026-10-17). Captures the intended experience; implementati
 
 ## Rewards and look
 - Rewards: sounds, graphics, and short unlockable stories (not necessarily about the topic — a fun reward).
-- One cozy, fixed default theme (light blue / white / silver).
-- **P1:** unlockable themes earned by completing sessions, configurable in settings behind a gear.
+- Graphics: multi-line **ASCII characters** (guide reactions, mentors, bosses) — see `reference/ascii-characters.md`. No image assets needed.
+- **Permanent XP bar and player level.** XP accrues across all sessions and topics, not just one game. Levels are a
+  property of the user, and each level grants a reward.
+- **Level rewards unlock cosmetics:** visual themes (Sunset, Forest, Sakura, Parchment, Night Sky, Matcha) and
+  **sound packs** (e.g., default soft chimes, marimba, retro 8-bit, nature) — selectable in settings behind the gear.
+- One cozy, fixed default theme ("Frost": light blue / white / silver — palette in `reference/research/04-ui-themes.md`).
+- **P1:** the unlockable themes and sound packs themselves; P0 ships the default theme, default sounds, and the XP bar.
 
 ## Platform and model
 - Likely a hosted web app (the brief requires a deployed prototype the Anthropic team can use).
