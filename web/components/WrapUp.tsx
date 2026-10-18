@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import type { WrapUpResponse } from "@/lib/contracts/api";
 import type { MomentView } from "@/lib/contracts/moment";
 import type { XpAward } from "@/lib/contracts/stream";
@@ -32,10 +34,12 @@ export interface WrapUpProps {
   onNewSession: () => void;
   /** Scrolls back to where a saved question came up in the session. */
   onShowContext?: (momentId: string) => void;
+  /** "Did you learn something?" thumbs; omit to hide. */
+  onFeedback?: (helpful: boolean) => void;
 }
 
 /** End-of-session sequence: deferred quiz → Codex → XP → story → suggestions → new session. */
-export function WrapUp({ data, moments, gradingMomentId, helpBusy, xpByMoment, onMomentAction, chapterLoading = false, onTryTheme, onSuggestion, onNewSession, onShowContext }: WrapUpProps) {
+export function WrapUp({ data, moments, gradingMomentId, helpBusy, xpByMoment, onMomentAction, chapterLoading = false, onTryTheme, onSuggestion, onNewSession, onShowContext, onFeedback }: WrapUpProps) {
   const { level } = data.user;
   const rewards = data.levelUps.flatMap((l) => l.rewards);
   const pct = Math.round(levelProgress(level) * 100);
@@ -134,9 +138,34 @@ export function WrapUp({ data, moments, gradingMomentId, helpBusy, xpByMoment, o
         </Card>
       )}
 
+      {onFeedback && <LearnedFeedback onFeedback={onFeedback} />}
+
       <div className="flex justify-center pt-2">
         <Button variant="primary" onClick={onNewSession}>Start a new session</Button>
       </div>
+    </div>
+  );
+}
+
+function LearnedFeedback({ onFeedback }: { onFeedback: (helpful: boolean) => void }) {
+  const [vote, setVote] = useState<boolean | null>(null);
+  const pick = (helpful: boolean) => {
+    setVote(helpful);
+    onFeedback(helpful);
+  };
+  return (
+    <div className="flex flex-col items-center gap-2 text-center" aria-live="polite">
+      {vote === null ? (
+        <>
+          <p className="font-semibold">Did you learn something this session?</p>
+          <div className="flex gap-2">
+            <Chip onClick={() => pick(true)} aria-label="Yes, I learned something">👍 Yes</Chip>
+            <Chip onClick={() => pick(false)} aria-label="Not really">👎 Not really</Chip>
+          </div>
+        </>
+      ) : (
+        <p className="text-sm text-muted">{vote ? "Glad to hear it. Thanks for telling us!" : "Thanks for the honesty. It helps us tune Co-learn."}</p>
+      )}
     </div>
   );
 }

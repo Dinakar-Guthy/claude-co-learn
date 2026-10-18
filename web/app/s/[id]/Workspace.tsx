@@ -25,7 +25,7 @@ import { Button, Spinner } from "@/components/ui";
 import { activeBoss, bossMomentId, nextBossQuestion, openMoment, revealedPredictions } from "@/lib/client/workspace";
 import { rememberTheme } from "@/lib/ui/themeBoot";
 import { startOverAsNewUser } from "@/lib/client/reset";
-import { errorMessage } from "@/lib/client/api";
+import { apiPost, errorMessage } from "@/lib/client/api";
 import { useNow } from "@/lib/ui/useNow";
 import { useWorkspace, type Workspace as WorkspaceApi } from "./useWorkspace";
 
@@ -98,7 +98,7 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
   const wrapped = view.status === "wrapped";
   const busy = ws.streaming || ws.bossState === "loading" || ws.storyWaiting;
   const timeUp = now !== null && now >= view.endsAt;
-  const showTimePrompt = timeUp && !wrapped && !keepGoing && !busy && !pending && !boss && !ws.wrap.data && !ws.wrap.loading;
+  const showTimePrompt = timeUp && !wrapped && !keepGoing && !busy && !pending && !boss && !view.bossOfferPending && !ws.wrap.data && !ws.wrap.loading;
   const revealed = revealedPredictions(view);
 
   const openDrawer = useCallback(() => {
@@ -237,6 +237,7 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
               onSuggestion={(s) => router.push(`/?start=1&goal=${encodeURIComponent(s)}`)}
               onNewSession={() => router.push("/?start=1")}
               onShowContext={(momentId) => showContext(view, momentId)}
+              onFeedback={(helpful) => void apiPost("/api/feedback", { sessionId: view.id, helpful }).catch(() => undefined)}
             />
           </div>
         )}
