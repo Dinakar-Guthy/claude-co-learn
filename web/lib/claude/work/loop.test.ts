@@ -9,6 +9,7 @@ import { MemoryStore } from "@/lib/store/memory";
 import { newUser } from "@/lib/store/defaults";
 import type { ModelParams, WorkDeps } from "./deps";
 import { MAX_STEPS, NOT_RUN, runTurn } from "./loop";
+import type { ApiMessage } from "./state";
 import { prepareTurn } from "./prepare";
 import type { ModelStream } from "./stream";
 import { bash, bashResult, failingStream, fakeMessage, fakeStream, makeSession, momentInput, text, toolUse } from "./testing";
@@ -48,6 +49,9 @@ async function setup(opts: Options = {}) {
       if (!next) throw new Error("no more scripted replies");
       return "finalMessage" in next ? next : fakeStream(next);
     },
+    compact: vi.fn(async () => {
+      throw new Error("compaction not scripted");
+    }),
     checkLimits: async () => opts.limits ?? { ok: true },
     recordUsage: vi.fn(async () => {}),
     now: () => session.createdAt + 60_000,
@@ -460,5 +464,62 @@ describe("server tool calls without results", () => {
     expect(ids(t.calls[0].messages)).not.toContain("srv_bad");
     expect(ids(await t.store.getApiMessages(t.session.id))).not.toContain("srv_bad");
     expect((await t.store.getTranscript(t.session.id)).some((i) => i.id === "srv_bad")).toBe(false);
+  });
+
+  describe("history compaction", () => {
+    /** A stored history big enough to compact: ordinary turns whose code printed a lot. */
+    function bigHistory(): ApiMessage[] {
+      return Array.from({ length: 30 }, (_, i): ApiMessage[] => [
+        { role: "user", content: [{ type: "text", text: `step ${i}` }] },
+        { role: "system", content: "context" },
+        { role: "assistant", content: [bash("python3 run.py", `srv_h${i}`), bashResult(`srv_h${i}`, "x".repeat(6_000)), text(`Result ${i}.`)] },
+      ] as ApiMessage[]).flat();
+    }
+    const summary = { type: "compaction", content: "Summary of earlier work.", encrypted_content: null, signature: "sig" } as Anthropic.Beta.BetaCompactionBlock;
+
+    it("compacts a large history before the turn and sends the block first, with the compaction beta", async () => {
+      const t = await setup({ session: { containerId: "cntr_1" } });
+      const history = bigHistory();
+      await t.store.putApiMessages(t.session.id, history);
+      vi.mocked(t.deps.compact).mockResolvedValueOnce(fakeMessage([summary], "compaction"));
+      t.replies.push(fakeMessage([text("Continuing.")]));
+      const events = await t.send({ kind: "message", text: "next" });
+
+      expect(lastEvent(events)).toEqual({ type: "turn_end", reason: "end_turn" });
+      expect(t.deps.compact).toHaveBeenCalledTimes(1);
+      const request = t.calls[0];
+      expect(request.betas).toEqual(["server-side-fallback-2026-07-01", "compact-2026-09-04"]);
+      expect(request.messages[0]).toEqual({ role: "assistant", content: [summary] });
+      expect(request.messages.slice(1, 13)).toEqual(history.slice(-12));
+      expect(request.messages.slice(13).map((m) => m.role)).toEqual(["user", "system"]);
+      const stored = await t.store.getApiMessages(t.session.id);
+      expect(stored).toHaveLength(1 + 12 + 3);
+      expect((await t.store.getSession(t.session.id))!.rollingSummary).toBe("Summary of earlier work.");
+      // Compaction usage + the turn's own request, both on the spend-cap path.
+      expect(t.deps.recordUsage).toHaveBeenCalledTimes(2);
+    });
+
+    it("continues with the full history when compaction fails", async () => {
+      const t = await setup();
+      const history = bigHistory();
+      await t.store.putApiMessages(t.session.id, history);
+      const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+      t.replies.push(fakeMessage([text("Continuing.")]));
+      const events = await t.send({ kind: "message", text: "next" });
+      spy.mockRestore();
+
+      expect(t.deps.compact).toHaveBeenCalledTimes(1);
+      expect(lastEvent(events)).toEqual({ type: "turn_end", reason: "end_turn" });
+      expect(t.calls[0].betas).toEqual(["server-side-fallback-2026-07-01"]);
+      expect(t.calls[0].messages.slice(0, history.length)).toEqual(history);
+    });
+
+    it("leaves small histories alone", async () => {
+      const t = await setup();
+      t.replies.push(fakeMessage([text("Hi.")]));
+      await t.send({ kind: "message", text: "hello" });
+      expect(t.deps.compact).not.toHaveBeenCalled();
+      expect(t.calls[0].betas).toEqual(["server-side-fallback-2026-07-01"]);
+    });
   });
 });

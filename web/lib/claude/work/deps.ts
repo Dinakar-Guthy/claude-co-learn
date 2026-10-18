@@ -6,9 +6,10 @@ import type { Store } from "@/lib/contracts/store";
 import { anthropic } from "@/lib/claude/client";
 import { content } from "@/lib/claude/content";
 import { engine } from "@/lib/engine";
+import type { UsageLike } from "@/lib/platform/cost";
 import { checkLimits, recordUsage, type LimitCheck } from "@/lib/platform/limits";
 import { getStore } from "@/lib/store";
-import type { BetaMessageStreamParams } from "@anthropic-ai/sdk/resources/beta/messages/messages";
+import type { MessageCreateParamsNonStreaming, BetaMessageStreamParams } from "@anthropic-ai/sdk/resources/beta/messages/messages";
 import type { ModelStream } from "./stream";
 
 export type ModelParams = BetaMessageStreamParams;
@@ -18,8 +19,10 @@ export interface WorkDeps {
   engine: EngineApi;
   content: Pick<ContentApi, "verifyMoment">;
   startStream(params: ModelParams, signal: AbortSignal): ModelStream;
+  /** One non-streaming request (the history compaction call, see compact.ts). */
+  compact(params: MessageCreateParamsNonStreaming, signal: AbortSignal): Promise<Anthropic.Beta.BetaMessage>;
   checkLimits(anonId: string, ip: string): Promise<LimitCheck>;
-  recordUsage(anonId: string, ip: string, model: string, usage: Anthropic.Beta.BetaUsage): Promise<void>;
+  recordUsage(anonId: string, ip: string, model: string, usage: UsageLike): Promise<void>;
   now(): number;
   newId(): string;
   /** Files API id of the demo churn CSV (env DEMO_FILE_ID). */
@@ -32,6 +35,7 @@ export function defaultDeps(): WorkDeps {
     engine,
     content,
     startStream: (params, signal) => anthropic().beta.messages.stream(params, { signal }),
+    compact: (params, signal) => anthropic().beta.messages.create(params, { signal }),
     checkLimits,
     recordUsage,
     now: Date.now,

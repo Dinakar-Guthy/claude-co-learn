@@ -7,6 +7,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { MODELS } from "@/lib/claude/models";
 import { recordSkipped } from "@/lib/engine";
 import type { TurnEndReason } from "@/lib/contracts/stream";
+import { COMPACTION_BETA, hasCompactionBlock, maybeCompact } from "./compact";
 import type { ModelParams, WorkDeps } from "./deps";
 import { demoDataNote, renderContext } from "./context";
 import { describeError, isAbort, isContainerError, REFUSAL_ERROR, toErrorEvent } from "./errors";
@@ -37,7 +38,8 @@ export function buildParams(messages: ApiMessage[], containerId: string | undefi
     // Top-level breakpoint: caches the growing conversation prefix across loop steps and turns.
     cache_control: { type: "ephemeral" },
     ...(containerId ? { container: containerId } : {}),
-    betas: ["server-side-fallback-2026-07-01"],
+    // Every request that carries a compaction block must send the compaction beta.
+    betas: ["server-side-fallback-2026-07-01", ...(hasCompactionBlock(messages) ? [COMPACTION_BETA] : [])],
     fallbacks: "default",
   };
 }
@@ -56,7 +58,8 @@ export async function runTurn(deps: WorkDeps, plan: TurnPlan, emit: Emit, signal
   // Fail-open: the limits machinery is degraded, so the turn proceeds with a heads-up (not persisted).
   if (limits.warning) emit({ type: "notice", itemId: `notice-limits-${deps.now()}`, text: limits.warning });
 
-  const history = await store.getApiMessages(session.id);
+  // Large histories are summarized first (never fails the turn; falls back to the full history).
+  const history = await maybeCompact({ deps, session, anonId, ip, history: await store.getApiMessages(session.id), signal });
   const state = new TurnState(store, session, history);
   const ctx = new ToolContext(deps, state, user);
 
