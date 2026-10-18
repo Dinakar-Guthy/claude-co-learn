@@ -20,6 +20,8 @@ import { CONTAINER_RESET_NOTE, skippedPendingNote } from "./userText";
 /** Model requests per user turn (pause_turn re-sends included). */
 export const MAX_STEPS = 8;
 
+export const NOT_RUN = "(not run)";
+
 const CUT_OFF_TOOL_RESULT = "Your response hit the output limit, so this tool call was cut off and not run. Call it again with a shorter input.";
 
 export function buildParams(messages: ApiMessage[], containerId: string | undefined): ModelParams {
@@ -99,7 +101,8 @@ export async function runTurn(deps: WorkDeps, plan: TurnPlan, emit: Emit, signal
         return await end("refusal");
       }
 
-      state.appendAssistant(message);
+      // A code call streamed in a response that stopped for our tool never runs; close its block in the UI.
+      for (const itemId of state.appendAssistant(message)) emit({ type: "code_result", itemId, stdout: NOT_RUN, stderr: "", returnCode: 0, fileIds: [] });
       if (message.stop_reason === "pause_turn") {
         state.commit();
         continue;

@@ -105,3 +105,40 @@ export function transcriptFromContent(messageId: string, content: Block[]): Tran
 export function fileIdsFromContent(content: Block[]): string[] {
   return content.flatMap((b) => codeResult(b)?.fileIds ?? []);
 }
+
+type AnyBlock = { type: string };
+
+/** An assistant turn cut off by pause_turn ends with a server tool call; it is resumed by re-sending as-is. */
+export function isPausedAssistant(message: { role: string; content: unknown } | undefined): boolean {
+  if (message?.role !== "assistant" || !Array.isArray(message.content)) return false;
+  const last = message.content.at(-1) as { type?: string } | undefined;
+  return last?.type === "server_tool_use";
+}
+
+/** A server tool's result block (`bash_code_execution_tool_result`, `web_search_tool_result`, ...), not a client `tool_result`. */
+function serverResultId(block: AnyBlock): string | undefined {
+  if (block.type === "tool_result" || !block.type.endsWith("_tool_result")) return undefined;
+  const id = (block as { tool_use_id?: unknown }).tool_use_id;
+  return typeof id === "string" ? id : undefined;
+}
+
+/** Ids of every server tool result in `content`. */
+export function serverResultIds(content: readonly AnyBlock[]): string[] {
+  return content.flatMap((b) => serverResultId(b) ?? []);
+}
+
+/**
+ * Removes `server_tool_use` blocks whose id isn't in `resultIds`. The API rejects a server tool call without its
+ * result, and it doesn't run server tools in a response that stops for a client tool (or hits max_tokens).
+ */
+export function dropOrphanServerToolUses<T extends AnyBlock>(content: T[], resultIds: ReadonlySet<string>): { content: T[]; dropped: string[] } {
+  const dropped: string[] = [];
+  const kept = content.filter((b) => {
+    if (b.type !== "server_tool_use") return true;
+    const id = String((b as { id?: unknown }).id);
+    if (resultIds.has(id)) return true;
+    dropped.push(id);
+    return false;
+  });
+  return { content: dropped.length ? kept : content, dropped };
+}

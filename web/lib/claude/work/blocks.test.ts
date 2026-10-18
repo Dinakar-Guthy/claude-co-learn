@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type Anthropic from "@anthropic-ai/sdk";
-import { codeResult, describeCode, fileIdsFromContent, MAX_OUTPUT_CHARS, transcriptFromContent } from "./blocks";
+import { codeResult, describeCode, dropOrphanServerToolUses, fileIdsFromContent, MAX_OUTPUT_CHARS, serverResultIds, transcriptFromContent } from "./blocks";
 import { bash, bashResult, text } from "./testing";
 
 describe("describeCode", () => {
@@ -56,6 +56,21 @@ describe("codeResult", () => {
 
   it("ignores other blocks", () => {
     expect(codeResult(text("hi"))).toBeNull();
+  });
+});
+
+describe("dropOrphanServerToolUses", () => {
+  it("drops server calls without a result and keeps everything else", () => {
+    const content = [bash("ls", "srv_1"), bashResult("srv_1", "x\n"), { type: "tool_use", id: "toolu_1", name: "learning_moment", input: {} } as Anthropic.Beta.BetaContentBlock, bash("pwd", "srv_2")];
+    const r = dropOrphanServerToolUses(content, new Set(serverResultIds(content)));
+    expect(r.dropped).toEqual(["srv_2"]);
+    expect(r.content).toEqual(content.slice(0, 3));
+  });
+
+  it("returns the same array when nothing is dropped, and ignores client tool_result ids", () => {
+    const content = [bash("ls", "srv_1"), bashResult("srv_1", "x\n")];
+    expect(dropOrphanServerToolUses(content, new Set(["srv_1"])).content).toBe(content);
+    expect(serverResultIds([{ type: "tool_result", tool_use_id: "toolu_1" } as never])).toEqual([]);
   });
 });
 
