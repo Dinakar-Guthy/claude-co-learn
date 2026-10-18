@@ -26,12 +26,4 @@ export interface HandlerResult<T> {
   background: BackgroundTask[];
 }
 
-export class HttpError extends Error {
-  constructor(
-    readonly status: number,
-    message: string,
-  ) {
-    super(message);
-    this.name = "HttpError";
-  }
-}
+export { HttpError } from "@/lib/platform/http";
