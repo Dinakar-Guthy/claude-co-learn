@@ -1,4 +1,10 @@
 # Transcripts
 
-Complete Claude / Claude Code transcripts are a required submission item.
-Export each session here (e.g. `2026-10-17-setup.md`). Do not include API keys or other secrets.
+Complete Claude Code transcripts for this take-home (a required submission item).
+
+- `YYYY-MM-DD-<session>.md`: readable renderings of each main session (prompts, replies, tool calls; thinking omitted, tool output truncated).
+- `raw/`: the complete original JSONL logs, including every subagent (research agents and parallel build tracks).
+  Kept out of git until final submission because they're large and regenerated each session.
+
+Regenerate at the end of every session (overwrites): `python3 scripts/collect_transcripts.py`.
+Known secret patterns (Anthropic keys, Upstash tokens, Redis URLs) are redacted automatically.

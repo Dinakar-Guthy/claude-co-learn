@@ -108,4 +108,5 @@ deploy it, and verify the demo journey on the live site. Then a morning report f
 - Commit in small steps with clear messages and push to `main` (auto-deploys). End commit messages with the Co-Authored-By line.
 - Never commit or print secrets.
 - Keep `docs/plan.md` checkboxes current.
+- **Transcripts:** at the end of every session, run `python3 scripts/collect_transcripts.py` (collects all sessions + subagents from `~/.claude/projects/`). At final submission, remove `transcripts/raw/` from `.gitignore` and commit it.
 - **Definition of done for P2:** the demo journey works on the live URL end to end; all tests, lint, typecheck, and build pass; this file is updated with a **Morning report** (what works, what doesn't, what needs Dinakar, suggested next steps).
