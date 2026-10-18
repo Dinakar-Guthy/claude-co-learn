@@ -17,8 +17,17 @@ import { startOverAsNewUser } from "@/lib/client/reset";
 
 type Stage = "checking" | "unlock" | "home" | "intent";
 
-/** `/`: the /co-learn unlock ritual → continue a past session or start one (intent) → the workspace. */
+/**
+ * `/`: the /co-learn unlock ritual → continue a past session or start one (intent) → the workspace.
+ * Keyed by bfcacheId: Next keeps visited routes mounted (Activity), so a fresh push/replace (e.g. "Start a new
+ * session" from a wrap-up) must start over instead of showing the last visit's half-finished intent form.
+ */
 export function HomeFlow() {
+  const { bfcacheId } = useRouter();
+  return <HomeFlowInner key={bfcacheId} />;
+}
+
+function HomeFlowInner() {
   const params = useSearchParams();
   const startDirectly = params.get("start") === "1";
   const initialGoal = params.get("goal") ?? "";

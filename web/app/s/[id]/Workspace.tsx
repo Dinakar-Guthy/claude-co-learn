@@ -35,7 +35,13 @@ const STATUS_LABEL = {
   preparing_moment: "Preparing a question for you…",
 } as const;
 
+/** Keyed by bfcacheId so a fresh navigation to a session reloads it instead of reviving a hidden stale copy. */
 export function Workspace({ sessionId }: { sessionId: string }) {
+  const { bfcacheId } = useRouter();
+  return <WorkspaceRoot key={bfcacheId} sessionId={sessionId} />;
+}
+
+function WorkspaceRoot({ sessionId }: { sessionId: string }) {
   const ws = useWorkspace(sessionId);
   const { user } = ws;
 
@@ -275,8 +281,8 @@ function showContext(view: SessionView, momentId: string) {
   const item = view.transcript.find((i) => i.kind === "moment" && i.momentId === momentId);
   const el = item && document.getElementById(anchorId(item.id));
   if (!el) return;
-  // Show what led up to the question, not just the card itself.
-  const target = (el.previousElementSibling?.previousElementSibling as HTMLElement | null) ?? el;
+  // Start at Claude's lead-in right before the question, so the context is visible too.
+  const target = (el.previousElementSibling as HTMLElement | null) ?? el;
   target.scrollIntoView({ behavior: "smooth", block: "start" });
   el.classList.add("ring-4", "ring-accent");
   setTimeout(() => el.classList.remove("ring-4", "ring-accent"), 2500);
