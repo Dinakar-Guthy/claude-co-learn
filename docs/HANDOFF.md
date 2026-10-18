@@ -339,7 +339,7 @@ Three full demo runs and one non-ML run (a SQL query), each in a fresh session:
 - **Compaction latency:** a compacting turn takes longer (a synchronous Sonnet call); there's no UI notice for it yet.
 
 ### Manual testing guide
-Use https://anthropic-take-home-10-17-26.vercel.app with the site password.
+Use https://anthropic-take-home-10-17-26.vercel.app/?test=1 with the site password. `?test=1` tags that tab's traffic as test ("Test traffic (this tab)" badge), so it stays out of `/insights`; open each new tab with it.
 
 **Start as a brand-new user:**
 - **Path:** Settings (gear) → Your data → Reset my data → Yes, reset.
