@@ -126,4 +126,22 @@ describe.each(factories)("Store conformance: %s", (_name, make) => {
     const store = make();
     await expect(store.logEvent({ at: Date.now(), anonId: "u1", name: "unlock" })).resolves.toBeUndefined();
   });
+
+  it("lists events per UTC day, oldest first, as copies", async () => {
+    const store = make();
+    const at = (iso: string) => Date.parse(iso);
+    await store.logEvent({ at: at("2026-10-17T23:59:59Z"), anonId: "u1", name: "unlock" });
+    await store.logEvent({ at: at("2026-10-18T00:00:00Z"), anonId: "u1", sessionId: "s1", name: "session_created", props: { demo: true } });
+    await store.logEvent({ at: at("2026-10-18T09:30:00Z"), anonId: "u2", sessionId: "s2", name: "moment_shown", props: { concept: "recall", score: null } });
+
+    expect(await store.listEvents("2026-10-16")).toEqual([]);
+    expect((await store.listEvents("2026-10-17")).map((e) => e.name)).toEqual(["unlock"]);
+    const day = await store.listEvents("2026-10-18");
+    expect(day).toEqual([
+      { at: at("2026-10-18T00:00:00Z"), anonId: "u1", sessionId: "s1", name: "session_created", props: { demo: true } },
+      { at: at("2026-10-18T09:30:00Z"), anonId: "u2", sessionId: "s2", name: "moment_shown", props: { concept: "recall", score: null } },
+    ]);
+    day[0].props!.demo = false;
+    expect((await store.listEvents("2026-10-18"))[0].props).toEqual({ demo: true });
+  });
 });

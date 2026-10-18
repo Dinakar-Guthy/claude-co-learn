@@ -72,4 +72,7 @@ export class MemoryStore implements Store {
   async getUsage(scopes: UsageScope[]) { return scopes.map((s) => this.usage.get(scopeKey(s)) ?? 0); }
 
   async logEvent(event: AppEvent) { this.events.push(clone(event)); }
+  async listEvents(day: string) {
+    return this.events.filter((e) => new Date(e.at).toISOString().slice(0, 10) === day).sort((a, b) => a.at - b.at).map(clone);
+  }
 }
