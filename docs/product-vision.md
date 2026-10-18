@@ -105,6 +105,9 @@ itself, we show it. No fixed budget or cooldown by default.
   Free-form tasks still work.
 - **Fallback:** a pre-recorded real run, replayed and clearly labeled "replayed", if the sandbox fails during review.
 
+## Follow-ups (not in the prototype)
+- **Explicit topic learning:** a user says "I want to learn about US presidents" (a subject, not a task). The work-first design partly covers this today, since Claude's "work" becomes explaining and moments still fire. A dedicated mode would reuse the section/boss structure from `alternative-projects/learning-quest/`.
+
 ## Platform and model
 Hosted web app. Next.js on Vercel. Claude via the Vercel AI SDK; Claude-only for now, model-agnostic as P1.
 Opus 5.5 / Sonnet 5.5 / Haiku 5.5 routed by task. Per-turn execution (incl. code runs): **Sonnet 5.5** by default; switch to Opus 5.5 if Sonnet

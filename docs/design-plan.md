@@ -400,33 +400,41 @@ Anonymous ID: a random UUID in a **server-set HttpOnly cookie** (survives Safari
 
 ---
 
-## 16. Build plan (target Oct 20; hard deadline Oct 21, 9:00 AM PT)
+## 16. Build plan (revised 2026-10-17: **complete by end of Sun Oct 18**; Oct 19–21 AM are buffer)
 
-The riskiest piece comes first: real code execution streaming end-to-end.
+The speed-up comes from parallelization: define the shared **contracts** first, then build independent tracks at the same
+time in isolated git worktrees, then integrate. The riskiest piece (real code execution) stays on the critical path.
 
-| # | Milestone | Contents | Est. |
+### Phases
+| Phase | Work | Wall clock | Who |
 |---|---|---|---|
-| M0 | Skeleton deployed | Next.js in `web/`, Tailwind + Frost tokens + Nunito, Vercel project from GitHub, env vars, Upstash via Marketplace, anon cookie, unlock screen | 2 h |
-| M1 | Real work loop | `/api/chat` + Sonnet + code execution + demo CSV + container reuse; render text, code runs, output, charts (`/api/files/[id]`); `pause_turn`/expiry handling | 3 h |
-| M2 | Learning moments | Tool schema + system prompt; engine (gate, mastery, difficulty, guardrails) **with unit tests**; verification; MomentCard; grading; MC fallback; skip/defer; continuation; XP + sounds + Pip | 4 h |
-| M3 | Predict + bosses + story | `resolve_prediction` reveal; `milestone_reached` → `/api/boss` → BossCard + HP; story bible + pre-generated chapters | 2.5 h |
-| M4 | Intent + sketch + wrap-up | Intent chips; background Opus sketch; session clock; wrap-up (deferred quiz, codex, story, level-up, suggestions) | 2 h |
-| M5 | Persistence + safety + settings | Resume sessions; rate limits + spend caps; settings drawer (sound, guardrails, themes); permanent levels; Sunset + Night Sky themes | 2.5 h |
-| M6 | Tune + polish | Prompt tuning on the demo journey + 2 other journeys; bug bash on Chrome, Safari, and mobile width; final deploy | 2 h |
-| D | Deliverables | Written rationale (~2 h), video ≤ 8 min (~2 h), transcripts export, submission | 4–5 h |
+| **P0: Skeleton + contracts** (serial) | Next.js in `web/`, Frost tokens, Nunito, shared types (`learning_moment` schema, engine types, store interface, API route signatures, UI message parts), Vercel project + env vars + Upstash, unlock screen, first deploy | ~1.5 h | Claude + Dinakar (Vercel/key setup) |
+| **P1: Parallel tracks** (5 worktree agents) | **A: Work loop** (critical path): `/api/chat` + Sonnet + code execution + demo CSV + container reuse + chart proxy + `pause_turn`/expiry handling<br>**B: Engine**: gate, guardrails, Elo-lite mastery, difficulty, bosses rules, XP/levels, spend accounting, all **with unit tests**<br>**C: UI kit**: TopBar/XP bar, MomentCard, BossCard, PredictionReveal, WrapUp, Settings drawer, ASCII characters, sounds, themes; built against mock data on a `/dev` page<br>**D: Content routes + data**: dataset generator, grading, verification, boss, story, wrap-up, session sketch (prompts + structured schemas)<br>**E: Platform**: Redis store, anon cookie, rate limits + spend caps, `/api/user`, sessions/resume | ~3–4 h (can run **overnight**) | Agents, unattended |
+| **P2: Integration** (serial) | Merge tracks; wire `learning_moment` → gate → card → grade → continuation; predict reveal; milestone → boss; intent → sketch; wrap-up; deploy preview | ~2–3 h | Claude, Dinakar reviewing |
+| **P3: Tune + bug bash** | Demo journey + 1 non-ML journey on the deployed preview; prompt tuning; Chrome, Safari, mobile; final deploy | ~2 h | Dinakar testing, Claude fixing |
+| **P4: Deliverables** | Claude drafts the rationale doc from these docs; Dinakar rewrites it in his voice. Video (≤ 8 min). Export transcripts. Submit | ~3–4 h | Dinakar-led |
 
-**Total ≈ 18 h build + 4–5 h deliverables.**
-
-| Day | Work |
+### Timeline
+| When | Plan |
 |---|---|
-| Sat Oct 17 | Plan sign-off |
-| Sun Oct 18 | M0–M2 |
-| Mon Oct 19 | M3–M5 + rationale draft |
-| Tue Oct 20 | M6 + video + submit |
-| Wed Oct 21 AM | Buffer only |
+| **Sat Oct 17 evening** | Vercel account + key setup → P0 → launch P1 tracks overnight (laptop kept awake with `caffeinate`, lid open, on power) |
+| **Sun Oct 18 morning** | Review and merge the overnight tracks → P2 integration → deployed preview by midday |
+| **Sun Oct 18 afternoon** | P3 tuning and bug bash → **2 pm cut-line checkpoint** |
+| **Sun Oct 18 evening** | P4: rationale doc, video, transcripts → submit (or submit Mon morning after a fresh-eyes check) |
+| Mon Oct 19 – Wed Oct 21 9 AM PT | Buffer only |
 
-**Cut line, in order, if behind at end of Oct 19:** unlockable themes → story pre-generation (generate on demand) → resume past
-sessions → guardrail UI (keep default off) → compaction. **Never cut:** real code execution, learning moments with feedback, one boss, wrap-up, deploy.
+If P1 doesn't run overnight, Sunday starts with P0 + P1 (~5 h), making it a ~13 h day with no slack. The cut line then
+applies at the 2 pm checkpoint.
+
+**Cut line, in order:** unlockable themes → story pre-generation (generate on demand) → resume past sessions → guardrail UI
+(keep default off) → compaction. **Never cut:** real code execution, learning moments with feedback, one boss, wrap-up, deploy.
+
+### Parallelization notes
+- Worktrees don't get the gitignored `web/.env.local`, so tracks B–E build against mocks and unit tests. Live API
+  testing happens in Track A (which needs the key) and in P2.
+- Each track owns its own folders (A: `app/api/chat`, `lib/claude/work*`; B: `lib/engine`; C: `components/`, `app/dev`;
+  D: `lib/claude/content*`, other `app/api/*`, `scripts/`; E: `lib/store`, `lib/platform`, `middleware.ts`) to keep merges clean.
+- Everything runs inside this Claude Code session so a single `/export` captures the full transcript for submission.
 
 ### Testing
 - **Unit (Vitest):** gate decisions, Elo updates, target difficulty, guardrail caps, XP/levels, spend accounting.
@@ -441,6 +449,7 @@ sessions → guardrail UI (keep default off) → compaction. **Never cut:** real
 - **Manual E2E** on the deployed preview: the full demo journey, plus one non-ML journey (e.g., a SQL report).
 
 ### P1 / future improvements (named in the doc and video)
+- **Explicit topic learning** ("teach me about US presidents"): when the intent is to learn a subject rather than do a task. The current design partly handles this already (Claude's "work" becomes explaining, and moments still fire). A full version would bring back structured sections and bosses from `alternative-projects/learning-quest/`.
 - Spaced review across sessions
 - Novice 60-second primer
 - Upload your own CSV

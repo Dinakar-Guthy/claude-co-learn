@@ -27,3 +27,6 @@ Running record of meaningful decisions and the reasoning behind them. Feeds the 
 | 2026-10-17 | Guardrail "Strict" = fewest interruptions | — | Confirmed |
 | 2026-10-17 | Per-turn execution model: Sonnet 5.5 (medium effort) by default; Opus 5.5 if Sonnet stumbles on multi-step code | Opus for all code turns | Half the cost and faster; test both on the demo |
 | 2026-10-17 | Approved: code execution tool, synthetic churn dataset + one-click demo, accepted costs/risks | — | — |
+| 2026-10-17 | Approved design plan: learning moments as a tool Claude calls (engine gates, turn pauses for the learner); spend caps $5/browser, $25/IP, $75/day global; app in `web/`; boss on Sonnet 5.5 high (Opus if weak) | — | "Sounds good in general" |
+| 2026-10-17 | Compress the schedule to finish by end of Oct 18 using contracts-first parallel worktree tracks, possibly overnight | Original 3-day plan | Leaves Oct 19–21 as buffer; parallel tracks are independent once the contracts exist |
+| 2026-10-17 | Explicit topic learning ("teach me about US presidents") deferred as a follow-up | Build now | Scope is already large; partly covered by the current design |
