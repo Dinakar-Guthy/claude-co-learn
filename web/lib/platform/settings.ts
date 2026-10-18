@@ -11,6 +11,7 @@ export const UpdateSettingsSchema = z
     soundPack: z.string().min(1).max(64),
     // The contract sends the whole guardrails object; a partial one is merged rather than rejected.
     guardrails: z.object({ enabled: z.boolean(), mode: z.enum(["light", "balanced", "strict"]) }).partial(),
+    bosses: z.boolean(),
   })
   .partial()
   .strict();

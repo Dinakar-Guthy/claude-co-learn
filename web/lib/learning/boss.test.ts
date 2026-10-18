@@ -3,7 +3,7 @@ import type { GradeRequest } from "@/lib/contracts/api";
 import { initialEngineState } from "@/lib/contracts/engine";
 import { ContentRefusalError } from "@/lib/claude/content/errors";
 import { engine } from "@/lib/engine";
-import { bossConcepts, mergeAwards, startBoss } from "./boss";
+import { bossConcepts, mergeAwards, skipBoss, startBoss } from "./boss";
 import { handleGrade } from "./grade";
 import { ANON, candidate, makeDeps, mockContent, seedSession } from "./test-helpers";
 
@@ -166,4 +166,30 @@ describe("mergeAwards", () => {
 it("candidate fixture is valid for the moment contract", async () => {
   const { LearningMomentInputSchema } = await import("@/lib/contracts/moment");
   expect(LearningMomentInputSchema.safeParse(candidate()).success).toBe(true);
+});
+
+describe("skipBoss (Skip this boss)", () => {
+  it("closes the remaining questions, keeps earlier answers, pays nothing, and continues the work", async () => {
+    const { deps, boss } = await bossSetup(["correct"]);
+    await handleGrade(deps, ANON, grade(boss.momentIds[0], { action: "submit", answer: "a" }));
+    const xpBefore = (await deps.store.getUser(ANON))!.xp;
+
+    const { body } = await skipBoss(deps, (await deps.store.getSession("s1"))!, boss.id);
+    expect(body.boss.outcome).toBe("skipped");
+    expect(body.continueWith).toEqual({ sessionId: "s1", kind: "boss_result", bossId: boss.id });
+    expect(body.moments[boss.momentIds[0]].status).toBe("answered");
+    expect(body.moments[boss.momentIds[1]].status).toBe("skipped");
+    expect((await deps.store.getUser(ANON))!.xp).toBe(xpBefore);
+    const session = await deps.store.getSession("s1");
+    expect(session?.engine.conceptsSinceBoss).toEqual([]);
+    expect(session?.story.chapters).toHaveLength(0);
+    expect(deps.store.events.map((e) => e.name)).toContain("boss_skipped");
+  });
+
+  it("clears a pending boss offer when the boss starts", async () => {
+    const deps = makeDeps();
+    const session = await seedSession(deps, { engine: { ...initialEngineState(), bossOfferPending: true, conceptsSinceBoss: ["a", "b", "c"] } });
+    await startBoss(deps, session);
+    expect((await deps.store.getSession("s1"))?.engine.bossOfferPending).toBe(false);
+  });
 });

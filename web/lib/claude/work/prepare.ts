@@ -7,7 +7,7 @@ import type { Session, User } from "@/lib/contracts/session";
 import type { Store } from "@/lib/contracts/store";
 import { newUser } from "@/lib/store/defaults";
 import { isPausedAssistant } from "./blocks";
-import { bossResultText, CONTINUE_TEXT, momentResponseText } from "./userText";
+import { BOSS_DECLINED_TEXT, bossResultText, CONTINUE_TEXT, momentResponseText } from "./userText";
 
 export { isPausedAssistant } from "./blocks";
 
@@ -19,6 +19,7 @@ export const ChatRequestSchema = z.discriminatedUnion("kind", [
   z.object({ sessionId: id, kind: z.literal("moment_response"), momentId: id }),
   z.object({ sessionId: id, kind: z.literal("boss_result"), bossId: id }),
   z.object({ sessionId: id, kind: z.literal("continue") }),
+  z.object({ sessionId: id, kind: z.literal("boss_declined") }),
 ]);
 
 export interface TurnPlan {
@@ -72,6 +73,9 @@ export async function prepareTurn(store: Store, anonId: string, ip: string, body
       const text = bossResultText(boss, concepts);
       return text ? plan(text) : fail(409, "This boss challenge isn't finished yet.");
     }
+    case "boss_declined":
+      if (!session.engine.bossOfferPending) return fail(409, "There's no boss offer to decline.");
+      return plan(BOSS_DECLINED_TEXT);
     case "continue": {
       const last = (await store.getApiMessages(session.id)).at(-1);
       return plan(isPausedAssistant(last) ? null : CONTINUE_TEXT);

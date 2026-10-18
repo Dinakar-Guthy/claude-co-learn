@@ -13,6 +13,8 @@ export interface UserSettings {
   theme: string; // theme id
   soundPack: string; // sound pack id
   guardrails: { enabled: boolean; mode: GuardrailMode };
+  /** Boss challenges at milestones (default on). Off: no boss offers at all. */
+  bosses?: boolean;
 }
 
 export interface ConceptMastery {

@@ -203,6 +203,15 @@ function SettingsBody({ settings, level, unlocks, onChange, sessions = [], curre
         )}
       </Section>
 
+      <Section title="Boss challenges">
+        <Switch label="Offer boss challenges" checked={settings.bosses !== false} onChange={(bosses) => onChange({ bosses })} />
+        <p className="text-sm text-muted">
+          {settings.bosses !== false
+            ? "At milestones, you're offered a short boss challenge that mixes what you've learned. You can always say \"Keep working\"."
+            : "Off: no boss challenges. Just the work and the learning moments."}
+        </p>
+      </Section>
+
       <Section title="Theme">
         <div role="group" aria-label="Theme" className="grid grid-cols-4 gap-3">
           {THEMES.map((t) => {

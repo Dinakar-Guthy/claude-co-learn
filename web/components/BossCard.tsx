@@ -11,7 +11,7 @@ import { AsciiBoss, type BossFrame } from "./AsciiBoss";
 import type { HelpBusy } from "./MomentHelp";
 import { MomentCard, type MomentHandlers } from "./MomentCard";
 import { useSounds } from "./SoundProvider";
-import { Button } from "./ui";
+import { Button, focusRing } from "./ui";
 
 export interface BossCardProps {
   boss: BossView;
@@ -22,6 +22,8 @@ export interface BossCardProps {
   momentHandlers: MomentHandlers;
   /** Which help request is in flight for the shown question (bosses offer hints only). */
   helpBusy?: HelpBusy;
+  /** "Skip this boss": shown while the fight is on. */
+  onSkip?: () => void;
   /** Shown with the outcome banner (e.g. reveal the story chapter / continue the work). */
   onContinue?: () => void;
   continueLabel?: string;
@@ -44,7 +46,7 @@ export function outcomeCopy(outcome: BossOutcome, name: string): { title: string
 
 const fmtHp = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
 
-export function BossCard({ boss, moment, grading = false, xp, momentHandlers, onContinue, continueLabel = "Continue", helpBusy }: BossCardProps) {
+export function BossCard({ boss, moment, grading = false, xp, momentHandlers, onContinue, continueLabel = "Continue", helpBusy, onSkip }: BossCardProps) {
   const sounds = useSounds();
   const [prevHp, setPrevHp] = useState(boss.hp);
   const [hits, setHits] = useState(0);
@@ -96,7 +98,14 @@ export function BossCard({ boss, moment, grading = false, xp, momentHandlers, on
           <AsciiBoss kind={boss.ascii} frame={frame} />
         </m.div>
         <div className="min-w-0 flex-1 space-y-2">
-          <p className="text-xs font-bold tracking-wide text-muted uppercase">Boss</p>
+          <div className="flex items-center gap-2">
+            <p className="flex-1 text-xs font-bold tracking-wide text-muted uppercase">Boss</p>
+            {onSkip && !outcome && (
+              <button type="button" onClick={onSkip} className={`rounded-full px-2.5 py-1 text-sm text-muted transition hover:bg-surface-2 hover:text-text ${focusRing}`}>
+                Skip this boss
+              </button>
+            )}
+          </div>
           <h3 className="text-xl font-extrabold">{boss.name}</h3>
           <p className="text-muted">{boss.intro}</p>
           <div className="flex items-center gap-3 pt-1">

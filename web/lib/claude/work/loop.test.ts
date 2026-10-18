@@ -253,6 +253,19 @@ describe("runTurn", () => {
     const history = await t.store.getApiMessages(t.session.id);
     const result = (history.at(-1)!.content as Anthropic.ToolResultBlockParam[])[0];
     expect(JSON.parse(String(result.content))).toEqual({ boss_due: true, instruction: BOSS_INSTRUCTION });
+    // The learner gets a "Take it on / Keep working" offer that survives reloads.
+    expect((await t.store.getSession(t.session.id))?.engine.bossOfferPending).toBe(true);
+  });
+
+  it("Keep working declines the boss offer and continues the work", async () => {
+    const t = await setup({ bossDue: true });
+    t.replies.push(fakeMessage([toolUse("milestone_reached", { label: "First model trained", summary: "s", concepts_involved: [] }, "toolu_ms")], "tool_use"));
+    await t.send({ kind: "message", text: "go" });
+    t.replies.push(fakeMessage([text("Carrying on.")]));
+    const events = await t.send({ kind: "boss_declined" });
+    expect(lastEvent(events)).toEqual({ type: "turn_end", reason: "end_turn" });
+    expect((await t.store.getSession(t.session.id))?.engine.bossOfferPending).toBe(false);
+    expect(JSON.stringify(t.calls.at(-1)!.messages)).toContain("keep working instead of taking on the boss");
   });
 
   it("continues after a milestone when no boss is due", async () => {

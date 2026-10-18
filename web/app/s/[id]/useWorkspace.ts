@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChatRequest, GradeRequest, GradeResponse, HelpRequest, HelpResponse, SessionView, StartBossResponse, UserView, WrapUpResponse } from "@/lib/contracts/api";
+import type { ChatRequest, GradeRequest, GradeResponse, HelpRequest, HelpResponse, SessionView, SkipBossResponse, StartBossResponse, UserView, WrapUpResponse } from "@/lib/contracts/api";
 import type { LevelReward, UserSettings } from "@/lib/contracts/engine";
 import type { StoryChapter, SessionSummary } from "@/lib/contracts/session";
 import type { ChatStreamEvent, TurnEndReason, XpAward } from "@/lib/contracts/stream";
@@ -203,8 +203,8 @@ export function useWorkspace(sessionId: string) {
 
       const reason = end as TurnEndReason | null;
       const err = error as Extract<ChatStreamEvent, { type: "error" }> | null;
-      if (reason === "boss_due") void startBoss();
-      else if (reason === "max_steps") setProblem({ reason, retry: { sessionId, kind: "continue" } });
+      // boss_due: the re-synced view carries bossOfferPending, which shows the "Take it on / Keep working" offer.
+      if (reason === "max_steps") setProblem({ reason, retry: { sessionId, kind: "continue" } });
       else if (reason === "error" || reason === "refusal") {
         // Nothing reached the model loop (e.g. a 429 before streaming): resend the same request.
         // Otherwise committed progress was saved, so continuing picks up where it stopped.
@@ -212,7 +212,33 @@ export function useWorkspace(sessionId: string) {
         setProblem({ reason, message: err?.message, retry });
       }
     },
-    [applyXp, sessionId, startBoss, sync, update],
+    [applyXp, sessionId, sync, update],
+  );
+
+  /** "Take it on": generate and start the boss. */
+  const takeBoss = useCallback(() => {
+    update((v) => ({ ...v, bossOfferPending: false }));
+    void startBoss();
+  }, [startBoss, update]);
+
+  /** "Keep working": decline for now (offered again at the next milestone). */
+  const declineBoss = useCallback(() => {
+    update((v) => ({ ...v, bossOfferPending: false }));
+    void send({ sessionId, kind: "boss_declined" });
+  }, [send, sessionId, update]);
+
+  /** "Skip this boss": close the remaining questions and get back to work. */
+  const skipBoss = useCallback(
+    async (bossId: string) => {
+      try {
+        const res = await apiPost<SkipBossResponse>("/api/boss/skip", { sessionId, bossId });
+        update((v) => applyBossStart(v, { boss: res.boss, moments: res.moments }));
+        void send(res.continueWith);
+      } catch (err) {
+        setNotice(errorMessage(err));
+      }
+    },
+    [send, sessionId, update],
   );
 
   const sendMessage = useCallback((text: string) => void send({ sessionId, kind: "message", text }), [send, sessionId]);
@@ -380,6 +406,9 @@ export function useWorkspace(sessionId: string) {
     sendMessage,
     act,
     startBoss,
+    takeBoss,
+    declineBoss,
+    skipBoss,
     showBossQuestion,
     wrapUp,
     changeSettings,

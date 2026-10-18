@@ -13,6 +13,7 @@ import { CodeRunBlock } from "@/components/CodeRunBlock";
 import { MomentCard, momentHandlers } from "@/components/MomentCard";
 import { PredictionReveal } from "@/components/PredictionReveal";
 import { BossCard } from "@/components/BossCard";
+import { BossOffer } from "@/components/BossOffer";
 import { AsciiBoss } from "@/components/AsciiBoss";
 import { StoryChapterCard } from "@/components/StoryChapterCard";
 import { LevelUpToast } from "@/components/LevelUpToast";
@@ -106,7 +107,9 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
   }, [ws]);
 
   const inputPlaceholder = boss
-    ? "Finish the boss challenge above to keep working…"
+    ? "Finish or skip the boss challenge above to keep working…"
+    : view.bossOfferPending
+      ? "Or just keep typing to carry on with your work…"
     : pending
       ? "Answer the question above, or type to skip it…"
       : "Message Claude…";
@@ -160,6 +163,10 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
         ))}
 
         {ws.streaming && ws.status && <StatusLine text={STATUS_LABEL[ws.status]} />}
+
+        {view.bossOfferPending && !ws.streaming && ws.bossState !== "loading" && !boss && (
+          <BossOffer onTake={ws.takeBoss} onDecline={ws.declineBoss} />
+        )}
 
         {ws.bossState === "loading" && (
           <div className="flex flex-col items-center gap-3 rounded-card border border-dashed border-border p-6 text-center" role="status">
@@ -342,6 +349,7 @@ function TranscriptEntry({
             helpBusy={moment ? ws.helpBusy[moment.id] : undefined}
             xp={moment ? ws.xpByMoment[moment.id] : undefined}
             momentHandlers={momentHandlers((a) => moment && void ws.act(moment.id, a))}
+            onSkip={() => void ws.skipBoss(boss.id)}
           />
           {next && (
             <div className="flex justify-end">

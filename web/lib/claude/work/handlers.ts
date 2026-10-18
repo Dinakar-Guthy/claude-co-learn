@@ -181,7 +181,7 @@ async function resolvePrediction(ctx: ToolContext, block: Anthropic.Beta.BetaToo
 }
 
 export const BOSS_INSTRUCTION =
-  "Stop here and wait: a short boss challenge starts now. Don't continue the work until its result arrives.";
+  "Stop here and wait: the learner is offered a short boss challenge and chooses whether to take it on. Don't continue the work until you're told what they chose (and the result, if they played).";
 
 async function milestone(ctx: ToolContext, block: Anthropic.Beta.BetaToolUseBlock): Promise<ToolOutcome> {
   const parsed = MilestoneInputSchema.safeParse(block.input);
@@ -189,7 +189,14 @@ async function milestone(ctx: ToolContext, block: Anthropic.Beta.BetaToolUseBloc
   const { deps, state } = ctx;
   const engineState = state.session.engine;
   // A moment shown in the same response takes priority; the boss can come at a later milestone.
-  const bossDue = !engineState.pendingMomentId && deps.engine.bossDue(engineState, deps.now(), sessionEndsAt(state.session));
+  const bossesOn = ctx.user.settings.bosses !== false;
+  const bossDue = bossesOn && !engineState.pendingMomentId && deps.engine.bossDue(engineState, deps.now(), sessionEndsAt(state.session));
+  if (bossDue) {
+    // The learner gets a "Take it on / Keep working" offer first; it survives reloads.
+    state.session.engine = { ...state.session.engine, bossOfferPending: true };
+    state.markDirty();
+    await ctx.log("boss_offered", { concepts: state.session.engine.conceptsSinceBoss.length });
+  }
   state.addItem({ kind: "milestone", id: block.id, label: parsed.data.label });
   ctx.outbox.push({ type: "milestone", itemId: block.id, label: parsed.data.label, bossDue });
   return bossDue

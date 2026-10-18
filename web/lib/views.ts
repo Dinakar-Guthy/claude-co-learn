@@ -55,5 +55,6 @@ export function toSessionView(s: Session, transcript: TranscriptItem[], moments:
     moments: Object.fromEntries(moments.map((m) => [m.id, toMomentView(m)])),
     bosses: Object.fromEntries(bosses.map((b) => [b.id, toBossView(b, moments)])),
     chapters: Object.fromEntries(s.story.chapters.map((c) => [c.id, c])),
+    bossOfferPending: Boolean(s.engine.bossOfferPending) && bosses.every((b) => b.outcome),
   };
 }

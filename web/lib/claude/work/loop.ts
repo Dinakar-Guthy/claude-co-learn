@@ -17,7 +17,7 @@ import { WORK_SYSTEM } from "./prompt";
 import { TurnState, type ApiMessage } from "./state";
 import { consumeStream, type Emit } from "./stream";
 import { WORK_TOOLS } from "./tools";
-import { CONTAINER_RESET_NOTE, skippedPendingNote } from "./userText";
+import { BOSS_DECLINED_TEXT, CONTAINER_RESET_NOTE, skippedPendingNote } from "./userText";
 
 /** Model requests per user turn (pause_turn re-sends included). */
 export const MAX_STEPS = 8;
@@ -74,7 +74,7 @@ export async function runTurn(deps: WorkDeps, plan: TurnPlan, emit: Emit, signal
   };
 
   try {
-    const prefix = await settlePendingMoment(ctx, plan);
+    const prefix = joinNotes(await settleBossOffer(ctx, plan), await settlePendingMoment(ctx, plan));
     session.engine = deps.engine.recordWorkTurn(session.engine);
     state.markDirty();
     if (plan.modelText !== null) await addUserTurn(ctx, plan, prefix);
@@ -154,6 +154,21 @@ async function runTools(ctx: ToolContext, toolUses: Anthropic.Beta.BetaToolUseBl
   }
   ctx.state.push({ role: "user", content: results });
   return pause;
+}
+
+const joinNotes = (...notes: (string | null)[]) => notes.filter(Boolean).join("\n\n") || null;
+
+/**
+ * Clears an open boss offer: "Keep working" (boss_declined) or simply carrying on with a new message both count
+ * as declining for now. The boss is offered again at the next milestone (Dinakar, 2026-10-18).
+ */
+async function settleBossOffer(ctx: ToolContext, plan: TurnPlan): Promise<string | null> {
+  const { session } = ctx.state;
+  if (!session.engine.bossOfferPending) return null;
+  session.engine = { ...session.engine, bossOfferPending: false };
+  ctx.state.markDirty();
+  await ctx.log("boss_declined", { via: plan.request.kind });
+  return plan.request.kind === "boss_declined" ? null : BOSS_DECLINED_TEXT;
 }
 
 /** Clears a pending moment the learner moved past; returns a note for Claude if it was skipped. */

@@ -1,11 +1,11 @@
 /** Boss lifecycle: start (generate + verify questions), hits, and the outcome (design-plan §7.4). */
-import type { StartBossResponse, GradeResponse } from "@/lib/contracts/api";
+import type { GradeResponse, SkipBossResponse, StartBossResponse } from "@/lib/contracts/api";
 import type { LearningMomentInput } from "@/lib/contracts/moment";
 import type { BossState, MomentRecord, Session } from "@/lib/contracts/session";
 import type { XpAward } from "@/lib/contracts/stream";
 import { recordBossFinished, recordBossStarted } from "@/lib/engine";
 import { toBossView, toMomentView } from "@/lib/views";
-import type { BackgroundTask, HandlerResult, LearningDeps } from "./deps";
+import { HttpError, type BackgroundTask, type HandlerResult, type LearningDeps } from "./deps";
 import { isSettled } from "./scores";
 import { appendTranscript, patchSession } from "./sessionStore";
 import { addChapter } from "./story";
@@ -91,7 +91,9 @@ export async function startBoss(deps: LearningDeps, session: Session): Promise<H
   for (const r of records) await deps.store.putMoment(r);
   await deps.store.putBoss(boss);
   const concepts = [...new Set(questions.map((q) => q.concept))];
-  await patchSession(deps, session.id, (latest) => ({ engine: recordBossStarted(latest.engine, { id: bossId, startedAt: now, concepts }) }));
+  await patchSession(deps, session.id, (latest) => ({
+    engine: { ...recordBossStarted(latest.engine, { id: bossId, startedAt: now, concepts }), bossOfferPending: false },
+  }));
   await appendTranscript(deps, session.id, { kind: "boss", id: `boss-${bossId}`, bossId });
   await deps.store.logEvent({ at: now, anonId: session.anonId, sessionId: session.id, name: "boss_started", props: { bossId, questions: records.length, name: boss.name } });
 
@@ -148,4 +150,39 @@ export function mergeAwards(a: XpAward | undefined, b: XpAward | undefined): XpA
       ? { from: a.levelUp.from, to: b.levelUp.to, rewards: [...a.levelUp.rewards, ...b.levelUp.rewards] }
       : (a.levelUp ?? b.levelUp);
   return { amount: a.amount + b.amount, reason: `${a.reason} + ${b.reason}`, level: b.level, ...(levelUp ? { levelUp } : {}) };
+}
+
+/**
+ * "Skip this boss" (Dinakar, 2026-10-18): closes the remaining questions in one click. Answers already given
+ * keep their XP; the skipped part earns nothing, there's no story chapter, and the work resumes right away.
+ */
+export async function skipBoss(deps: LearningDeps, session: Session, bossId: string): Promise<HandlerResult<SkipBossResponse>> {
+  const boss = await deps.store.getBoss(session.id, bossId);
+  if (!boss) throw new HttpError(404, "Boss not found");
+  let moments = (await deps.store.listMoments(session.id)).filter((m) => m.bossId === bossId);
+  let final = boss;
+
+  if (!boss.outcome) {
+    moments = moments.map((m) => (isSettled(m) ? m : { ...m, status: "skipped" as const }));
+    for (const m of moments) await deps.store.putMoment(m);
+    final = { ...boss, outcome: "skipped" };
+    await deps.store.putBoss(final);
+    await patchSession(deps, session.id, (latest) => ({ engine: recordBossFinished(latest.engine, bossId, "skipped") }));
+    await deps.store.logEvent({
+      at: deps.now(),
+      anonId: session.anonId,
+      sessionId: session.id,
+      name: "boss_skipped",
+      props: { bossId, questions: moments.length },
+    });
+  }
+
+  return {
+    body: {
+      boss: toBossView(final, moments),
+      moments: Object.fromEntries(moments.map((m) => [m.id, toMomentView(m)])),
+      continueWith: { sessionId: session.id, kind: "boss_result", bossId },
+    },
+    background: [],
+  };
 }
