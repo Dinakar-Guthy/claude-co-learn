@@ -31,12 +31,15 @@ export interface ToolOutcome {
 export class ToolContext {
   readonly outbox: ChatStreamEvent[] = [];
   private mastery?: MasteryMap;
+  readonly deps: WorkDeps;
+  readonly state: TurnState;
+  readonly user: User;
 
-  constructor(
-    readonly deps: WorkDeps,
-    readonly state: TurnState,
-    readonly user: User,
-  ) {}
+  constructor(deps: WorkDeps, state: TurnState, user: User) {
+    this.deps = deps;
+    this.state = state;
+    this.user = user;
+  }
 
   get anonId() {
     return this.state.session.anonId;

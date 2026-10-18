@@ -37,6 +37,6 @@ export const REFUSAL_ERROR: ErrorEvent = {
 
 /** Loggable summary of an error, without request bodies or headers. */
 export function describeError(err: unknown): string {
-  if (err instanceof Anthropic.APIError) return `${err.name} ${err.status ?? ""} ${err.message}`.trim();
+  if (err instanceof Anthropic.APIError) return `${err.constructor.name}: ${err.message}`;
   return err instanceof Error ? `${err.name}: ${err.message}` : String(err);
 }

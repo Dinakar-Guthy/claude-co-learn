@@ -22,12 +22,15 @@ export class TurnState {
   private staged: TranscriptItem[] = [];
   private onCommit: (() => void)[] = [];
   dirty = false;
+  readonly store: Store;
+  readonly session: Session;
+  private readonly history: ApiMessage[];
 
-  constructor(
-    readonly store: Store,
-    readonly session: Session,
-    private readonly history: ApiMessage[],
-  ) {}
+  constructor(store: Store, session: Session, history: ApiMessage[]) {
+    this.store = store;
+    this.session = session;
+    this.history = history;
+  }
 
   /** Full message list for the next request. */
   messages(): ApiMessage[] {
