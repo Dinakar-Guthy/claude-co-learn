@@ -3,7 +3,8 @@
  */
 import type { BossState, MomentRecord } from "@/lib/contracts/session";
 
-const CONTINUE = "Continue the work, building on their choice.";
+const CONTINUE =
+  "Continue the work, building on their choice. Before your next consequential choice (e.g. how to evaluate the model or handle class imbalance), check whether it should be the learner's call: if so, ask with a decide moment first.";
 
 const label = (m: MomentRecord) => `moment ${m.id} (${m.type} · ${m.candidate.concept})`;
 
