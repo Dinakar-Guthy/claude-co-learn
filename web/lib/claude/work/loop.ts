@@ -53,6 +53,8 @@ export async function runTurn(deps: WorkDeps, plan: TurnPlan, emit: Emit, signal
     emit({ type: "turn_end", reason: "error", detail: limits.code });
     return;
   }
+  // Fail-open: the limits machinery is degraded, so the turn proceeds with a heads-up (not persisted).
+  if (limits.warning) emit({ type: "notice", itemId: `notice-limits-${deps.now()}`, text: limits.warning });
 
   const history = await store.getApiMessages(session.id);
   const state = new TurnState(store, session, history);

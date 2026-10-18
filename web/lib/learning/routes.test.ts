@@ -52,6 +52,20 @@ describe("Track D routes", () => {
     expect(await res.json()).toMatchObject({ code: "spend_cap" });
   });
 
+  it("passes a fail-open limits warning in X-Colearn-Warning without changing the body", async () => {
+    state.limit = { ok: true, warning: "Heads up: limits aren't working." };
+    const res = await createSession(post({ intent }));
+    expect(res.status).toBe(200);
+    expect(decodeURIComponent(res.headers.get("X-Colearn-Warning")!)).toBe("Heads up: limits aren't working.");
+    const body = (await res.json()) as CreateSessionResponse;
+    expect(Object.keys(body)).not.toContain("warning");
+    await flush();
+
+    state.limit = { ok: true };
+    expect((await createSession(post({ intent }))).headers.get("X-Colearn-Warning")).toBeNull();
+    await flush();
+  });
+
   it("runs a full session: create → view → boss → grade → story → wrap-up", async () => {
     const created = (await (await createSession(post({ intent }))).json()) as CreateSessionResponse;
     await flush();
