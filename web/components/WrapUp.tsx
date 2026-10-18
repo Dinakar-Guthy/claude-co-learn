@@ -3,6 +3,7 @@
 import type { WrapUpResponse } from "@/lib/contracts/api";
 import type { MomentView } from "@/lib/contracts/moment";
 import type { XpAward } from "@/lib/contracts/stream";
+import type { HelpBusy } from "./MomentHelp";
 import { MomentCard, momentHandlers, type MomentAction } from "./MomentCard";
 import { StoryChapterCard } from "./StoryChapterCard";
 import { levelProgress } from "./XPBar";
@@ -21,6 +22,7 @@ export interface WrapUpProps {
   /** Deferred moments as they update (keyed by id); falls back to data.deferred. */
   moments?: Record<string, MomentView>;
   gradingMomentId?: string;
+  helpBusy?: Record<string, HelpBusy | undefined>;
   xpByMoment?: Record<string, XpAward>;
   onMomentAction: (momentId: string, action: MomentAction) => void;
   /** Story chapter still generating. */
@@ -31,7 +33,7 @@ export interface WrapUpProps {
 }
 
 /** End-of-session sequence: deferred quiz → Codex → XP → story → suggestions → new session. */
-export function WrapUp({ data, moments, gradingMomentId, xpByMoment, onMomentAction, chapterLoading = false, onTryTheme, onSuggestion, onNewSession }: WrapUpProps) {
+export function WrapUp({ data, moments, gradingMomentId, helpBusy, xpByMoment, onMomentAction, chapterLoading = false, onTryTheme, onSuggestion, onNewSession }: WrapUpProps) {
   const { level } = data.user;
   const rewards = data.levelUps.flatMap((l) => l.rewards);
   const pct = Math.round(levelProgress(level) * 100);
@@ -52,6 +54,7 @@ export function WrapUp({ data, moments, gradingMomentId, xpByMoment, onMomentAct
                 key={d.id}
                 moment={view}
                 grading={gradingMomentId === d.id}
+                helpBusy={helpBusy?.[d.id]}
                 xp={xpByMoment?.[d.id]}
                 canDefer={false}
                 {...momentHandlers((a) => onMomentAction(d.id, a))}

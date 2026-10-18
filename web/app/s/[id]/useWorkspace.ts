@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChatRequest, GradeRequest, GradeResponse, SessionView, StartBossResponse, UserView, WrapUpResponse } from "@/lib/contracts/api";
+import type { ChatRequest, GradeRequest, GradeResponse, HelpRequest, HelpResponse, SessionView, StartBossResponse, UserView, WrapUpResponse } from "@/lib/contracts/api";
 import type { LevelReward, UserSettings } from "@/lib/contracts/engine";
 import type { StoryChapter, SessionSummary } from "@/lib/contracts/session";
 import type { ChatStreamEvent, TurnEndReason, XpAward } from "@/lib/contracts/stream";
 import type { MomentAction } from "@/components/MomentCard";
+import type { HelpBusy } from "@/components/MomentHelp";
 import { apiGet, apiPatch, apiPost, errorMessage } from "@/lib/client/api";
 import { streamChat } from "@/lib/client/chatStream";
 import { addChapter, applyBossStart, applyGrade, applyStreamEvent, appendUserMessage, bossTrigger, mergeMoments, reconcile } from "@/lib/client/workspace";
@@ -31,7 +32,15 @@ const STORY_POLL_MAX_MS = 25_000;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-function gradeBody(sessionId: string, momentId: string, action: MomentAction): GradeRequest {
+type GradeAction = Exclude<MomentAction, { kind: "hint" | "teach" | "ask" }>;
+type HelpAction = Extract<MomentAction, { kind: "hint" | "teach" | "ask" }>;
+const isHelp = (a: MomentAction): a is HelpAction => a.kind === "hint" || a.kind === "teach" || a.kind === "ask";
+
+function helpBody(sessionId: string, momentId: string, action: HelpAction): HelpRequest {
+  return action.kind === "ask" ? { sessionId, momentId, action: "ask", text: action.text } : { sessionId, momentId, action: action.kind };
+}
+
+function gradeBody(sessionId: string, momentId: string, action: GradeAction): GradeRequest {
   switch (action.kind) {
     case "submit":
       return { sessionId, momentId, action: "submit", answer: action.answer };
@@ -53,6 +62,7 @@ export function useWorkspace(sessionId: string) {
   const [notice, setNotice] = useState<string | null>(null);
 
   const [grading, setGrading] = useState<Record<string, boolean>>({});
+  const [helpBusy, setHelpBusy] = useState<Record<string, HelpBusy | undefined>>({});
   const [xpByMoment, setXpByMoment] = useState<Record<string, XpAward>>({});
   const [xpGain, setXpGain] = useState<{ amount: number; id: number } | undefined>();
   const [levelUp, setLevelUp] = useState<LevelUpState | null>(null);
@@ -243,8 +253,28 @@ export function useWorkspace(sessionId: string) {
     [send, update, waitForChapter],
   );
 
+  const askHelp = useCallback(
+    async (momentId: string, action: HelpAction) => {
+      if (helpBusy[momentId]) return;
+      setHelpBusy((b) => ({ ...b, [momentId]: action.kind }));
+      setNotice(null);
+      try {
+        const res = await apiPost<HelpResponse>("/api/moment/help", helpBody(sessionId, momentId, action));
+        update((v) => mergeMoments(v, [res.moment]));
+        if (wrap.data) setWrap((w) => (w.data ? { ...w, data: { ...w.data, deferred: w.data.deferred.map((d) => (d.id === momentId ? res.moment : d)) } } : w));
+        if (res.continueWith) void send(res.continueWith);
+      } catch (err) {
+        setNotice(errorMessage(err));
+      } finally {
+        setHelpBusy((b) => ({ ...b, [momentId]: undefined }));
+      }
+    },
+    [helpBusy, send, sessionId, update, wrap.data],
+  );
+
   const act = useCallback(
     async (momentId: string, action: MomentAction) => {
+      if (isHelp(action)) return askHelp(momentId, action);
       if (grading[momentId]) return;
       // Keep an answered boss question on screen (its feedback) until the learner moves on.
       const bossId = view?.moments[momentId]?.bossId;
@@ -280,7 +310,7 @@ export function useWorkspace(sessionId: string) {
         if (slow) setGrading((g) => ({ ...g, [momentId]: false }));
       }
     },
-    [applyXp, grading, onBossFinished, send, sessionId, update, view, wrap.data],
+    [applyXp, askHelp, grading, onBossFinished, send, sessionId, update, view, wrap.data],
   );
 
   const showBossQuestion = useCallback((bossId: string, momentId: string) => setBossShown((s) => ({ ...s, [bossId]: momentId })), []);
@@ -334,6 +364,7 @@ export function useWorkspace(sessionId: string) {
     notice,
     dismissNotice: () => setNotice(null),
     grading,
+    helpBusy,
     xpByMoment,
     xpGain,
     levelUp,

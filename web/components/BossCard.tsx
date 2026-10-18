@@ -8,6 +8,7 @@ import type { MomentView } from "@/lib/contracts/moment";
 import type { XpAward } from "@/lib/contracts/stream";
 import { celebrate } from "@/lib/ui/celebrate";
 import { AsciiBoss, type BossFrame } from "./AsciiBoss";
+import type { HelpBusy } from "./MomentHelp";
 import { MomentCard, type MomentHandlers } from "./MomentCard";
 import { useSounds } from "./SoundProvider";
 import { Button } from "./ui";
@@ -19,6 +20,8 @@ export interface BossCardProps {
   grading?: boolean;
   xp?: XpAward;
   momentHandlers: MomentHandlers;
+  /** Which help request is in flight for the shown question (bosses offer hints only). */
+  helpBusy?: HelpBusy;
   /** Shown with the outcome banner (e.g. reveal the story chapter / continue the work). */
   onContinue?: () => void;
   continueLabel?: string;
@@ -41,7 +44,7 @@ export function outcomeCopy(outcome: BossOutcome, name: string): { title: string
 
 const fmtHp = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
 
-export function BossCard({ boss, moment, grading = false, xp, momentHandlers, onContinue, continueLabel = "Continue" }: BossCardProps) {
+export function BossCard({ boss, moment, grading = false, xp, momentHandlers, onContinue, continueLabel = "Continue", helpBusy }: BossCardProps) {
   const sounds = useSounds();
   const [prevHp, setPrevHp] = useState(boss.hp);
   const [hits, setHits] = useState(0);
@@ -125,7 +128,7 @@ export function BossCard({ boss, moment, grading = false, xp, momentHandlers, on
           {qIndex >= 0 && boss.momentIds.length > 1 && (
             <p className="text-xs font-semibold text-muted">Question {qIndex + 1} of {boss.momentIds.length}</p>
           )}
-          <MomentCard key={moment.id} moment={moment} grading={grading} xp={xp} canDefer={false} {...momentHandlers} />
+          <MomentCard key={moment.id} moment={moment} grading={grading} xp={xp} canDefer={false} helpMode="hints" helpBusy={helpBusy} {...momentHandlers} />
         </div>
       )}
 

@@ -29,6 +29,9 @@ function handlers(): MomentHandlers & Record<string, ReturnType<typeof vi.fn>> {
     onSkip: vi.fn(),
     onDefer: vi.fn(),
     onReport: vi.fn(),
+    onHint: vi.fn(),
+    onTeach: vi.fn(),
+    onAsk: vi.fn(),
   };
 }
 
@@ -158,5 +161,44 @@ describe("MomentCard", () => {
     rerender(<SoundProvider manager={manager}><MomentCard moment={answered} {...h} /></SoundProvider>);
     expect(spy).toHaveBeenCalledOnce();
     expect(spy).toHaveBeenCalledWith("correct");
+  });
+});
+
+describe("MomentCard help tools", () => {
+  it("offers hints and Help me learn this as quiet actions, and opens the help panel", () => {
+    const h = handlers();
+    render(<MomentCard moment={base} {...h} />);
+    fireEvent.click(screen.getByRole("button", { name: "Give me a hint" }));
+    expect(h.onHint).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Help me learn this" }));
+    fireEvent.click(screen.getByRole("button", { name: "Teach me the idea first" }));
+    expect(h.onTeach).toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText("Ask Claude about this question"), { target: { value: "What is recall?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ask" }));
+    expect(h.onAsk).toHaveBeenCalledWith("What is recall?");
+  });
+
+  it("shows hints given so far and hides the hint button after two", () => {
+    render(<MomentCard moment={{ ...base, help: { hints: ["Think about the rare class.", "Count the churners."], thread: [] } }} {...handlers()} />);
+    expect(screen.getByText("Think about the rare class.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /hint/i })).toBeNull();
+  });
+
+  it("bosses get hints only", () => {
+    render(<MomentCard moment={{ ...base, type: "boss" }} helpMode="hints" canDefer={false} {...handlers()} />);
+    expect(screen.getByRole("button", { name: "Give me a hint" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Help me learn this" })).toBeNull();
+  });
+
+  it("renders a revealed question with its answer", () => {
+    render(<MomentCard moment={{ ...base, status: "revealed", answerExplanation: "Recall, because misses are costly." }} {...handlers()} />);
+    expect(screen.getByText("Recall, because misses are costly.")).toBeTruthy();
+    expect(screen.getAllByText(/come back for a quick review/).length).toBeGreaterThan(0);
+  });
+
+  it("offers See the answer after a skip", () => {
+    render(<MomentCard moment={{ ...base, status: "skipped", answerExplanation: "Recall." }} {...handlers()} />);
+    fireEvent.click(screen.getByRole("button", { name: "See the answer" }));
+    expect(screen.getByText("Recall.")).toBeTruthy();
   });
 });

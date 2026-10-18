@@ -8,12 +8,14 @@ export type MomentPhase =
   | "mc_answered" // option picked: chosen + best option highlighted
   | "answered" // verdict + why + XP
   | "locked_in" // predict: waiting for the real result
+  | "revealed" // the learner asked for the answer (after one nudge); shown with no credit
   | "skipped"
   | "deferred"
   | "reported";
 
 export function momentPhase(m: MomentView, grading = false): MomentPhase {
   if (m.status === "skipped" || m.status === "deferred" || m.status === "reported") return m.status;
+  if (m.status === "revealed") return "revealed";
   if (grading) return "grading";
   if (m.status === "awaiting_prediction_result") return "locked_in";
   if (m.mcChoice !== undefined) return "mc_answered";

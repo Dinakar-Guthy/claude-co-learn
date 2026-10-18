@@ -8,6 +8,7 @@ import { Pip } from "./Pip";
 import { useSounds } from "./SoundProvider";
 import { Button, Spinner, VERDICT_LABEL, VerdictChip, XpChip, focusRing } from "./ui";
 import { MOMENT_TYPE_LABEL, feedbackKey, momentPhase, pipMoodFor, type MomentPhase } from "./momentPhase";
+import { AnswerReveal, HelpPanel, HintList, MAX_HINTS, QuietAction, type HelpBusy } from "./MomentHelp";
 
 export interface MomentHandlers {
   onSubmit: (answer: string) => void;
@@ -16,6 +17,9 @@ export interface MomentHandlers {
   onSkip: () => void;
   onDefer: () => void;
   onReport: () => void;
+  onHint: () => void;
+  onTeach: () => void;
+  onAsk: (text: string) => void;
 }
 
 /** Mirrors GradeRequest["action"], so P2 can route every card action through one function. */
@@ -25,7 +29,11 @@ export type MomentAction =
   | { kind: "show_options" }
   | { kind: "skip" }
   | { kind: "defer" }
-  | { kind: "report" };
+  | { kind: "report" }
+  // Learner-requested help (POST /api/moment/help)
+  | { kind: "hint" }
+  | { kind: "teach" }
+  | { kind: "ask"; text: string };
 
 export function momentHandlers(onAction: (action: MomentAction) => void): MomentHandlers {
   return {
@@ -35,6 +43,9 @@ export function momentHandlers(onAction: (action: MomentAction) => void): Moment
     onSkip: () => onAction({ kind: "skip" }),
     onDefer: () => onAction({ kind: "defer" }),
     onReport: () => onAction({ kind: "report" }),
+    onHint: () => onAction({ kind: "hint" }),
+    onTeach: () => onAction({ kind: "teach" }),
+    onAsk: (text) => onAction({ kind: "ask", text }),
   };
 }
 
@@ -48,6 +59,10 @@ export interface MomentCardProps extends MomentHandlers {
   canDefer?: boolean;
   autoFocus?: boolean;
   className?: string;
+  /** "full": hints + Teach me + Ask Claude; "hints": bosses; "none": no help. */
+  helpMode?: "full" | "hints" | "none";
+  /** Which help request is in flight. */
+  helpBusy?: HelpBusy;
 }
 
 const PLACEHOLDER: Record<MomentView["type"], string> = {
@@ -62,8 +77,11 @@ const PLACEHOLDER: Record<MomentView["type"], string> = {
 const LETTERS = ["A", "B", "C", "D", "E", "F"];
 
 /** An inline learning moment in the chat (never a modal). States: see momentPhase(). */
-export function MomentCard({ moment, grading = false, xp, canDefer = true, autoFocus = false, className = "", ...handlers }: MomentCardProps) {
+export function MomentCard({ moment, grading = false, xp, canDefer = true, autoFocus = false, className = "", helpMode = "full", helpBusy, ...handlers }: MomentCardProps) {
   const phase = momentPhase(moment, grading);
+  const hasHelp = Boolean(moment.help?.lesson || moment.help?.thread.length);
+  const [helpOpen, setHelpOpen] = useState(hasHelp);
+  const help: HelpUi = { mode: helpMode, busy: helpBusy, open: helpOpen || hasHelp, setOpen: setHelpOpen };
   const sounds = useSounds();
   const headingId = useId();
 
@@ -79,7 +97,12 @@ export function MomentCard({ moment, grading = false, xp, canDefer = true, autoF
   }, [fk, moment.verdict, sounds]);
 
   if (phase === "skipped" || phase === "deferred" || phase === "reported") {
-    return <ClosedLine phase={phase} concept={moment.concept} className={className} />;
+    return (
+      <div className={`space-y-1 ${className}`}>
+        <ClosedLine phase={phase} concept={moment.concept} className="" />
+        {phase === "skipped" && moment.answerExplanation && <div className="pl-6"><AnswerReveal text={moment.answerExplanation} /></div>}
+      </div>
+    );
   }
 
   const xpAmount = xp?.amount ?? moment.xp ?? 0;
@@ -109,7 +132,7 @@ export function MomentCard({ moment, grading = false, xp, canDefer = true, autoF
         {announcement(phase, moment)}
       </p>
 
-      <PhaseBody phase={phase} moment={moment} xpAmount={xpAmount} big={big} canDefer={canDefer} autoFocus={autoFocus} liveFeedback={liveFeedback} handlers={handlers} />
+      <PhaseBody phase={phase} moment={moment} xpAmount={xpAmount} big={big} canDefer={canDefer} autoFocus={autoFocus} liveFeedback={liveFeedback} handlers={handlers} help={help} />
 
       {phase !== "grading" && (
         <div className="mt-4 flex justify-end">
@@ -129,6 +152,7 @@ export function MomentCard({ moment, grading = false, xp, canDefer = true, autoF
 function announcement(phase: MomentPhase, m: MomentView): string {
   if (phase === "grading") return "Checking your answer…";
   if (phase === "locked_in") return "Locked in! Let's see what really happens.";
+  if (phase === "revealed") return "Here's the answer. This one will come back for a quick review later.";
   if (m.verdict && (phase === "answered" || phase === "mc_answered" || phase === "choosing")) {
     const label = VERDICT_LABEL[m.verdict];
     return `${label}${/[.!?]$/.test(label) ? "" : "."} ${m.why ?? ""}${phase === "choosing" ? " Try picking from the options." : ""}`;
@@ -136,7 +160,15 @@ function announcement(phase: MomentPhase, m: MomentView): string {
   return "";
 }
 
+interface HelpUi {
+  mode: "full" | "hints" | "none";
+  busy?: HelpBusy;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}
+
 interface PhaseBodyProps {
+  help: HelpUi;
   phase: MomentPhase;
   moment: MomentView;
   xpAmount: number;
@@ -147,10 +179,31 @@ interface PhaseBodyProps {
   handlers: MomentHandlers;
 }
 
-function PhaseBody({ phase, moment, xpAmount, big, canDefer, autoFocus, liveFeedback, handlers }: PhaseBodyProps) {
+function PhaseBody({ phase, moment, xpAmount, big, canDefer, autoFocus, liveFeedback, handlers, help }: PhaseBodyProps) {
+  const panel = (canTeach: boolean) =>
+    help.mode === "full" && help.open ? (
+      <HelpPanel moment={moment} canTeach={canTeach} busy={help.busy} onTeach={handlers.onTeach} onAsk={handlers.onAsk} onClose={() => help.setOpen(false)} />
+    ) : null;
   switch (phase) {
     case "question":
-      return <AnswerForm moment={moment} canDefer={canDefer} autoFocus={autoFocus} handlers={handlers} />;
+      return (
+        <div className="space-y-3">
+          <HintList hints={moment.help?.hints ?? []} loading={help.busy === "hint"} />
+          {panel(true)}
+          <AnswerForm moment={moment} canDefer={canDefer} autoFocus={autoFocus} handlers={handlers} help={help} />
+        </div>
+      );
+    case "revealed":
+      return (
+        <div className="space-y-3">
+          {panel(false)}
+          {moment.answerExplanation && <AnswerReveal text={moment.answerExplanation} collapsible={false} />}
+          <div className="flex items-center gap-4">
+            <Pip mood="encouraging" className="text-xs" />
+            <p>Got it. This one will come back for a quick review later.</p>
+          </div>
+        </div>
+      );
     case "grading":
       return (
         <div className="flex items-center gap-4">
@@ -175,7 +228,9 @@ function PhaseBody({ phase, moment, xpAmount, big, canDefer, autoFocus, liveFeed
         <div className="space-y-4">
           {moment.answer && <YourAnswer text={moment.answer} />}
           {moment.verdict && <Feedback verdict={moment.verdict} why={moment.why} xpAmount={0} big={false} />}
-          <OptionPicker moment={moment} canDefer={canDefer} focusFirst={liveFeedback} handlers={handlers} />
+          <HintList hints={moment.help?.hints ?? []} loading={help.busy === "hint"} />
+          {panel(true)}
+          <OptionPicker moment={moment} canDefer={canDefer} focusFirst={liveFeedback} handlers={handlers} help={help} />
         </div>
       );
     case "mc_answered":
@@ -183,6 +238,7 @@ function PhaseBody({ phase, moment, xpAmount, big, canDefer, autoFocus, liveFeed
         <div className="space-y-4">
           <OptionResults moment={moment} />
           {moment.verdict && <Feedback verdict={moment.verdict} why={moment.why} xpAmount={xpAmount} big={big} />}
+          <FollowUp help={help} panel={panel(false)} />
         </div>
       );
     case "answered":
@@ -190,6 +246,7 @@ function PhaseBody({ phase, moment, xpAmount, big, canDefer, autoFocus, liveFeed
         <div className="space-y-4">
           {moment.answer && <YourAnswer text={moment.answer} />}
           {moment.verdict && <Feedback verdict={moment.verdict} why={moment.why} xpAmount={xpAmount} big={big} />}
+          <FollowUp help={help} panel={panel(false)} />
         </div>
       );
     default:
@@ -197,7 +254,7 @@ function PhaseBody({ phase, moment, xpAmount, big, canDefer, autoFocus, liveFeed
   }
 }
 
-function AnswerForm({ moment, canDefer, autoFocus, handlers }: { moment: MomentView; canDefer: boolean; autoFocus: boolean; handlers: MomentHandlers }) {
+function AnswerForm({ moment, canDefer, autoFocus, handlers, help }: { moment: MomentView; canDefer: boolean; autoFocus: boolean; handlers: MomentHandlers; help: HelpUi }) {
   const [draft, setDraft] = useState(moment.answer ?? "");
   const inputId = useId();
   const submit = () => {
@@ -223,18 +280,16 @@ function AnswerForm({ moment, canDefer, autoFocus, handlers }: { moment: MomentV
         }}
         className="w-full resize-y rounded-2xl border border-border bg-surface p-3 leading-relaxed outline-none placeholder:text-muted focus:border-primary"
       />
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-x-1 gap-y-2">
         <Button type="submit" variant="primary" disabled={!draft.trim()}>Submit</Button>
-        <Button onClick={handlers.onShowOptions}>Show options</Button>
         <span className="flex-1" />
-        <Button variant="quiet" onClick={handlers.onSkip}>Skip</Button>
-        {canDefer && <Button variant="quiet" onClick={handlers.onDefer}>Quiz me later</Button>}
+        <SecondaryActions moment={moment} canDefer={canDefer} handlers={handlers} help={help} showOptions />
       </div>
     </form>
   );
 }
 
-function OptionPicker({ moment, canDefer, focusFirst, handlers }: { moment: MomentView; canDefer: boolean; focusFirst: boolean; handlers: MomentHandlers }) {
+function OptionPicker({ moment, canDefer, focusFirst, handlers, help }: { moment: MomentView; canDefer: boolean; focusFirst: boolean; handlers: MomentHandlers; help: HelpUi }) {
   const firstRef = useRef<HTMLButtonElement>(null);
   const hadVerdict = Boolean(moment.verdict);
   useEffect(() => {
@@ -258,10 +313,38 @@ function OptionPicker({ moment, canDefer, focusFirst, handlers }: { moment: Mome
           </button>
         ))}
       </div>
-      <div className="flex flex-wrap justify-end gap-2">
-        <Button variant="quiet" onClick={handlers.onSkip}>Skip</Button>
-        {canDefer && <Button variant="quiet" onClick={handlers.onDefer}>Quiz me later</Button>}
+      <div className="flex flex-wrap justify-end gap-x-1 gap-y-2">
+        <SecondaryActions moment={moment} canDefer={canDefer} handlers={handlers} help={help} showOptions={false} />
       </div>
+    </div>
+  );
+}
+
+/** The quiet right-hand row: help, then the opt-outs. Submit (or picking an option) stays the main action. */
+function SecondaryActions({ moment, canDefer, handlers, help, showOptions }: { moment: MomentView; canDefer: boolean; handlers: MomentHandlers; help: HelpUi; showOptions: boolean }) {
+  const hints = moment.help?.hints.length ?? 0;
+  return (
+    <>
+      {help.mode !== "none" && hints < MAX_HINTS && (
+        <QuietAction onClick={handlers.onHint} disabled={Boolean(help.busy)}>{hints ? "Another hint" : "Give me a hint"}</QuietAction>
+      )}
+      {help.mode === "full" && !help.open && (
+        <QuietAction onClick={() => help.setOpen(true)}>Help me learn this</QuietAction>
+      )}
+      {showOptions && <QuietAction onClick={handlers.onShowOptions}>Show options</QuietAction>}
+      <QuietAction onClick={handlers.onSkip}>Skip</QuietAction>
+      {canDefer && <QuietAction onClick={handlers.onDefer}>Quiz me later</QuietAction>}
+    </>
+  );
+}
+
+/** After answering: the Ask Claude thread stays available for "why?" follow-ups. */
+function FollowUp({ help, panel }: { help: HelpUi; panel: React.ReactNode }) {
+  if (help.mode !== "full") return null;
+  if (help.open) return <>{panel}</>;
+  return (
+    <div className="flex justify-end">
+      <QuietAction onClick={() => help.setOpen(true)}>Ask Claude why</QuietAction>
     </div>
   );
 }

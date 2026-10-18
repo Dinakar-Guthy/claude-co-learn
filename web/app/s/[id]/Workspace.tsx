@@ -220,6 +220,7 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
               data={ws.wrap.data}
               moments={view.moments}
               gradingMomentId={Object.keys(ws.grading).find((id) => ws.grading[id])}
+              helpBusy={ws.helpBusy}
               xpByMoment={ws.xpByMoment}
               onMomentAction={(id, a) => void ws.act(id, a)}
               onTryTheme={(id) => void ws.changeSettings({ theme: id })}
@@ -305,6 +306,7 @@ function TranscriptEntry({
         <MomentCard
           moment={shown}
           grading={Boolean(ws.grading[m.id])}
+          helpBusy={ws.helpBusy[m.id]}
           xp={ws.xpByMoment[m.id]}
           autoFocus={ws.liveIds.has(m.id) && m.status === "awaiting_answer"}
           {...momentHandlers((a) => void ws.act(m.id, a))}
@@ -336,6 +338,7 @@ function TranscriptEntry({
             boss={boss}
             moment={moment}
             grading={moment ? Boolean(ws.grading[moment.id]) : false}
+            helpBusy={moment ? ws.helpBusy[moment.id] : undefined}
             xp={moment ? ws.xpByMoment[moment.id] : undefined}
             momentHandlers={momentHandlers((a) => moment && void ws.act(moment.id, a))}
           />
