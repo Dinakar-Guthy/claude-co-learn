@@ -244,7 +244,7 @@ breakthrough(c) = c.costly_mistake and c.learning_value == 5
 | System | Co-learn rules (work first; propose moments via the tool; value scale; never answer your own question; build on the learner's choices; learning by consequence; keep moments small), moment-type guidance, code-execution guidance (small steps, concise prints, save charts as PNG, reload data from files), style | Cached |
 | Session | Intent (goal, familiarity, time), session sketch (milestones, concept radar) once ready | Cached once present |
 | Dynamic | Elapsed/remaining time, guardrail mode, target difficulty, mastered concepts, concepts practised since the last boss, last 3 moment outcomes, rolling summary | Not cached |
-| Messages | The last ~12 messages verbatim; older turns compacted into the rolling summary (Haiku) when over ~40K tokens | — |
+| Messages | The last ~12 messages verbatim; older turns compacted when over ~40K tokens (implemented 2026-10-18 with the API's on-demand compaction on the work model, not Haiku: see decision log) | — |
 
 ### 9.2 Model routing
 | Call | Model | Effort | Output |
@@ -254,7 +254,9 @@ breakthrough(c) = c.costly_mistake and c.learning_value == 5
 | Boss generation | Sonnet 5.5 | high | structured |
 | Story bible + chapters | Sonnet 5.5 | medium | structured |
 | Wrap-up (codex + suggestions) | Sonnet 5.5 | medium | structured |
-| Moment verification, grading, compaction | Haiku 5.5 | low/default | structured |
+| Moment verification, grading, hints | Haiku 5.5 | low/default | structured |
+| "Teach me" and "Ask Claude" help (added 2026-10-18) | Sonnet 5.5 | low | structured |
+| History compaction (2026-10-18) | the work model (Sonnet 5.5), on-demand compaction beta | medium | compaction block |
 
 All model IDs and effort levels live in one config file (`lib/claude/models.ts`), which is also the seam for model-agnosticism (P1).
 Exact `effort` and thinking parameter support per model is to be verified against the docs at build time.

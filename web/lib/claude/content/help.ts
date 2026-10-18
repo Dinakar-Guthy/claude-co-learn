@@ -31,6 +31,14 @@ function contextBlock(input: HelpContext): string {
   return parts.join("\n\n");
 }
 
+/** Drops a stray unbalanced closing brace the model occasionally leaves at the end (a JSON artifact). */
+export function tidy(text: string): string {
+  const t = text.trim();
+  const opens = (t.match(/\{/g) ?? []).length;
+  const closes = (t.match(/\}/g) ?? []).length;
+  return closes > opens ? t.replace(/\}+\s*$/, "").trimEnd() : t;
+}
+
 // ---- hints ----
 
 export const HINT_SYSTEM = `You give one short hint for a learning question that came up while a professional did real work with Claude.
@@ -50,7 +58,7 @@ export const generateHint: ContentApi["generateHint"] = async (input) => {
   const n = input.hints.length + 1;
   const user = [contextBlock({ ...input, attempted: false }), `Write hint ${n} of 2.`].join("\n\n");
   const out = await callStructured({ task: "generateHint", route: MODELS.hint, system: HINT_SYSTEM, user, schema: HintSchema, timeoutMs: 30_000 });
-  return { hint: out.hint.trim() };
+  return { hint: tidy(out.hint) };
 };
 
 // ---- teach me ----
@@ -72,7 +80,7 @@ const LessonSchema = z.object({ lesson: z.string().describe("Markdown lesson, ~1
 
 export const teachConcept: ContentApi["teachConcept"] = async (input) => {
   const out = await callStructured({ task: "teachConcept", route: MODELS.tutor, system: TEACH_SYSTEM, user: contextBlock({ ...input, attempted: false }), schema: LessonSchema, timeoutMs: 60_000 });
-  return { lesson: out.lesson.trim() };
+  return { lesson: tidy(out.lesson) };
 };
 
 // ---- ask Claude ----
@@ -105,5 +113,5 @@ export const askTutor: ContentApi["askTutor"] = async (input) => {
     : `Case: NOT ATTEMPTED. If they're asking for the answer, this is the ${input.declinedBefore ? "SECOND time (give the answer)" : "FIRST time (nudge them to try first)"}.`;
   const user = [contextBlock(input), situation, "The learner's new message:", asData("learner_message", truncate(input.message, 1000))].join("\n\n");
   const out = await callStructured({ task: "askTutor", route: MODELS.tutor, system: ASK_SYSTEM, user, schema: AskSchema, timeoutMs: 60_000 });
-  return { reply: out.reply.trim(), wantsAnswer: out.wants_answer };
+  return { reply: tidy(out.reply), wantsAnswer: out.wants_answer };
 };

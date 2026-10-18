@@ -7,3 +7,11 @@ describe("stripLeadIn", () => {
     expect(stripLeadIn("Try calibration")).toBe("Try calibration");
   });
 });
+
+describe("tidy (help replies)", () => {
+  it("drops a stray trailing brace but keeps balanced ones", async () => {
+    const { tidy } = await import("./help");
+    expect(tidy("ask again and I'll tell you.}")).toBe("ask again and I'll tell you.");
+    expect(tidy("Use {threshold} here")).toBe("Use {threshold} here");
+  });
+});
