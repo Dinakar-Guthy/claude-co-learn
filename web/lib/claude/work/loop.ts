@@ -5,6 +5,7 @@
  */
 import type Anthropic from "@anthropic-ai/sdk";
 import { MODELS } from "@/lib/claude/models";
+import { recordSkipped } from "@/lib/engine";
 import type { TurnEndReason } from "@/lib/contracts/stream";
 import type { ModelParams, WorkDeps } from "./deps";
 import { demoDataNote, renderContext } from "./context";
@@ -52,8 +53,10 @@ export async function runTurn(deps: WorkDeps, plan: TurnPlan, emit: Emit, signal
     emit({ type: "turn_end", reason: "error", detail: limits.code });
     return;
   }
+  // Fail-open: the limits machinery is degraded, so the turn proceeds with a heads-up (not persisted).
+  if (limits.warning) emit({ type: "notice", itemId: `notice-limits-${deps.now()}`, text: limits.warning });
 
-  const history = (await store.getApiMessages(session.id)) as unknown as ApiMessage[];
+  const history = await store.getApiMessages(session.id);
   const state = new TurnState(store, session, history);
   const ctx = new ToolContext(deps, state, user);
 
@@ -155,7 +158,7 @@ async function settlePendingMoment(ctx: ToolContext, plan: TurnPlan): Promise<st
   const { session } = ctx.state;
   const pendingId = session.engine.pendingMomentId;
   if (!pendingId) return null;
-  session.engine = { ...session.engine, pendingMomentId: undefined };
+  session.engine = recordSkipped(session.engine, pendingId);
   ctx.state.markDirty();
   if (plan.request.kind === "moment_response" && plan.request.momentId === pendingId) return null;
 

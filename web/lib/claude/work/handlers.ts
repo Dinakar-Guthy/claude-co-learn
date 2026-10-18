@@ -9,11 +9,11 @@ import {
   MilestoneInputSchema,
   ResolvePredictionInputSchema,
   type LearningMomentInput,
-  type Verdict,
 } from "@/lib/contracts/moment";
 import type { GateContext, GateDecision, MasteryMap } from "@/lib/contracts/engine";
 import type { AppEvent, MomentRecord, User } from "@/lib/contracts/session";
 import type { ChatStreamEvent, XpAward } from "@/lib/contracts/stream";
+import { scoreFor } from "@/lib/engine";
 import { toMomentView } from "@/lib/views";
 import type { WorkDeps } from "./deps";
 import { sessionEndsAt } from "./context";
@@ -129,8 +129,6 @@ async function learningMoment(ctx: ToolContext, block: Anthropic.Beta.BetaToolUs
   return { content: json({ status: "awaiting_learner", moment_id: moment.id }), pause: "awaiting_learner" };
 }
 
-const SCORE: Record<Verdict, number> = { correct: 1, partial: 0.5, incorrect: 0 };
-
 /** Adds XP to the stored user (re-read to avoid clobbering concurrent updates) and returns the award. */
 export async function awardXp(ctx: ToolContext, amount: number, reason: string): Promise<XpAward> {
   const { store, engine } = ctx.deps;
@@ -168,7 +166,7 @@ async function resolvePrediction(ctx: ToolContext, block: Anthropic.Beta.BetaToo
   await deps.store.putMoment({ ...moment, status: "answered", verdict: input.verdict, why: input.why, xp, answeredAt: now });
 
   const concept = moment.candidate.concept;
-  const score = SCORE[input.verdict];
+  const score = scoreFor(input.verdict, false);
   const gate = await ctx.gateContext(now);
   const mastery = deps.engine.updateMastery(gate.mastery[concept], score, moment.candidate.difficulty, state.session.intent.familiarity, now);
   gate.mastery[concept] = mastery;

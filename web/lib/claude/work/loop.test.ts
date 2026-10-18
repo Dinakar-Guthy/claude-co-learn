@@ -350,6 +350,18 @@ describe("runTurn", () => {
     expect(t.calls).toHaveLength(0);
   });
 
+  it("emits a notice and keeps going when limits fail open with a warning", async () => {
+    const t = await setup({ limits: { ok: true, warning: "Limits are degraded." } });
+    t.replies.push(fakeMessage([text("Hi")]));
+    const events = await t.send({ kind: "message", text: "go" });
+    expect(events.slice(0, 2)).toEqual([
+      { type: "status", status: "thinking" },
+      { type: "notice", itemId: `notice-limits-${t.session.createdAt + 60_000}`, text: "Limits are degraded." },
+    ]);
+    expect(lastEvent(events)).toEqual({ type: "turn_end", reason: "end_turn" });
+    expect((await t.store.getTranscript(t.session.id)).some((i) => i.kind === "notice")).toBe(false);
+  });
+
   it("preserves session fields patched concurrently by other routes", async () => {
     const t = await setup();
     t.replies.push({

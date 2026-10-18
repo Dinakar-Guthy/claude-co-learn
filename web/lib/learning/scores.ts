@@ -1,14 +1,9 @@
-/** Score and boss-hit values (design-plan §7.3, §7.4). */
+/** Boss-hit values and moment scoring (design-plan §7.3, §7.4). Outcome scores come from the engine. */
 import type { Verdict } from "@/lib/contracts/moment";
 import type { MomentRecord } from "@/lib/contracts/session";
+import { scoreFor } from "@/lib/engine";
 
-export const SCORE = { correct: 1, afterMC: 0.6, partial: 0.5, incorrect: 0 } as const;
 export const HIT = { correct: 1, afterMC: 0.5, partial: 0.5, incorrect: 0 } as const;
-
-export function scoreFor(verdict: Verdict, afterMC: boolean): number {
-  if (verdict === "correct") return afterMC ? SCORE.afterMC : SCORE.correct;
-  return verdict === "partial" ? SCORE.partial : SCORE.incorrect;
-}
 
 export function hitFor(verdict: Verdict, afterMC: boolean): number {
   if (verdict === "correct") return afterMC ? HIT.afterMC : HIT.correct;
