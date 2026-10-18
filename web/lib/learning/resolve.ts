@@ -1,10 +1,11 @@
 /** Resolving a graded moment: record the verdict, update mastery and engine state, award XP. */
 import type { XpEvent } from "@/lib/contracts/engine";
-import type { Verdict } from "@/lib/contracts/moment";
+import type { HelpLevel, Verdict } from "@/lib/contracts/moment";
 import type { MomentRecord, Session } from "@/lib/contracts/session";
 import type { XpAward } from "@/lib/contracts/stream";
 import type { LearningDeps } from "./deps";
 import { scoreFor } from "@/lib/engine";
+import { thetaOf } from "@/lib/engine/mastery";
 import { patchSession } from "./sessionStore";
 import { awardXp } from "./xp";
 
@@ -22,8 +23,10 @@ export interface Resolved {
   xp?: XpAward;
 }
 
-export const answerXpReason = (verdict: Verdict, afterMC: boolean) =>
-  verdict === "correct" ? (afterMC ? "Correct with options" : "Correct answer") : verdict === "partial" ? "Partly right" : "Answer";
+export const answerXpReason = (verdict: Verdict, afterMC: boolean, help?: HelpLevel) => {
+  const base = verdict === "correct" ? (afterMC ? "Correct with options" : "Correct answer") : verdict === "partial" ? "Partly right" : "Answer";
+  return help ? `${base} (with ${help === "hint" ? "a hint" : "help"})` : base;
+};
 
 export async function resolveMoment(
   deps: LearningDeps,
@@ -33,7 +36,7 @@ export async function resolveMoment(
   xp: { events: XpEvent[]; reason: string },
 ): Promise<Resolved> {
   const now = deps.now();
-  const score = scoreFor(res.verdict, res.afterMC);
+  const score = scoreFor(res.verdict, res.afterMC, record.help?.level);
   const { concept, difficulty } = record.candidate;
 
   const mastery = await deps.store.getMastery(session.anonId);
@@ -55,6 +58,7 @@ export async function resolveMoment(
     mcChoice: res.mcChoice ?? record.mcChoice,
     xp: award?.amount ?? 0,
     answeredAt: now,
+    masteryDelta: nextMastery.theta - thetaOf(mastery[concept], session.intent.familiarity),
   };
   await deps.store.putMoment(moment);
   await deps.store.logEvent({
@@ -62,7 +66,7 @@ export async function resolveMoment(
     anonId: session.anonId,
     sessionId: session.id,
     name: "moment_answered",
-    props: { momentId: record.id, type: record.type, concept, verdict: res.verdict, afterMC: res.afterMC, score, boss: !!record.bossId },
+    props: { momentId: record.id, type: record.type, concept, verdict: res.verdict, afterMC: res.afterMC, score, boss: !!record.bossId, help: record.help?.level ?? null },
   });
   return { moment, score, xp: award };
 }

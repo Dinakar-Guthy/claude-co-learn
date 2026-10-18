@@ -12,8 +12,10 @@ export function hitFor(verdict: Verdict, afterMC: boolean): number {
 
 /** Score of a resolved moment, derived from its stored verdict (MC use is implied by mcChoice). */
 export function momentScore(m: MomentRecord): number | null {
+  if (m.status === "revealed") return 0;
   if (m.status !== "answered" || !m.verdict) return null;
-  return scoreFor(m.verdict, m.mcChoice !== undefined);
+  return scoreFor(m.verdict, m.mcChoice !== undefined, m.help?.level);
 }
 
-export const isSettled = (m: MomentRecord) => m.status === "answered" || m.status === "skipped" || m.status === "reported";
+export const isSettled = (m: MomentRecord) =>
+  m.status === "answered" || m.status === "skipped" || m.status === "reported" || m.status === "revealed";

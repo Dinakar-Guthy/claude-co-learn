@@ -22,6 +22,11 @@ export function toMomentView(m: MomentRecord): MomentView {
     why: m.why,
     correctIndex: m.mcChoice !== undefined ? m.candidate.mc_fallback.correct_index : undefined,
     xp: m.xp,
+    help: m.help ? { hints: m.help.hints, lesson: m.help.lesson, thread: m.help.thread } : undefined,
+    helpLevel: m.help?.level,
+    // The ideal answer only once it's out: answered, skipped ("See the answer"), or revealed on request.
+    answerExplanation: m.status === "answered" || m.status === "skipped" || m.status === "revealed" ? m.candidate.ideal_answer : undefined,
+    explainAtWrapUp: m.explainAtWrapUp,
   };
 }
 

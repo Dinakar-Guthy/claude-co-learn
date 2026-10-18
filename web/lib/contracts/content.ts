@@ -30,10 +30,34 @@ export interface WrapUpDraft {
   suggestions: string[]; // 2-3 "next time you could..." ideas
 }
 
+/** What the help tools know about one question (the answer key stays server-side). */
+export interface HelpContext {
+  candidate: LearningMomentInput;
+  /** The learner has attempted (answered or picked an option) or the answer is already out: help may discuss it freely. */
+  attempted: boolean;
+  /** Their attempt so far, if any. */
+  answer?: string;
+  hints: string[];
+  lesson?: string;
+  thread: { role: "learner" | "claude"; text: string }[];
+  /** Short summary of the work so far (real numbers), so help is grounded in their task. */
+  workContext: string;
+}
+
 export interface ContentApi {
   /** retryAvailable: an incorrect answer gets a multiple-choice retry next, so the "why" must not give the answer away. */
   gradeAnswer(input: { candidate: LearningMomentInput; answer: string; retryAvailable?: boolean }): Promise<GradeResult>;
   verifyMoment(input: { candidate: LearningMomentInput }): Promise<VerifyResult>;
+  /** One more hint (never the answer). */
+  generateHint(input: HelpContext): Promise<{ hint: string }>;
+  /** "Teach me": a short lesson with a similar worked example, then the learner answers the original question. */
+  teachConcept(input: HelpContext): Promise<{ lesson: string }>;
+  /**
+   * "Ask Claude" about the question. wantsAnswer: the learner asked to be told the answer. Before an attempt the
+   * reply nudges them to try first unless `declinedBefore`, in which case it gives the answer (the app then
+   * closes the question as revealed).
+   */
+  askTutor(input: HelpContext & { message: string; declinedBefore: boolean }): Promise<{ reply: string; wantsAnswer: boolean }>;
   generateSketch(input: { intent: Intent }): Promise<SessionSketch>;
   generateBoss(input: {
     intent: Intent;

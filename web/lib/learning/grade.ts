@@ -13,6 +13,7 @@ import { HttpError, type BackgroundTask, type HandlerResult, type LearningDeps }
 import { answerXpReason, resolveMoment, type Resolution } from "./resolve";
 import { hitFor, isSettled } from "./scores";
 import { loadOwnedSession, patchSession } from "./sessionStore";
+import { revokeXp } from "./xp";
 
 const ids = { sessionId: z.string().min(1).max(100), momentId: z.string().min(1).max(100) };
 export const GradeRequestSchema = z.union([
@@ -107,14 +108,15 @@ async function showOptions(ctx: Ctx): Promise<HandlerResult<GradeResponse>> {
 async function finalize(ctx: Ctx, res: Resolution): Promise<HandlerResult<GradeResponse>> {
   const { deps, session, record } = ctx;
 
+  const help = record.help?.level;
   if (!record.bossId) {
-    const events: XpEvent[] = [{ kind: "answer", verdict: res.verdict, afterMC: res.afterMC }];
-    const resolved = await resolveMoment(deps, session, record, res, { events, reason: answerXpReason(res.verdict, res.afterMC) });
+    const events: XpEvent[] = [{ kind: "answer", verdict: res.verdict, afterMC: res.afterMC, help }];
+    const resolved = await resolveMoment(deps, session, record, res, { events, reason: answerXpReason(res.verdict, res.afterMC, help) });
     return done({ moment: toMomentView(resolved.moment), verdict: res.verdict, offerMC: false, xp: resolved.xp, continueWith: continueWork(ctx) });
   }
 
   const hit = hitFor(res.verdict, res.afterMC);
-  const events: XpEvent[] = hit > 0 ? [{ kind: "boss_hit", partial: hit < 1 }] : [];
+  const events: XpEvent[] = hit > 0 ? [{ kind: "boss_hit", partial: hit < 1, help }] : [];
   const resolved = await resolveMoment(deps, session, record, res, { events, reason: hit >= 1 ? "Boss hit" : "Glancing boss hit" });
   const advance = await advanceBoss(deps, session, record.bossId, hit);
   return done(
@@ -141,6 +143,11 @@ async function settleWithoutGrade(ctx: Ctx, action: "skip" | "defer" | "report")
   const effective = record.bossId && action === "defer" ? "skip" : action;
 
   const next: MomentRecord = { ...record, status: STATUS[effective] };
+  // Reporting a question that already earned credit takes the credit back (P9: flagged content doesn't count).
+  if (effective === "report" && (record.status === "answered" || record.status === "revealed")) {
+    await revokeCredit(deps, session, record);
+    next.xp = 0;
+  }
   await deps.store.putMoment(next);
   if (session.engine.pendingMomentId === record.id) {
     await patchSession(deps, session.id, (latest) => ({ engine: recordSkipped(latest.engine, record.id) }));
@@ -162,4 +169,17 @@ async function settleWithoutGrade(ctx: Ctx, action: "skip" | "defer" | "report")
   }
   // Reporting a moment the work already moved past shouldn't trigger another continuation.
   return done({ moment: toMomentView(next), offerMC: false, continueWith: wasSettled ? undefined : continueWork(ctx) });
+}
+
+/** Undoes a graded moment's XP, mastery change, and recorded outcome (used when it's reported afterwards). */
+async function revokeCredit(deps: LearningDeps, session: Session, record: MomentRecord): Promise<void> {
+  if (record.xp) await revokeXp(deps, session.anonId, record.xp);
+  const { concept } = record.candidate;
+  if (record.masteryDelta !== undefined) {
+    const current = (await deps.store.getMastery(session.anonId))[concept];
+    if (current) await deps.store.putMastery(session.anonId, concept, { ...current, theta: current.theta - record.masteryDelta, n: Math.max(0, current.n - 1) });
+  }
+  await patchSession(deps, session.id, (latest) => ({
+    engine: { ...latest.engine, recentOutcomes: latest.engine.recentOutcomes.filter((o) => o.momentId !== record.id) },
+  }));
 }

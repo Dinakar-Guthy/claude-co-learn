@@ -1,4 +1,4 @@
-/** XP per event (design-plan §12). XP is only ever added, never subtracted. */
+/** XP per event (design-plan §12). XP is only added, except when a graded question is reported (see revokeXp). */
 import type { BossOutcome, XpEvent } from "@/lib/contracts/engine";
 import type { Verdict } from "@/lib/contracts/moment";
 

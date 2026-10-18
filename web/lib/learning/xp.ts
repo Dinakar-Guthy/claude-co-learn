@@ -50,3 +50,15 @@ export async function awardXp(
   await deps.store.putUser(next);
   return award;
 }
+
+/**
+ * Takes back XP for a question the learner reported after it was graded (P9: flagged content doesn't count).
+ * Never drops the learner below the start of their current level, so levels and unlocks stay (P2: never punish).
+ */
+export async function revokeXp(deps: LearningDeps, anonId: string, amount: number): Promise<void> {
+  if (amount <= 0) return;
+  const user = await loadUser(deps, anonId);
+  const floor = deps.engine.levelFor(user.xp).levelStartXp;
+  const xp = Math.max(floor, user.xp - amount);
+  if (xp !== user.xp) await deps.store.putUser({ ...user, xp });
+}

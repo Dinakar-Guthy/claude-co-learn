@@ -38,6 +38,13 @@ export function mockContent(overrides: Partial<ContentApi> = {}): ContentApi {
   const base: ContentApi = {
     gradeAnswer: vi.fn(async () => ({ verdict: "correct" as const, why: "Nice.", missingPoints: [] })),
     verifyMoment: vi.fn(async () => ({ ok: true })),
+    generateHint: vi.fn(async ({ hints }: Parameters<ContentApi["generateHint"]>[0]) => ({ hint: `Hint ${hints.length + 1}: think about the rare class.` })),
+    teachConcept: vi.fn(async () => ({ lesson: "Here's the idea, with a worked example." })),
+    askTutor: vi.fn(async ({ message, attempted, declinedBefore }: Parameters<ContentApi["askTutor"]>[0]) => {
+      const wantsAnswer = /answer|tell me/i.test(message);
+      const reply = wantsAnswer && !attempted ? (declinedBefore ? "The answer is recall." : "Try a guess first!") : "Recall is the share of churners you catch.";
+      return { reply, wantsAnswer };
+    }),
     generateSketch: vi.fn(async () => ({ title: "Churn model", goalSummary: "Train a churn model", novice: true, milestones: ["Explore"], conceptRadar: [] })),
     generateBoss: vi.fn(async () => ({
       name: "The Overfit Bug",
