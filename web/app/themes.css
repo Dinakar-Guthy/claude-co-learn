@@ -1,5 +1,110 @@
 /*
- * Unlockable themes (Track C). Each theme overrides the semantic tokens from globals.css:
- *   [data-theme="sunset"] { --background: ...; ... }
- * Palettes: reference/research/04-ui-themes.md. Registry: lib/themes.ts.
+ * Unlockable themes (Track C). Each block overrides the semantic tokens from globals.css.
+ * Palettes: reference/research/04-ui-themes.md. Registry + unlock levels: lib/themes.ts.
+ * Selectors use :root[data-theme] because globals.css imports this file before its own :root block.
+ * Contrast (WCAG AA, 4.5:1) checked for: primary-foreground on primary; text, muted, primary,
+ * success and gentle-error on background / surface / surface-2 / primary-soft.
+ * (Frost's colored text is AA on surface; components keep colored text on bg-surface.)
  */
+
+:root[data-theme="sunset"] {
+  --background: #fff4ec;
+  --surface: #ffffff;
+  --surface-2: #fbe7da;
+  --border: #f1d3c2;
+  --primary: #a8432c;
+  --primary-foreground: #ffffff;
+  --primary-soft: #fde4d6;
+  --accent: #f4a261;
+  --text: #3a2520;
+  --muted: #7a5547;
+  --success: #2b7553;
+  --gentle-error: #a84a3c;
+  --shadow-soft: 0 1px 2px rgb(58 37 32 / 0.04), 0 8px 24px rgb(58 37 32 / 0.07);
+}
+
+:root[data-theme="forest"] {
+  --background: #f1f5ee;
+  --surface: #fbfcf9;
+  --surface-2: #e3ebdf;
+  --border: #cfdacb;
+  --primary: #3f6b4a;
+  --primary-foreground: #ffffff;
+  --primary-soft: #dfeadb;
+  --accent: #a3c49a;
+  --text: #1f2b22;
+  --muted: #55645a;
+  --success: #2d6a45;
+  --gentle-error: #a14f45;
+  --shadow-soft: 0 1px 2px rgb(31 43 34 / 0.04), 0 8px 24px rgb(31 43 34 / 0.06);
+}
+
+:root[data-theme="night"] {
+  color-scheme: dark;
+  --background: #141b2d;
+  --surface: #1e2740;
+  --surface-2: #28334f;
+  --border: #34405f;
+  --primary: #8fb8ff;
+  --primary-foreground: #141b2d;
+  --primary-soft: #26365a;
+  --accent: #f2d27a;
+  --text: #e6ecf5; /* 14.4:1 on background */
+  --muted: #a9b5c8; /* 8.3:1 on background, 5.8:1 on primary-soft */
+  --success: #7dd3a6;
+  --gentle-error: #f2a69d;
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.2), 0 8px 24px rgb(0 0 0 / 0.25);
+}
+
+:root[data-theme="sakura"] {
+  --background: #fdf3f5;
+  --surface: #ffffff;
+  --surface-2: #f7e5eb;
+  --border: #eed3dc;
+  --primary: #a8445f;
+  --primary-foreground: #ffffff;
+  --primary-soft: #fbe3ea;
+  --accent: #f5b8c8;
+  --text: #3a2230;
+  --muted: #77566a;
+  --success: #2b7553;
+  --gentle-error: #a3473f;
+  --shadow-soft: 0 1px 2px rgb(58 34 48 / 0.04), 0 8px 24px rgb(58 34 48 / 0.06);
+}
+
+:root[data-theme="parchment"] {
+  --background: #f5ecd7;
+  --surface: #fbf5e6;
+  --surface-2: #ece0c4;
+  --border: #dccba6;
+  --primary: #7a4e2d;
+  --primary-foreground: #ffffff;
+  --primary-soft: #efe1c2;
+  --accent: #c9a227;
+  --text: #3b2a1a;
+  --muted: #65503a;
+  --success: #386436;
+  --gentle-error: #984a35;
+  --shadow-soft: 0 1px 2px rgb(59 42 26 / 0.05), 0 8px 24px rgb(59 42 26 / 0.08);
+}
+
+/* Parchment gets serif headings for a storybook feel. */
+:root[data-theme="parchment"] :is(h1, h2, h3) {
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", serif;
+}
+
+:root[data-theme="matcha"] {
+  --background: #f3f5ec;
+  --surface: #ffffff;
+  --surface-2: #e6ebd8;
+  --border: #d3dbc0;
+  --primary: #55703b;
+  --primary-foreground: #ffffff;
+  --primary-soft: #e4ecd0;
+  --accent: #c5d6a0;
+  --text: #262d1e;
+  --muted: #59634d;
+  --success: #2d6a46;
+  --gentle-error: #a14f45;
+  --shadow-soft: 0 1px 2px rgb(38 45 30 / 0.04), 0 8px 24px rgb(38 45 30 / 0.06);
+}
