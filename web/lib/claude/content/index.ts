@@ -11,6 +11,7 @@ import { generateStoryBible } from "./storyBible";
 import { generateChapter } from "./chapter";
 import { generateWrapUp } from "./wrapup";
 import { askTutor, generateHint, teachConcept } from "./help";
+import { generatePrimer } from "./primer";
 
 export const content: ContentApi = {
   gradeAnswer,
@@ -19,6 +20,7 @@ export const content: ContentApi = {
   teachConcept,
   askTutor,
   generateSketch,
+  generatePrimer,
   generateBoss,
   generateStoryBible: (input) => generateStoryBible(input),
   generateChapter,

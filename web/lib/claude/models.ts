@@ -30,6 +30,8 @@ export const MODELS = {
   /** Learner-requested help: quick hints on Haiku; "Teach me" and "Ask Claude" on Sonnet (better teaching, better at not leaking). */
   hint: { model: "claude-haiku-5-5", effort: "low", maxTokens: 2000 },
   tutor: { model: "claude-sonnet-5-5", effort: "low", maxTokens: 4000 },
+  /** Novice primer, generated in parallel with the sketch; must be quick so it's ready during the first turn. */
+  primer: { model: "claude-sonnet-5-5", effort: "low", maxTokens: 4000 },
 } as const satisfies Record<string, ModelRoute>;
 
 /** $ per million tokens (input, output, cache read) — for spend caps. Source: claude-api skill cache 2026-10-06. */

@@ -50,15 +50,23 @@ export async function createSession(deps: LearningDeps, anonId: string, intent: 
 export async function enrichSession(deps: LearningDeps, sessionId: string): Promise<void> {
   const session = await deps.store.getSession(sessionId);
   if (!session) return;
-  const [sketch, bible] = await Promise.allSettled([
+  // The primer is the fastest call and is meant to appear during the first work turn, so it saves on its own.
+  const primerTask =
+    session.intent.familiarity === "new" && !session.primer
+      ? deps.content.generatePrimer({ intent: session.intent }).then((draft) =>
+          patchSession(deps, sessionId, (latest) => ({ primer: latest.primer ?? { ...draft, createdAt: deps.now() } })),
+        )
+      : Promise.resolve(null);
+  const [sketch, bible, primer] = await Promise.allSettled([
     deps.content.generateSketch({ intent: session.intent }),
     session.story.bible ? Promise.resolve(session.story.bible) : deps.content.generateStoryBible({ intent: session.intent }),
+    primerTask,
   ]);
   await patchSession(deps, sessionId, (latest) => ({
     ...(sketch.status === "fulfilled" ? { sketch: sketch.value, title: sketch.value.title || latest.title } : {}),
     story: { ...latest.story, bible: latest.story.bible ?? (bible.status === "fulfilled" ? bible.value : undefined) },
   }));
-  for (const r of [sketch, bible]) {
+  for (const r of [sketch, bible, primer]) {
     if (r.status === "rejected") {
       await deps.store.logEvent({ at: deps.now(), anonId: session.anonId, sessionId, name: "error", props: { where: "enrichSession", message: String(r.reason).slice(0, 200) } });
     }

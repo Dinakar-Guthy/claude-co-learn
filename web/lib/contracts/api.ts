@@ -44,7 +44,20 @@ export interface SessionView {
   chapters: Record<string, StoryChapter>;
   /** A boss is due: show the "Take it on / Keep working" offer. */
   bossOfferPending?: boolean;
+  primer?: PrimerView;
 }
+
+/** Client view of the novice primer: the check's answer key only after it's answered. */
+export interface PrimerView {
+  ideas: string[];
+  check: { question: string; options: string[]; answered?: { choice: number; correct: boolean; correctIndex: number; why: string } };
+  dismissed: boolean;
+}
+
+// GET /api/session/[id]/primer → { primer: PrimerView | null } (null while generating, or not a novice session)
+// POST /api/session/[id]/primer
+export type PrimerRequest = { action: "dismiss" } | { action: "answer"; choice: number };
+export interface PrimerResponse { primer: PrimerView; xp?: XpAward }
 
 // GET /api/sessions → SessionSummary[]
 

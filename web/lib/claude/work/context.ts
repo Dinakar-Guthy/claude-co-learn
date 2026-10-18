@@ -29,7 +29,7 @@ export function reviewLine(concepts: string[]): string {
 }
 
 export interface ContextInput {
-  session: Pick<Session, "createdAt" | "intent" | "sketch">;
+  session: Pick<Session, "createdAt" | "intent" | "sketch" | "primer">;
   summary: EngineSummary;
   now: number;
   /** Extra one-off notes for this turn (e.g. how to get the demo dataset). */
@@ -63,6 +63,7 @@ export function renderContext({ session, summary, now, notes = [] }: ContextInpu
       );
     }
   }
+  if (session.primer) lines.push(`- ${primerLine(session.primer.ideas)}`);
   for (const note of notes) lines.push(`- ${note}`);
   return lines.join("\n");
 }
@@ -71,4 +72,10 @@ export function demoDataNote(hasDemoFile: boolean): string {
   return hasDemoFile
     ? "Demo dataset: a customer-churn CSV has been uploaded to your sandbox with this message. Find it (e.g. with ls/find) and load it from the file."
     : "Demo dataset: no file is attached. First generate a realistic synthetic customer-churn dataset in the sandbox with a fixed seed and save it as churn.csv: ~5,000 rows, ~15% churn, columns customer_id, tenure_months, contract_type, monthly_charges, total_charges (a few missing), support_tickets_90d, payment_method, has_premium_support, last_login_days_ago, plan_tier, cancellation_request_date (mostly filled for churners: a planted leak), churned. Don't point out the leak or the missing values yourself; they're for the learner to discover. Then continue with the task.";
+}
+
+/** The novice primer's bold terms, so Claude builds on what the learner just read instead of re-explaining it. */
+export function primerLine(ideas: string[]): string {
+  const terms = ideas.map((i) => /\*\*(.+?)\*\*/.exec(i)?.[1]?.trim()).filter((t): t is string => Boolean(t));
+  return `The learner was shown a 60-second primer at the start${terms.length ? ` covering: ${terms.join(", ")}` : ""}. Build on it; don't re-explain those basics unless asked.`;
 }

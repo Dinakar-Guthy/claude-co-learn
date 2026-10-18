@@ -40,6 +40,15 @@ export interface StoryBible {
   seeds: { narrator: string; twist: string };
 }
 
+/** A 60-second primer: a few key ideas plus one warm-up check (decision log 2026-10-18). Server-side record. */
+export interface Primer {
+  ideas: string[]; // 3-4 short markdown lines
+  check: { question: string; options: string[]; correctIndex: number; why: string[] };
+  createdAt: number;
+  dismissed?: boolean;
+  answer?: { choice: number; correct: boolean };
+}
+
 export interface StoryChapter {
   id: string;
   trigger: string; // e.g. "boss:<id>" | "wrapup"
@@ -68,6 +77,8 @@ export interface Session {
   engine: EngineState;
   rollingSummary?: string;
   story: StoryState;
+  /** Novice primer ("New to this" only), generated in the background with the sketch. */
+  primer?: Primer;
 }
 
 /** Full server-side record of a moment (contains answer keys; never sent to the client as-is). */
@@ -167,6 +178,8 @@ export interface AppEvent {
     | "boss_declined"
     | "boss_skipped"
     | "learned_feedback"
+    | "primer_answered"
+    | "primer_dismissed"
     | "error";
   props?: Record<string, string | number | boolean | null>;
 }

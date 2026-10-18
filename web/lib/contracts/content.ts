@@ -3,7 +3,7 @@
  * Each function makes one structured Claude call (messages.parse + zodOutputFormat).
  */
 import type { LearningMomentInput, Verdict } from "./moment";
-import type { Intent, SessionSketch, StoryBible, StoryChapter } from "./session";
+import type { Intent, Primer, SessionSketch, StoryBible, StoryChapter } from "./session";
 import type { BossOutcome, Familiarity } from "./engine";
 
 export interface GradeResult {
@@ -60,6 +60,8 @@ export interface ContentApi {
    */
   askTutor(input: HelpContext & { message: string; declinedBefore: boolean }): Promise<{ reply: string; wantsAnswer: boolean }>;
   generateSketch(input: { intent: Intent }): Promise<SessionSketch>;
+  /** Novice primer: 3-4 key ideas for this goal plus one easy multiple-choice warm-up. */
+  generatePrimer(input: { intent: Intent }): Promise<Omit<Primer, "createdAt" | "dismissed" | "answer">>;
   generateBoss(input: {
     intent: Intent;
     familiarity: Familiarity;

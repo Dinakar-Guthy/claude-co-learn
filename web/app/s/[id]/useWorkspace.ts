@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChatRequest, GradeRequest, GradeResponse, HelpRequest, HelpResponse, SessionView, SkipBossResponse, StartBossResponse, UserView, WrapUpResponse } from "@/lib/contracts/api";
+import type { ChatRequest, GradeRequest, GradeResponse, HelpRequest, HelpResponse, PrimerResponse, PrimerView, SessionView, SkipBossResponse, StartBossResponse, UserView, WrapUpResponse } from "@/lib/contracts/api";
 import type { LevelReward, UserSettings } from "@/lib/contracts/engine";
 import type { StoryChapter, SessionSummary } from "@/lib/contracts/session";
 import type { ChatStreamEvent, TurnEndReason, XpAward } from "@/lib/contracts/stream";
@@ -29,6 +29,9 @@ export interface LevelUpState {
 
 const STORY_POLL_MS = 1500;
 const STORY_POLL_MAX_MS = 25_000;
+const PRIMER_POLL_MS = 2500;
+/** "If it isn't ready in time, it's skipped." */
+const PRIMER_POLL_MAX_MS = 45_000;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -131,6 +134,53 @@ export function useWorkspace(sessionId: string) {
       }
     },
     [refreshUser],
+  );
+
+  // ---- novice primer: poll briefly while the first turn runs (it's generated in the background) ----
+  const wantsPrimer = view?.intent.familiarity === "new" && !view.primer && view.transcript.length < 8;
+  useEffect(() => {
+    if (!wantsPrimer) return;
+    let stopped = false;
+    const started = Date.now();
+    const tick = async () => {
+      while (!stopped && Date.now() - started < PRIMER_POLL_MAX_MS) {
+        await sleep(PRIMER_POLL_MS);
+        try {
+          const { primer } = await apiGet<{ primer: PrimerView | null }>(`/api/session/${encodeURIComponent(sessionId)}/primer`);
+          if (primer && !stopped) {
+            setView((v) => (v ? { ...v, primer } : v));
+            return;
+          }
+        } catch {
+          /* keep polling */
+        }
+      }
+    };
+    void tick();
+    return () => {
+      stopped = true;
+    };
+  }, [wantsPrimer, sessionId]);
+
+  const [primerBusy, setPrimerBusy] = useState(false);
+  const [primerXp, setPrimerXp] = useState<number | undefined>();
+  const primerAction = useCallback(
+    async (body: { action: "dismiss" } | { action: "answer"; choice: number }) => {
+      setPrimerBusy(true);
+      try {
+        const res = await apiPost<PrimerResponse>(`/api/session/${encodeURIComponent(sessionId)}/primer`, body);
+        setView((v) => (v ? { ...v, primer: res.primer } : v));
+        if (res.xp) {
+          setPrimerXp(res.xp.amount);
+          applyXp(res.xp);
+        }
+      } catch (err) {
+        setNotice(errorMessage(err));
+      } finally {
+        setPrimerBusy(false);
+      }
+    },
+    [applyXp, sessionId],
   );
 
   // ---- boss ----
@@ -402,6 +452,10 @@ export function useWorkspace(sessionId: string) {
     storyWaiting,
     wrap,
     sessions,
+    primerBusy,
+    primerXp,
+    answerPrimer: (choice: number) => void primerAction({ action: "answer", choice }),
+    dismissPrimer: () => void primerAction({ action: "dismiss" }),
     send,
     sendMessage,
     act,

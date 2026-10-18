@@ -45,6 +45,10 @@ export function mockContent(overrides: Partial<ContentApi> = {}): ContentApi {
       const reply = wantsAnswer && !attempted ? (declinedBefore ? "The answer is recall." : "Try a guess first!") : "Recall is the share of churners you catch.";
       return { reply, wantsAnswer };
     }),
+    generatePrimer: vi.fn(async () => ({
+      ideas: ["**Model**: learns patterns from past customers.", "**Test set**: data held back to check the model honestly."],
+      check: { question: "Why hold back a test set?", options: ["To check on unseen data", "To train faster", "To save memory"], correctIndex: 0, why: ["Right.", "No.", "No."] },
+    })),
     generateSketch: vi.fn(async () => ({ title: "Churn model", goalSummary: "Train a churn model", novice: true, milestones: ["Explore"], conceptRadar: [] })),
     generateBoss: vi.fn(async () => ({
       name: "The Overfit Bug",

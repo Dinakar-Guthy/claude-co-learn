@@ -14,6 +14,7 @@ import { MomentCard, momentHandlers } from "@/components/MomentCard";
 import { PredictionReveal } from "@/components/PredictionReveal";
 import { BossCard } from "@/components/BossCard";
 import { BossOffer } from "@/components/BossOffer";
+import { PrimerCard } from "@/components/PrimerCard";
 import { AsciiBoss } from "@/components/AsciiBoss";
 import { StoryChapterCard } from "@/components/StoryChapterCard";
 import { LevelUpToast } from "@/components/LevelUpToast";
@@ -164,6 +165,9 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
       )}
 
       <main className="mx-auto w-full max-w-[720px] flex-1 space-y-5 px-4 pt-6 pb-10">
+        {view.primer && !view.primer.dismissed && (
+          <PrimerCard primer={view.primer} xp={ws.primerXp} busy={ws.primerBusy} onAnswer={ws.answerPrimer} onDismiss={ws.dismissPrimer} />
+        )}
         {view.transcript.map((item) => (
           <div key={item.id} id={anchorId(item.id)} className="scroll-mt-20 rounded-card transition-shadow duration-700">
             <TranscriptEntry item={item} ws={ws} view={view} revealed={revealed} hideWrapChapter={Boolean(ws.wrap.data)} />

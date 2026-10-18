@@ -95,7 +95,8 @@ export type XpEvent =
   | { kind: "prediction"; verdict: Verdict; help?: HelpLevel }
   | { kind: "boss_hit"; partial: boolean; help?: HelpLevel }
   | { kind: "boss_outcome"; outcome: BossOutcome }
-  | { kind: "session_complete" };
+  | { kind: "session_complete" }
+  | { kind: "primer_check"; correct: boolean };
 
 export interface LevelInfo {
   level: number;

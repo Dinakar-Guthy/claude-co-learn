@@ -14,6 +14,8 @@ export const XP = {
   // A retreat still pays: never punish. A skipped boss was the learner's choice not to play, so it pays nothing.
   bossOutcome: { flawless: 75, victory: 50, retreat: 20, skipped: 0 } satisfies Record<BossOutcome, number>,
   sessionComplete: 30,
+  /** The novice primer's warm-up question: a small reward, no mastery update (it's a warm-up, not practice). */
+  primerCheck: 5,
 } as const;
 
 export function xpFor(event: XpEvent): number {
@@ -36,5 +38,7 @@ export function xpFor(event: XpEvent): number {
       return XP.bossOutcome[event.outcome];
     case "session_complete":
       return XP.sessionComplete;
+    case "primer_check":
+      return event.correct ? XP.primerCheck : 0;
   }
 }

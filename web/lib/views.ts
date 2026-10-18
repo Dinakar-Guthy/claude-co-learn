@@ -1,7 +1,7 @@
 /** Server → client view mappers (shared). Never leak answer keys to the browser. */
 import type { MomentView } from "@/lib/contracts/moment";
-import type { BossState, MomentRecord, Session, TranscriptItem, User } from "@/lib/contracts/session";
-import type { BossView, SessionView, UserView } from "@/lib/contracts/api";
+import type { BossState, MomentRecord, Primer, Session, TranscriptItem, User } from "@/lib/contracts/session";
+import type { BossView, PrimerView, SessionView, UserView } from "@/lib/contracts/api";
 import { engine } from "@/lib/engine";
 
 export function toMomentView(m: MomentRecord): MomentView {
@@ -56,5 +56,20 @@ export function toSessionView(s: Session, transcript: TranscriptItem[], moments:
     bosses: Object.fromEntries(bosses.map((b) => [b.id, toBossView(b, moments)])),
     chapters: Object.fromEntries(s.story.chapters.map((c) => [c.id, c])),
     bossOfferPending: Boolean(s.engine.bossOfferPending) && bosses.every((b) => b.outcome),
+    primer: s.primer ? toPrimerView(s.primer) : undefined,
+  };
+}
+
+/** The primer's check reveals its answer key only once it's been answered. */
+export function toPrimerView(p: Primer): PrimerView {
+  const { question, options, correctIndex, why } = p.check;
+  return {
+    ideas: p.ideas,
+    check: {
+      question,
+      options,
+      answered: p.answer ? { choice: p.answer.choice, correct: p.answer.correct, correctIndex, why: why[p.answer.choice] ?? "" } : undefined,
+    },
+    dismissed: Boolean(p.dismissed),
   };
 }
