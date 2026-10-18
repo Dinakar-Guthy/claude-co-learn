@@ -178,6 +178,12 @@ Three full demo runs and one non-ML run (a SQL query), each in a fresh session:
   - Double punctuation in the screen-reader announcement.
 
 ### Needs Dinakar
+0. **Rotate `SITE_PASSWORD` (security, do this first).**
+   - **Problem:** the current reviewer password equals your first name / macOS username. It appears in every file path (`/Users/…`), your email, and git config, so it's easy to guess.
+   - It's also spelled out as the password in an already-committed transcript (`transcripts/2026-10-17-97516b94.md`, commit `cfdd234`; the repo is private).
+   - **Fix:** pick a non-guessable phrase and set it in Vercel (Production + Preview) and `web/.env.local`, then redeploy.
+   - **Transcripts:** I ran `scripts/collect_transcripts.py` but left the new renderings **uncommitted** for now. Commit them after rotating.
+   - **Note:** the collector's redaction can't help here, because the value is your name.
 1. **Review the decisions marked "pending Dinakar's review"** in `docs/decision-log.md` (8 entries, 2026-10-18):
    - auto-starting the goal
    - chat locked during a boss
