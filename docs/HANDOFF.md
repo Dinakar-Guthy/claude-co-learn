@@ -16,7 +16,7 @@ Last updated: 2026-10-18 afternoon. **Start with §0 Current status** (the most 
   - **Compaction status line:** while a long history is summarized (several seconds), the status reads "Tidying up my notes so far… (a few extra seconds)". Verified locally with a lowered threshold (~13s summary). Background compaction and a recap card are in `docs/backlog.md`.
   - **Repo:** decided to make it public at submission time; history secret scan is clean (2026-10-18).
   - **Repo** renamed.
-- **Decisions:** all reviewed with Dinakar on 2026-10-18 except the "primer details as built" entry (pending). See `docs/decision-log.md`.
+- **Decisions:** all reviewed with Dinakar on 2026-10-18 (the "primer details as built" entry was accepted later that day). See `docs/decision-log.md`.
 - **Remaining work for Dinakar:** the checklist in `docs/plan.md` → "Remaining for Dinakar":
   1. manual testing and iteration
   2. the written rationale (run `/rationale-coach`)
