@@ -3,7 +3,8 @@
  *
  * History is append-only (preserved thinking): messages are only ever appended, never rewritten, with one
  * exception: server tool calls that never got a result are dropped (see `sanitizeHistory`), because the API
- * rejects them. New messages are "pending" until a model response for them succeeds ("committed"), so a failed first
+ * rejects them. (Between turns, compact.ts may swap the oldest messages for a server-written compaction block; the
+ * kept messages stay byte-identical.) New messages are "pending" until a model response for them succeeds ("committed"), so a failed first
  * request never leaves a dangling user + system pair in stored history.
  */
 import type Anthropic from "@anthropic-ai/sdk";

@@ -22,6 +22,10 @@ export const MODELS = {
   /** Fast structured calls. Switch grade to Sonnet if testing shows mis-grades. */
   grade: { model: "claude-haiku-5-5", effort: "low", maxTokens: 4000 },
   verify: { model: "claude-haiku-5-5", effort: "low", maxTokens: 4000 },
+  /**
+   * Currently unused: work-loop history compaction (lib/claude/work/compact.ts) runs on `work`, because the API's
+   * on-demand compaction must run on the conversation's model to keep the kept turns' thinking valid.
+   */
   compact: { model: "claude-haiku-5-5", effort: "low", maxTokens: 4000 },
 } as const satisfies Record<string, ModelRoute>;
 
