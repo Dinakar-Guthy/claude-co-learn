@@ -25,6 +25,10 @@ Without Upstash env vars the app falls back to an in-memory store (`lib/store/me
 | `lib/claude/content/`, `app/api/{moment,boss,story,wrapup,session}/`, `scripts/` | Track D | Content generation (`ContentApi`) + routes + demo dataset |
 | `lib/store/redis.ts`, `lib/store/index.ts`, `lib/platform/`, `app/api/{user,sessions,files}/` | Track E | Persistence, rate limits, spend caps, platform routes |
 
+**P0 stand-ins:** `lib/engine/index.ts` (Track B replaces), `lib/claude/content/index.ts` (Track D replaces),
+`lib/platform/limits.ts` (Track E replaces) are minimal working stand-ins so tracks can import real paths.
+`lib/views.ts` is shared (append new mappers; don't change existing signatures).
+
 ## Conventions
 - Server-only code never runs in the browser; the API key is read only via `lib/claude/client.ts`.
 - The browser only sees `MomentView` (never answer keys, rubrics, or `correct_index`).

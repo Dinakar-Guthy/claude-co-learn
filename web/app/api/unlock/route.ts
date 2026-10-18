@@ -1,18 +1,8 @@
 import { ensureAnonId } from "@/lib/platform/anon";
 import { getStore } from "@/lib/store";
 import { newUser } from "@/lib/store/defaults";
-import { UNLOCK_PHRASE, type UnlockRequest, type UnlockResponse, type UserView } from "@/lib/contracts/api";
-import type { User } from "@/lib/contracts/session";
-
-// P2: replace with engine.levelFor once lib/engine lands.
-function toUserView(user: User): UserView {
-  return {
-    xp: user.xp,
-    level: { level: user.level, xp: user.xp, levelStartXp: 0, nextLevelXp: 100 },
-    unlocks: user.unlocks,
-    settings: user.settings,
-  };
-}
+import { UNLOCK_PHRASE, type UnlockRequest, type UnlockResponse } from "@/lib/contracts/api";
+import { toUserView } from "@/lib/views";
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as UnlockRequest | null;
