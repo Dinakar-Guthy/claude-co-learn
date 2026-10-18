@@ -18,3 +18,7 @@ Running record of meaningful decisions and the reasoning behind them. Feeds the 
 | 2026-10-17 | Story rewards: surprise genre, lightly themed to the work | User picks genre | Surprise is part of the reward; light theming connects it to the work |
 | 2026-10-17 | Use the provided API key; generous per-browser/IP daily spend cap; open link with rate limit (no passcode) | Passcode; BYO key | Frictionless for reviewers; caps only exist to prevent abuse |
 | 2026-10-17 | Accepted principle revisions P2, P5, P8, P9; P3/P4 and P7 pending clarification | — | See `docs/design-principles.md` |
+| 2026-10-17 | Claude effort: **high** for planning, **medium** for per-turn execution | Medium/low (cheaper, faster) | Planning quality matters most and happens rarely; per-turn calls need a balance of quality and latency |
+| 2026-10-17 | Work-first with injected learning moments (accepted) | Teach first, collaborate at boss level | See product vision: matches the brief, respects professionals' goals, just-in-time learning transfers better |
+| 2026-10-17 | Accepted P3/P4 (always explain why) and re-scoped P7 (user stays the decision-maker) | — | Feedback makes mistakes useful; agency is central to Option B and the rubric |
+| 2026-10-17 | Learning moments: **no limits by default**, shown whenever a high-value moment arises; opt-in guardrails (Light / Balanced / Strict) as soft caps | Default budget of 3–5 per 10 min | Interactions vary in how ripe they are for learning; a quality bar beats a fixed quota. Default to be tuned with real usage data later |

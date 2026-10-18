@@ -64,9 +64,9 @@ Engineering effort, building with Claude Code:
 | P1: bring-your-own-key fallback | ~1 h | |
 | P1: second provider (model-agnostic proof) | ~1 h | Mostly a provider swap if the AI SDK is used from day 1 |
 
-Model-side "effort" (Claude's `effort` setting, which trades thinking depth for speed/cost): start with medium for
-curriculum/planning calls and low for per-turn generation and grading; tune by testing latency and quality.
-Exact parameter support per model to be verified against the docs during the build.
+Model-side "effort" (Claude's effort setting, which trades thinking depth for speed and cost): **decided 2026-10-17:
+high for planning calls, medium for per-turn execution calls.** Verify exact parameter support per model against the
+docs during the build.
 
 ## Alternatives to Vercel (added 2026-10-17)
 | Host | Fit | Caveat |

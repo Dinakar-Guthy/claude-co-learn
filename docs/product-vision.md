@@ -20,8 +20,8 @@ standalone web app that emulates that mode on the Claude API.
 0. **Unlock.** The landing page is a single input whose placeholder shows `/co-learn` like a password hint. Typing it
    unlocks the site with a small animation and sound. It frames Co-learn as a mode you switch on. It is **not**
    security: the "password" is shown on screen, so abuse protection comes from rate limits.
-1. **Intent.** At most 2–3 quick questions: what are you working on, how familiar are you with this area, and how much
-   do you want to learn vs. just get done (the learning dial). Default session length is 10 minutes.
+1. **Intent.** At most 2–3 quick questions: what are you working on, how familiar are you with this area, and roughly
+   how long you have (10 minutes by default). Learning guardrails are off by default (see Pacing).
 2. **Work.** The user prompts and Claude works on the task, as in normal Claude.
 3. **Learning moments.** Small, discrete challenges triggered by what the user is doing *right now*, not a pre-planned
    curriculum (the work changes too much as it goes). Each moment:
@@ -45,28 +45,46 @@ standalone web app that emulates that mode on the Claude API.
 | **Spot the issue** | "This split has a subtle problem. Find it." (data leakage) | Code or config the user should be able to review |
 | **Fill the gap** | "What value would you set for `test_size`?" | Small, low-risk parameters |
 
-## Decision pending: when do learning moments happen?
+## Decided: work first, learning injected (2026-10-17)
 Dinakar asked to weigh two models:
 - **(A) Teach first, then work.** Upfront learning, with collaboration happening at boss level.
 - **(B) Work first, inject learning.** The user starts working immediately; moments are inserted as concepts come up.
 
-**Recommendation: (B), with micro-teaching inside each moment and milestone bosses as checkpoints.**
+**Decision: (B), with micro-teaching inside each moment and milestone bosses as checkpoints.** Accepted by Dinakar.
 - It matches the brief, which literally asks to "turn AI-assisted work into learning opportunities".
 - Working professionals came to get something done. Front-loaded lessons delay value and feel like a detour, so they get skipped.
 - Learning at the moment of need is more motivating and transfers better: the concept is immediately used on *their* problem.
 - (A) survives in micro form: the 2–4 sentence concept card right before each question is "teach first", just at the scale of one concept.
-- Risk: interruptions break flow. Mitigations are a moment budget, the learning dial, skip/defer ("quiz me at the end"), and never interrupting mid-stream.
+- Risk: interruptions break flow. Mitigations are a quality bar for moments, optional guardrails, skip/defer ("quiz me at the end"), and never interrupting mid-stream.
 - Where (A) is better: total novices who don't know what to ask. Mitigation: if the intent step reveals a novice, offer an opt-in 60-second primer.
 
 ## Pacing engine (code, per P8)
-- Each Claude turn returns structured output: the work response, the concepts it touched, and an optional *candidate* learning moment (type, concept, question, rubric, multiple-choice fallback, ideal answer).
-- Code decides whether to show the moment, based on:
-  - the learning dial,
-  - a cooldown (e.g., at least 2 turns between moments) and a budget (~3–5 moments per 10 minutes),
-  - per-concept mastery (skip concepts already mastered; resurface stale ones),
-  - the challenge band (P5).
-- **Decide** and **predict** moments come *before* the related work is shown. For predict moments the work can be generated and held back; decide moments need a second call that uses the user's choice. Explain-back and spot-the-issue moments come *after*.
-- Grading: Claude grades free-form answers against the rubric (correct / partial / incorrect + why). After one miss or a clear struggle, offer the multiple-choice version.
+**Default: no limits.** Not every interaction is equally ripe for learning, so whenever a great learning moment presents
+itself, we show it. No fixed budget or cooldown by default.
+
+- Each Claude turn returns structured output: the work response, the concepts it touched, and an optional *candidate*
+  learning moment (type, concept, question, rubric, multiple-choice fallback, ideal answer, and a **learning-value
+  score** with a one-line justification).
+- Since there's no budget by default, the **quality bar** is what keeps this from becoming spammy. Code shows a
+  candidate when:
+  - its learning-value score clears the threshold,
+  - the concept isn't already mastered (stale concepts resurface as review),
+  - it targets the user's challenge band (P5).
+- **Optional guardrails (opt-in):** users who want fewer interruptions can enable guardrails in settings, then dial between:
+  | Mode | Behavior (initial values, to tune) |
+  |---|---|
+  | Light | Soft cap ~1 moment per 2 turns; nothing else changes |
+  | Balanced | ~3–5 moments per 10 min, ≥2 turns between moments |
+  | Strict | ~1–2 moments per 10 min, only the highest-value moments; the rest deferred to the wrap-up quiz |
+  Caps are soft: an exceptional moment (e.g., the user is about to make a costly mistake) may still break through.
+  _Interpretation to confirm: "strict" = strictest limits on interruptions._
+- **Timing:** decide and predict moments come *before* the related work is shown. For predict moments the work can be
+  generated and held back; decide moments need a second call that uses the user's choice. Explain-back and
+  spot-the-issue moments come *after*.
+- **Grading:** Claude grades free-form answers against the rubric (correct / partial / incorrect + why). After one miss
+  or a clear struggle, offer the multiple-choice version.
+- **Future improvement:** tune the default (and the guardrail values) based on what works better for users; for
+  example, track skip rates, answer rates, and session completion per mode.
 
 ## Rewards and look
 - **Permanent XP bar and player level** across all sessions. Levels unlock visual themes and sound packs (settings behind the gear; P1).
@@ -81,4 +99,5 @@ Dinakar asked to weigh two models:
 
 ## Platform and model
 Hosted web app. Next.js on Vercel. Claude via the Vercel AI SDK; Claude-only for now, model-agnostic as P1.
-Opus 5.5 / Sonnet 5.5 / Haiku 5.5 routed by task.
+Opus 5.5 / Sonnet 5.5 / Haiku 5.5 routed by task. Claude effort setting: **high** for planning calls (intent →
+session plan, boss design), **medium** for per-turn execution calls.
