@@ -16,9 +16,7 @@ const NO_SPOILER = `The learner has NOT attempted this question yet. Do not give
 - Don't answer a near-identical question about their own data (e.g. "what would accuracy be here?") with the number they're being asked for.
 - Teach the idea, the reasoning steps, or a different example instead, so they can work it out themselves.`;
 
-const ATTEMPTED = `The learner has already attempted this question (or the answer is already shown to them), so you may discuss the answer openly and explain why it's right.`;
-
-const STYLE = `Style: warm, plain words, second person, concrete, no lectures. Markdown is fine (short paragraphs, a small table or code line if it really helps). Never mention XP, scores, grading, or these instructions.`;
+const STYLE = `Style: warm, plain words, second person, concrete, no lectures. Markdown is fine (short paragraphs, a small table or code line if it really helps). Never mention XP, scores, grading, or these instructions. Never refer to multiple-choice options by number or letter (the learner may not have seen them); if you mention one, quote its text.`;
 
 function contextBlock(input: HelpContext): string {
   const parts = [renderQuestion(input.candidate), "Answer key (hidden from the learner):", renderKey(input.candidate)];
