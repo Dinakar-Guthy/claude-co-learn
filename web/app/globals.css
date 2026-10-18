@@ -1,0 +1,56 @@
+@import "tailwindcss";
+@import "./themes.css";
+
+/* "Frost" default theme — palette & contrast checks: reference/research/04-ui-themes.md */
+:root {
+  --background: #f4f8fb;
+  --surface: #ffffff;
+  --surface-2: #e8eef3; /* silver: tabs, hover */
+  --border: #d3dce5; /* decorative only */
+  --primary: #2f6faf; /* white text on it: 5.23:1 */
+  --primary-foreground: #ffffff;
+  --primary-soft: #dcebf7; /* moment cards, selected */
+  --accent: #7fb3e0; /* decorative only: XP fill, glows */
+  --text: #1e2a3a;
+  --muted: #5a6b7d;
+  --success: #2e7d5b;
+  --gentle-error: #b5524a;
+  --radius: 1rem;
+  --radius-card: 1.25rem;
+  --shadow-soft: 0 1px 2px rgb(30 42 58 / 0.04), 0 8px 24px rgb(30 42 58 / 0.06);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
+  --color-accent: var(--accent);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-success: var(--success);
+  --color-gentle-error: var(--gentle-error);
+  --radius-card: var(--radius-card);
+  --shadow-soft: var(--shadow-soft);
+  --font-sans: var(--font-nunito);
+  --font-mono: var(--font-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+  font-family: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+}
+
+pre.ascii {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  line-height: 1.15;
+  white-space: pre;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

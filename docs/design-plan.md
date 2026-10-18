@@ -85,8 +85,8 @@ Browser (Next.js client)                         Vercel (Next.js route handlers,
                                                └───────────────────────────────────────────┘
 ```
 
-- **Stack:** Next.js (App Router) + TypeScript + Tailwind v4 + shadcn/ui primitives. Vercel AI SDK with
-  `@ai-sdk/anthropic`; `@anthropic-ai/sdk` for Files API upload/download. Upstash Redis + `@upstash/ratelimit`.
+- **Stack:** Next.js 16 (App Router) + TypeScript + Tailwind v4. **Native `@anthropic-ai/sdk`** for all Claude calls
+  (changed from the Vercel AI SDK during P0, see decision log), with our own NDJSON stream protocol (`lib/contracts/stream.ts`). Upstash Redis + `@upstash/ratelimit`.
   `use-sound` (Howler), Motion (LazyMotion), canvas-confetti. Vitest for tests.
 - **Runtime:** Node.js route handlers, `export const maxDuration = 300` on streaming routes (Vercel Hobby with Fluid compute allows 300s).
 - **Source of truth:** the server (Redis) owns session state and message history. The client sends only the new message

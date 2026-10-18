@@ -1,0 +1,5 @@
+/*
+ * Unlockable themes (Track C). Each theme overrides the semantic tokens from globals.css:
+ *   [data-theme="sunset"] { --background: ...; ... }
+ * Palettes: reference/research/04-ui-themes.md. Registry: lib/themes.ts.
+ */

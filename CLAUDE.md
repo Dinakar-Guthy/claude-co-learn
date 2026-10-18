@@ -29,5 +29,10 @@ triggered by their work. Demo: a working professional training an ML model. See 
 - `reference/research/` — research reports; `reference/ascii-characters.md` — character art
 - `alternative-projects/` — archived ideas, not part of the submission
 
+## Build conventions
+- App lives in `web/` (Next.js 16; read `web/AGENTS.md` and `web/README.md` first).
+- Shared contracts in `web/lib/contracts/` are frozen during parallel tracks; propose changes instead of silently editing.
+- Before committing: `npm run typecheck && npm test && npm run lint` in `web/`.
+
 ## Repo layout
 See `README.md`.
