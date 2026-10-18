@@ -22,6 +22,7 @@ Option B: **Co-learn**, a Claude mode where users do real work with Claude and g
 triggered by their work. Demo: a working professional training an ML model. See `docs/product-vision.md`.
 
 ## Key docs
+- `docs/design-plan.md` — **build blueprint** (architecture, tools, engine, data model, build order)
 - `docs/design-principles.md` — Dinakar's design principles (don't change without proposing first)
 - `docs/product-vision.md` — Co-learn experience, learning moments, pacing engine
 - `docs/context-persistence.md` — storage and model-context plan

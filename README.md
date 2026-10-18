@@ -10,6 +10,7 @@ Prototype + design rationale for the Anthropic Education Labs take-home.
 | Path | Purpose |
 |------|---------|
 | `docs/assignment-brief.md` | Summary of the assignment, deliverables, and evaluation criteria |
+| `docs/design-plan.md` | **Detailed design plan / build blueprint** |
 | `docs/design-principles.md` | Design principles (authored by Dinakar) |
 | `docs/product-vision.md` | Co-learn experience and feature set |
 | `docs/context-persistence.md` | Storage and model-context plan |
