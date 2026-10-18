@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { GradeRequest } from "@/lib/contracts/api";
 import { initialEngineState } from "@/lib/contracts/engine";
 import { ContentRefusalError } from "@/lib/claude/content/errors";
+import { engine } from "@/lib/engine";
 import { bossConcepts, mergeAwards, startBoss } from "./boss";
 import { handleGrade } from "./grade";
 import { ANON, candidate, makeDeps, mockContent, seedSession } from "./test-helpers";
@@ -31,7 +32,8 @@ describe("startBoss", () => {
     const call = vi.mocked(content.generateBoss).mock.calls[0][0];
     expect(call.concepts).toEqual(["class imbalance", "metric choice", "data leakage"]);
     expect(call.workSummary).toContain("test recall 0.52");
-    expect(call.targetDifficulty).toBe(3);
+    // Boss difficulty comes from the real engine (target success 0.72 for a fresh concept at this familiarity).
+    expect(call.targetDifficulty).toBe(engine.targetDifficulty(undefined, "boss", "some", []));
 
     expect(boss).toMatchObject({ name: "The Overfit Bug", hp: 2, maxHp: 2, ascii: "bug" });
     expect(boss.momentIds).toHaveLength(2);
