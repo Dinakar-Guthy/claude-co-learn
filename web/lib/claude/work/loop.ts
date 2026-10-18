@@ -120,11 +120,18 @@ export async function runTurn(deps: WorkDeps, plan: TurnPlan, emit: Emit, signal
     if (signal.aborted || isAbort(err)) return;
     console.error("work turn failed:", describeError(err));
     await ctx.log("error", { where: "chat", error: describeError(err).slice(0, 200) }).catch(() => {});
+    // Save committed progress before the client can retry.
+    await persistQuietly(state);
     emit(toErrorEvent(err));
     emit({ type: "turn_end", reason: "error" });
   } finally {
-    if (state.dirty) await state.persist().catch((e) => console.error("persist failed:", describeError(e)));
+    await persistQuietly(state);
   }
+}
+
+async function persistQuietly(state: TurnState): Promise<void> {
+  if (!state.dirty) return;
+  await state.persist().catch((e) => console.error("persist failed:", describeError(e)));
 }
 
 /** Runs every tool call of one response and appends all results in a single user message. */
