@@ -225,7 +225,7 @@ Three full demo runs and one non-ML run (a SQL query), each in a fresh session:
 
 **Bottom line:** everything in the approved overnight plan (`docs/plan.md`, "Overnight run 2") is built, tested, deployed, and verified on the live site, except two items:
 - **The novice primer:** skipped; see the decision log.
-- **Spaced review across sessions:** checked locally; see below.
+- **Spaced review across sessions:** checked live locally (shared Redis) rather than on production, because it needs a 10-minute gap between sessions.
 
 | Check | Status |
 |---|---|
@@ -299,7 +299,7 @@ Three full demo runs and one non-ML run (a SQL query), each in a fresh session:
 ### Known rough edges
 - **Option lengths:** multiple-choice correct options are still sometimes the longest, despite the prompt rule. Worth a stronger fix later, e.g. having the verifier check it.
 - **Moment quality still varies run to run:** Claude sometimes skips a decide moment. The latest prompt helped on production.
-- **Spaced review:** verified in unit tests and locally (see the end of this report), but not yet across a real day's gap.
+- **Spaced review:** verified live locally across two sessions. A revealed concept showed as "review" after the 10-minute gap; the next session's context listed it as due; Claude asked about it again as a review (no concept card); a correct answer moved it to "Growing". Not yet seen across a real day's gap (stale *mastered* concepts).
 - **Insights "first exposure"** is approximate within the selected window (the page says so).
 - **Compaction latency:** a compacting turn takes longer (a synchronous Sonnet call); there's no UI notice for it yet.
 
