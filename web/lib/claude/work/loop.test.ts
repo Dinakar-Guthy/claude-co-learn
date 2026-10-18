@@ -8,7 +8,7 @@ import { engine as standIn } from "@/lib/engine";
 import { MemoryStore } from "@/lib/store/memory";
 import { newUser } from "@/lib/store/defaults";
 import type { ModelParams, WorkDeps } from "./deps";
-import { MAX_STEPS, runTurn } from "./loop";
+import { MAX_STEPS, NOT_RUN, runTurn } from "./loop";
 import { prepareTurn } from "./prepare";
 import type { ModelStream } from "./stream";
 import { bash, bashResult, failingStream, fakeMessage, fakeStream, makeSession, momentInput, text, toolUse } from "./testing";
@@ -365,5 +365,88 @@ describe("runTurn", () => {
     const saved = (await t.store.getSession(t.session.id))!;
     expect(saved.title).toBe("New title from sketch");
     expect(saved.containerId).toBe("cntr_1");
+  });
+});
+
+describe("server tool calls without results", () => {
+  const viewTmp = (id: string) => ({ type: "server_tool_use", id, name: "text_editor_code_execution", input: { command: "view", path: "/tmp" } }) as Anthropic.Beta.BetaContentBlock;
+  const ids = (messages: { content: unknown }[]) => JSON.stringify(messages);
+
+  it("drops a server call issued in parallel with learning_moment (never run), from history, transcript, and the next request", async () => {
+    const t = await setup({ gate: { action: "show" } });
+    const reply = fakeMessage([bash("ls", "srv_a"), bashResult("srv_a", "data.csv\n"), toolUse("learning_moment", momentInput(), "toolu_m"), viewTmp("srv_orphan")], "tool_use");
+    t.replies.push(reply);
+    const events = await t.send({ kind: "message", text: "train it" });
+
+    expect(events).toContainEqual({ type: "code_start", itemId: "srv_orphan", language: "file", code: "# view /tmp" });
+    expect(events).toContainEqual({ type: "code_result", itemId: "srv_orphan", stdout: NOT_RUN, stderr: "", returnCode: 0, fileIds: [] });
+    expect(lastEvent(events)).toEqual({ type: "turn_end", reason: "awaiting_learner" });
+
+    const history = await t.store.getApiMessages(t.session.id);
+    expect(ids(history)).not.toContain("srv_orphan");
+    expect(ids(history)).toContain("srv_a");
+    expect(ids(history)).toContain("toolu_m");
+    const transcript = await t.store.getTranscript(t.session.id);
+    expect(transcript.filter((i) => i.kind === "code_run").map((i) => i.id)).toEqual(["srv_a"]);
+
+    const moment = (await t.store.listMoments(t.session.id))[0];
+    await t.store.putMoment({ ...moment, status: "skipped" });
+    t.replies.push(fakeMessage([text("I'll pick.")]));
+    await t.send({ kind: "moment_response", momentId: moment.id });
+    expect(ids(t.calls[1].messages)).not.toContain("srv_orphan");
+  });
+
+  it("keeps a server call that has its result", async () => {
+    const t = await setup();
+    t.replies.push(fakeMessage([bash("ls", "srv_ok"), bashResult("srv_ok", "x\n"), text("Done.")]));
+    const events = await t.send({ kind: "message", text: "ls" });
+    expect(events.filter((e) => e.type === "code_result")).toHaveLength(1);
+    const assistant = (await t.store.getApiMessages(t.session.id)).at(-1)!;
+    expect(assistant.content).toEqual([bash("ls", "srv_ok"), bashResult("srv_ok", "x\n"), text("Done.")]);
+  });
+
+  it("leaves pause_turn responses untouched, including a call whose result arrives in the next message", async () => {
+    const t = await setup();
+    t.replies.push(fakeMessage([text("Running."), bash("sleep 1", "srv_p")], "pause_turn"), fakeMessage([bashResult("srv_p", "ok\n"), text("Done.")]));
+    await t.send({ kind: "message", text: "go" });
+    expect(t.calls[1].messages.at(-1)).toEqual({ role: "assistant", content: [text("Running."), bash("sleep 1", "srv_p")] });
+
+    t.replies.push(fakeMessage([text("Next.")]));
+    await t.send({ kind: "message", text: "next" });
+    expect(ids(t.calls[2].messages)).toContain("srv_p");
+    expect((await t.store.getTranscript(t.session.id)).find((i) => i.id === "srv_p")).toMatchObject({ returnCode: 0 });
+  });
+
+  it("after max_steps on a pause, a new message drops the dangling paused call (`continue` resumes it instead)", async () => {
+    const t = await setup();
+    const last = MAX_STEPS - 1;
+    for (let i = 0; i < MAX_STEPS; i++) t.replies.push(fakeMessage([bash(`echo ${i}`, `srv_${i}`)], "pause_turn"));
+    await t.send({ kind: "message", text: "go" });
+    const stored = await t.store.getApiMessages(t.session.id);
+    expect(stored.at(-1)).toEqual({ role: "assistant", content: [bash(`echo ${last}`, `srv_${last}`)] });
+
+    t.replies.push(fakeMessage([text("Okay.")]));
+    await t.send({ kind: "message", text: "actually, stop" });
+    const request = t.calls.at(-1)!.messages;
+    expect(ids(request)).not.toContain(`srv_${last}`);
+    expect(request.at(-1)!.role).toBe("system");
+    expect(request.at(-3)).toEqual({ role: "assistant", content: [{ type: "text", text: "…" }] });
+    const transcript = await t.store.getTranscript(t.session.id);
+    expect(transcript.some((i) => i.id === `srv_${last}`)).toBe(false);
+  });
+
+  it("repairs a stored history that already contains an orphaned call", async () => {
+    const t = await setup();
+    await t.store.putApiMessages(t.session.id, [
+      { role: "user", content: [{ type: "text", text: "go" }] },
+      { role: "assistant", content: [{ type: "tool_use", id: "toolu_1", name: "milestone_reached", input: {} }, { type: "server_tool_use", id: "srv_bad", name: "text_editor_code_execution", input: {} }] },
+      { role: "user", content: [{ type: "tool_result", tool_use_id: "toolu_1", content: "ok" }] },
+    ] as never);
+    await t.store.putTranscript(t.session.id, [{ kind: "code_run", id: "srv_bad", language: "file", code: "# view /tmp", fileIds: [] }]);
+    t.replies.push(fakeMessage([text("Back on track.")]));
+    await t.send({ kind: "message", text: "continue please" });
+    expect(ids(t.calls[0].messages)).not.toContain("srv_bad");
+    expect(ids(await t.store.getApiMessages(t.session.id))).not.toContain("srv_bad");
+    expect((await t.store.getTranscript(t.session.id)).some((i) => i.id === "srv_bad")).toBe(false);
   });
 });

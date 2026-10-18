@@ -6,7 +6,10 @@ import type { ChatRequest } from "@/lib/contracts/api";
 import type { Session, User } from "@/lib/contracts/session";
 import type { Store } from "@/lib/contracts/store";
 import { newUser } from "@/lib/store/defaults";
+import { isPausedAssistant } from "./blocks";
 import { bossResultText, CONTINUE_TEXT, momentResponseText } from "./userText";
+
+export { isPausedAssistant } from "./blocks";
 
 export const MAX_MESSAGE_CHARS = 4000;
 
@@ -76,12 +79,6 @@ export async function prepareTurn(store: Store, anonId: string, ip: string, body
   }
 }
 
-/** An assistant turn cut off by pause_turn ends with a server tool call; it is resumed by re-sending as-is. */
-export function isPausedAssistant(message: { role: string; content: unknown } | undefined): boolean {
-  if (message?.role !== "assistant" || !Array.isArray(message.content)) return false;
-  const last = message.content.at(-1) as { type?: string } | undefined;
-  return last?.type === "server_tool_use";
-}
 
 async function bossConcepts(store: Store, session: Session, bossId: string): Promise<string[]> {
   const record = session.engine.bosses.find((b) => b.id === bossId);
