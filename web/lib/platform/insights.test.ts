@@ -291,13 +291,13 @@ describe("computeInsights", () => {
 });
 
 describe("withoutTestTraffic", () => {
-  const days = [{ day: "2026-10-18", events: [{ anonId: "real", name: "unlock", at: 1 }, { anonId: "tester", name: "unlock", at: 2 }] }];
-  it("drops test identities' events by default and counts them", () => {
-    const out = withoutTestTraffic(days, new Set(["tester"]), false);
-    expect(out.days[0].events.map((e) => e.anonId)).toEqual(["real"]);
+  const days = [{ day: "2026-10-18", events: [{ anonId: "a", name: "unlock", at: 1 }, { anonId: "a", name: "unlock", at: 2, props: { test: true } }] }];
+  it("drops events tagged as test traffic by default and counts them", () => {
+    const out = withoutTestTraffic(days, false);
+    expect(out.days[0].events.map((e) => e.at)).toEqual([1]);
     expect(out.excluded).toBe(1);
   });
   it("keeps everything when asked to include test traffic", () => {
-    expect(withoutTestTraffic(days, new Set(["tester"]), true).days[0].events).toHaveLength(2);
+    expect(withoutTestTraffic(days, true).days[0].events).toHaveLength(2);
   });
 });

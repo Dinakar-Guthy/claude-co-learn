@@ -6,6 +6,7 @@ import type { Store } from "@/lib/contracts/store";
 import { MemoryStore } from "./memory";
 import { RedisStore } from "./redis";
 import { createUpstashKv, upstashCredentials } from "./redis-kv";
+import { tagTestEvents } from "./testTraffic";
 
 export { StoreError, isStoreError, STORE_ERROR_MESSAGE } from "./errors";
 
@@ -18,7 +19,7 @@ export function storeKind(): "redis" | "memory" {
 export function getStore(): Store {
   if (!globalForStore.__colearnStore) {
     const creds = upstashCredentials();
-    globalForStore.__colearnStore = creds ? new RedisStore(createUpstashKv(creds)) : new MemoryStore();
+    globalForStore.__colearnStore = tagTestEvents(creds ? new RedisStore(createUpstashKv(creds)) : new MemoryStore());
   }
   return globalForStore.__colearnStore;
 }

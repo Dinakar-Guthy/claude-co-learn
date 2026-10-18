@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Nunito, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { THEME_BOOT_SCRIPT } from "@/lib/ui/themeBoot";
+import { TestModeBadge } from "@/components/TestModeBadge";
 
 const nunito = Nunito({ variable: "--font-nunito", subsets: ["latin"] });
 const mono = JetBrains_Mono({ variable: "--font-mono", subsets: ["latin"] });
@@ -18,7 +19,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <TestModeBadge />
+      </body>
     </html>
   );
 }

@@ -3,6 +3,8 @@
  * the limits-degraded warning (X-Colearn-Warning header, fail-open policy) is broadcast to subscribers.
  */
 
+import { testHeaders } from "./testMode";
+
 export const WARNING_HEADER = "X-Colearn-Warning";
 
 export class ApiError extends Error {
@@ -47,7 +49,7 @@ export async function apiFetch<T>(path: string, init?: { method?: string; body?:
   try {
     res = await fetch(path, {
       method: init?.method ?? (init?.body === undefined ? "GET" : "POST"),
-      headers: init?.body === undefined ? undefined : { "Content-Type": "application/json" },
+      headers: { ...testHeaders(), ...(init?.body === undefined ? {} : { "Content-Type": "application/json" }) },
       body: init?.body === undefined ? undefined : JSON.stringify(init.body),
       signal: init?.signal,
       cache: "no-store",

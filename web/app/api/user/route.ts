@@ -1,7 +1,6 @@
 import { ensureAnonId, readAnonId } from "@/lib/platform/anon";
 import { jsonError, routeErrorResponse, unauthorized } from "@/lib/platform/http";
 import { applySettingsUpdate } from "@/lib/platform/settings";
-import { tagIfTest } from "@/lib/platform/testTraffic";
 import { getStore } from "@/lib/store";
 import { newUser } from "@/lib/store/defaults";
 import type { User } from "@/lib/contracts/session";
@@ -24,7 +23,6 @@ export async function GET() {
   try {
     const user = await loadUser(anonId);
     await ensureAnonId(); // slide the cookie's 60-day expiry along with the stored user
-    await tagIfTest(anonId);
     return Response.json(toUserView(user) satisfies UserView);
   } catch (e) {
     return routeErrorResponse(e, "GET /api/user");

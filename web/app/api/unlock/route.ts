@@ -1,6 +1,5 @@
 import { ensureAnonId } from "@/lib/platform/anon";
 import { jsonError, routeErrorResponse } from "@/lib/platform/http";
-import { tagIfTest } from "@/lib/platform/testTraffic";
 import { getStore } from "@/lib/store";
 import { newUser } from "@/lib/store/defaults";
 import { UNLOCK_PHRASE, type UnlockRequest, type UnlockResponse } from "@/lib/contracts/api";
@@ -19,7 +18,6 @@ export async function POST(request: Request) {
       user = newUser(anonId);
       await store.putUser(user);
     }
-    await tagIfTest(anonId);
     await store.logEvent({ at: Date.now(), anonId, name: "unlock" });
     const res: UnlockResponse = { ok: true, user: toUserView(user), sessions: await store.listSessions(anonId) };
     return Response.json(res);

@@ -113,15 +113,6 @@ describe.each(factories)("Store conformance: %s", (_name, make) => {
     expect(await store.getSession("s2")).not.toBeNull();
   });
 
-  it("records test users", async () => {
-    const store = make();
-    expect(await store.listTestUsers()).toEqual([]);
-    await store.markTestUser("u1");
-    await store.markTestUser("u1");
-    await store.markTestUser("u2");
-    expect((await store.listTestUsers()).sort()).toEqual(["u1", "u2"]);
-  });
-
   it("stores bosses per session", async () => {
     const store = make();
     const boss = makeBoss("b1", "s1");

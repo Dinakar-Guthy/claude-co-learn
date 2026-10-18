@@ -4,6 +4,7 @@
  */
 import type { ChatRequest } from "@/lib/contracts/api";
 import type { ChatStreamEvent } from "@/lib/contracts/stream";
+import { testHeaders } from "./testMode";
 
 export interface NdjsonParse {
   events: ChatStreamEvent[];
@@ -51,7 +52,7 @@ export async function streamChat(req: ChatRequest, onEvent: (event: ChatStreamEv
   try {
     res = await fetch("/api/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...testHeaders() },
       body: JSON.stringify(req),
       signal,
     });

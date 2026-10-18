@@ -49,11 +49,11 @@ export function InsightsView() {
           ))}
         </div>
       </header>
-      {data?.testTraffic && (data.testTraffic.testUsers > 0 || data.testTraffic.included) && (
+      {data?.testTraffic && (data.testTraffic.eventsExcluded > 0 || data.testTraffic.included) && (
         <p className="-mt-3 flex flex-wrap items-center gap-2 text-sm text-muted">
           {data.testTraffic.included
             ? "Including test traffic (the owner's and automated testing)."
-            : `Excluding test traffic: ${data.testTraffic.eventsExcluded} events from ${data.testTraffic.testUsers} test ${data.testTraffic.testUsers === 1 ? "identity" : "identities"}.`}
+            : `Excluding test traffic: ${data.testTraffic.eventsExcluded} events from test tabs (?test=1) and automated checks.`}
           <Chip selected={includeTest} onClick={() => setIncludeTest((v) => !v)}>Include test traffic</Chip>
         </p>
       )}
