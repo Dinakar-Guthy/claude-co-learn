@@ -77,7 +77,7 @@ itself, we show it. No fixed budget or cooldown by default.
   | Balanced | ~3–5 moments per 10 min, ≥2 turns between moments |
   | Strict | ~1–2 moments per 10 min, only the highest-value moments; the rest deferred to the wrap-up quiz |
   Caps are soft: an exceptional moment (e.g., the user is about to make a costly mistake) may still break through.
-  _Interpretation to confirm: "strict" = strictest limits on interruptions._
+  Strict = fewest interruptions (confirmed).
 - **Timing:** decide and predict moments come *before* the related work is shown. For predict moments the work can be
   generated and held back; decide moments need a second call that uses the user's choice. Explain-back and
   spot-the-issue moments come *after*.
@@ -107,5 +107,6 @@ itself, we show it. No fixed budget or cooldown by default.
 
 ## Platform and model
 Hosted web app. Next.js on Vercel. Claude via the Vercel AI SDK; Claude-only for now, model-agnostic as P1.
-Opus 5.5 / Sonnet 5.5 / Haiku 5.5 routed by task. Claude effort setting: **high** for planning calls (intent →
+Opus 5.5 / Sonnet 5.5 / Haiku 5.5 routed by task. Per-turn execution (incl. code runs): **Sonnet 5.5** by default; switch to Opus 5.5 if Sonnet
+stumbles on multi-step code during testing. Claude effort setting: **high** for planning calls (intent →
 session plan, boss design), **medium** for per-turn execution calls.

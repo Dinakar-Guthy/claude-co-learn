@@ -24,3 +24,6 @@ Running record of meaningful decisions and the reasoning behind them. Feeds the 
 | 2026-10-17 | Learning moments: **no limits by default**, shown whenever a high-value moment arises; opt-in guardrails (Light / Balanced / Strict) as soft caps | Default budget of 3–5 per 10 min | Interactions vary in how ripe they are for learning; a quality bar beats a fixed quota. Default to be tuned with real usage data later |
 | 2026-10-17 | Claude runs real code via Anthropic's server-side code execution tool | Simulated results; hosted Claude Agent SDK; bridge to local Claude Code | Real metrics make predict/boss moments genuine; works with just the API key; the local bridge is a future "local mode" (a hosted server can't reach a laptop) |
 | 2026-10-17 | Demo data: seeded synthetic churn CSV (~15% churn) + one-click starter | IBM Telco (license unclear); sklearn built-ins (not a work scenario) | No license risk; imbalance creates a natural teaching moment about metrics |
+| 2026-10-17 | Guardrail "Strict" = fewest interruptions | — | Confirmed |
+| 2026-10-17 | Per-turn execution model: Sonnet 5.5 (medium effort) by default; Opus 5.5 if Sonnet stumbles on multi-step code | Opus for all code turns | Half the cost and faster; test both on the demo |
+| 2026-10-17 | Approved: code execution tool, synthetic churn dataset + one-click demo, accepted costs/risks | — | — |
