@@ -13,6 +13,7 @@ import { UiProviders } from "@/components/UiProviders";
 import { Button, Spinner } from "@/components/ui";
 import { ApiError, apiGet, apiPost, errorMessage } from "@/lib/client/api";
 import { rememberTheme } from "@/lib/ui/themeBoot";
+import { startOverAsNewUser } from "@/lib/client/reset";
 
 type Stage = "checking" | "unlock" | "home" | "intent";
 
@@ -55,7 +56,18 @@ export function HomeFlow() {
             }}
           />
         )}
-        {stage === "home" && <Welcome sessions={sessions} onNew={() => setStage("intent")} />}
+        {stage === "home" && (
+          <Welcome
+            sessions={sessions}
+            onNew={() => setStage("intent")}
+            onStartOver={async () => {
+              const fresh = await startOverAsNewUser();
+              setUser(fresh);
+              setSessions([]);
+              setStage("intent");
+            }}
+          />
+        )}
         {stage === "intent" && <Intent initialGoal={initialGoal} />}
       </main>
     </UiProviders>
@@ -118,7 +130,9 @@ function UnlockBox({ onUnlocked }: { onUnlocked: (res: UnlockResponse) => void }
   );
 }
 
-function Welcome({ sessions, onNew }: { sessions: SessionSummary[]; onNew: () => void }) {
+function Welcome({ sessions, onNew, onStartOver }: { sessions: SessionSummary[]; onNew: () => void; onStartOver: () => Promise<void> }) {
+  const [confirm, setConfirm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const recent = [...sessions].sort((a, b) => b.createdAt - a.createdAt).slice(0, 3);
   return (
@@ -134,6 +148,18 @@ function Welcome({ sessions, onNew }: { sessions: SessionSummary[]; onNew: () =>
         ))}
       </div>
       <Button variant="primary" onClick={onNew}>Start something new</Button>
+      {confirm ? (
+        <div className="flex flex-col items-center gap-2 rounded-2xl bg-surface-2 p-3 text-sm">
+          <p>Start over as a brand-new user? Your XP, unlocks, and past sessions on this browser will be gone.</p>
+          <div className="flex gap-2">
+            <Button size="sm" variant="primary" onClick={() => onStartOver().catch((err) => setError(errorMessage(err)))}>Yes, start over</Button>
+            <Button size="sm" onClick={() => setConfirm(false)}>Cancel</Button>
+          </div>
+          {error && <p role="alert" className="text-muted">{error}</p>}
+        </div>
+      ) : (
+        <Button size="sm" variant="quiet" onClick={() => setConfirm(true)}>Start over as a new user</Button>
+      )}
     </div>
   );
 }

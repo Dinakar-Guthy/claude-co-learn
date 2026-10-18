@@ -14,8 +14,19 @@ export async function readAnonId(): Promise<string | null> {
 
 /** Returns the existing anon ID or creates one and sets the cookie (Route Handlers / Server Functions only). */
 export async function ensureAnonId(): Promise<string> {
-  const existing = await readAnonId();
-  const id = existing ?? crypto.randomUUID();
+  const id = (await readAnonId()) ?? crypto.randomUUID();
+  await setAnonCookie(id);
+  return id;
+}
+
+/** "Start over as a new user": this browser gets a fresh identity; the old data simply ages out (60-day TTL). */
+export async function rotateAnonId(): Promise<string> {
+  const id = crypto.randomUUID();
+  await setAnonCookie(id);
+  return id;
+}
+
+async function setAnonCookie(id: string): Promise<void> {
   (await cookies()).set({
     name: ANON_COOKIE,
     value: id,
@@ -25,7 +36,6 @@ export async function ensureAnonId(): Promise<string> {
     path: "/",
     maxAge: SIXTY_DAYS_S, // refreshed on each unlock (sliding)
   });
-  return id;
 }
 
 export function clientIp(request: Request): string {

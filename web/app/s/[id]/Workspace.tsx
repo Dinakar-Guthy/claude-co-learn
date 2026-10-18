@@ -23,6 +23,8 @@ import { Pip } from "@/components/Pip";
 import { Button, Spinner } from "@/components/ui";
 import { activeBoss, bossMomentId, nextBossQuestion, openMoment, revealedPredictions } from "@/lib/client/workspace";
 import { rememberTheme } from "@/lib/ui/themeBoot";
+import { startOverAsNewUser } from "@/lib/client/reset";
+import { errorMessage } from "@/lib/client/api";
 import { useNow } from "@/lib/ui/useNow";
 import { useWorkspace, type Workspace as WorkspaceApi } from "./useWorkspace";
 
@@ -133,6 +135,11 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
         onOpenSession={(id) => {
           setDrawer(false);
           if (id !== view.id) router.push(`/s/${id}`);
+        }}
+        onResetData={() => {
+          startOverAsNewUser()
+            .then(() => router.replace("/?start=1"))
+            .catch((err) => window.alert(errorMessage(err)));
         }}
       />
       {ws.levelUp && (

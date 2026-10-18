@@ -178,12 +178,6 @@ Three full demo runs and one non-ML run (a SQL query), each in a fresh session:
   - Double punctuation in the screen-reader announcement.
 
 ### Needs Dinakar
-0. **Rotate `SITE_PASSWORD` (security, do this first).**
-   - **Problem:** the current reviewer password equals your first name / macOS username. It appears in every file path (`/Users/…`), your email, and git config, so it's easy to guess.
-   - It's also spelled out as the password in an already-committed transcript (`transcripts/2026-10-17-97516b94.md`, commit `cfdd234`; the repo is private).
-   - **Fix:** pick a non-guessable phrase and set it in Vercel (Production + Preview) and `web/.env.local`, then redeploy.
-   - **Transcripts:** I ran `scripts/collect_transcripts.py` but left the new renderings **uncommitted** for now. Commit them after rotating.
-   - **Note:** the collector's redaction can't help here, because the value is your name.
 1. **Review the decisions marked "pending Dinakar's review"** in `docs/decision-log.md` (8 entries, 2026-10-18):
    - auto-starting the goal
    - chat locked during a boss
@@ -219,3 +213,10 @@ Three full demo runs and one non-ML run (a SQL query), each in a fresh session:
 - `/tmp/e2e/drive.mjs`: a tiny Chrome DevTools driver (`login` reads `SITE_PASSWORD` from `.env.local` without printing it; `type`, `click`, `idle`, `text`, `shot`).
 - `/tmp/e2e/tools/{events,spend}.mjs`: read app events and spend from Upstash.
 - Rebuild these if `/tmp` is wiped; they're about 100 lines.
+
+### Follow-ups (morning of 2026-10-18)
+- Dinakar: the reviewer password is intentionally light security; no rotation needed.
+- **Added "Start over as a new user":**
+  - Where: Settings → Your data → Reset my data, plus a quiet link on the "Welcome back" screen.
+  - `POST /api/user/reset` gives this browser a fresh anonymous identity (level 1, no sessions, Frost theme).
+  - The old identity's data isn't deleted; it ages out with the 60-day TTL.

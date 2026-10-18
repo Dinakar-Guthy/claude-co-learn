@@ -21,6 +21,7 @@ const user = await import("./user/route");
 const sessions = await import("./sessions/route");
 const file = await import("./files/[id]/route");
 const health = await import("./health/route");
+const reset = await import("./user/reset/route");
 
 let store: MemoryStore;
 beforeEach(() => {
@@ -151,4 +152,22 @@ describe("GET /api/health", () => {
 
 it("getStore returns the injected singleton", () => {
   expect(getStore()).toBe(store);
+});
+
+describe("POST /api/user/reset", () => {
+  it("401s without a cookie", async () => {
+    cookie.value = undefined;
+    expect((await reset.POST()).status).toBe(401);
+  });
+
+  it("gives the browser a fresh level-1 identity and leaves the old user untouched", async () => {
+    await store.putUser({ ...newUser(ANON), xp: 300 });
+    const res = await reset.POST();
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ xp: 0, level: { level: 1 } });
+    const newId = cookie.set.mock.calls[0][0].value as string;
+    expect(newId).not.toBe(ANON);
+    expect(await store.getUser(newId)).toMatchObject({ xp: 0 });
+    expect((await store.getUser(ANON))?.xp).toBe(300);
+  });
 });
