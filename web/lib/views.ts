@@ -1,7 +1,7 @@
 /** Server → client view mappers (shared). Never leak answer keys to the browser. */
 import type { MomentView } from "@/lib/contracts/moment";
-import type { BossState, MomentRecord, User } from "@/lib/contracts/session";
-import type { BossView, UserView } from "@/lib/contracts/api";
+import type { BossState, MomentRecord, Session, TranscriptItem, User } from "@/lib/contracts/session";
+import type { BossView, SessionView, UserView } from "@/lib/contracts/api";
 import { engine } from "@/lib/engine";
 
 export function toMomentView(m: MomentRecord): MomentView {
@@ -35,4 +35,20 @@ export function toBossView(b: BossState, moments: MomentRecord[]): BossView {
 
 export function toUserView(u: User): UserView {
   return { xp: u.xp, level: engine.levelFor(u.xp), unlocks: u.unlocks, settings: u.settings };
+}
+
+export function toSessionView(s: Session, transcript: TranscriptItem[], moments: MomentRecord[], bosses: BossState[]): SessionView {
+  return {
+    id: s.id,
+    title: s.title,
+    intent: s.intent,
+    sketch: s.sketch,
+    status: s.status,
+    createdAt: s.createdAt,
+    endsAt: s.createdAt + s.intent.minutes * 60_000,
+    transcript,
+    moments: Object.fromEntries(moments.map((m) => [m.id, toMomentView(m)])),
+    bosses: Object.fromEntries(bosses.map((b) => [b.id, toBossView(b, moments)])),
+    chapters: Object.fromEntries(s.story.chapters.map((c) => [c.id, c])),
+  };
 }
