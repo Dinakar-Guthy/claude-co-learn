@@ -21,13 +21,15 @@ export interface IntentFlowProps {
   /** Disable the final button while the session is being created. */
   busy?: boolean;
   autoFocus?: boolean;
+  /** Prefills the goal (e.g. a "Next time you could…" suggestion from a wrap-up). */
+  initialGoal?: string;
 }
 
 /** Intent step: goal (or the demo starter), then familiarity + time chips. */
-export function IntentFlow({ onComplete, busy = false, autoFocus = true }: IntentFlowProps) {
+export function IntentFlow({ onComplete, busy = false, autoFocus = true, initialGoal = "" }: IntentFlowProps) {
   const [step, setStep] = useState<"goal" | "details">("goal");
-  const [goal, setGoal] = useState("");
-  const [demo, setDemo] = useState(false);
+  const [goal, setGoal] = useState(initialGoal);
+  const [demo, setDemo] = useState(initialGoal.trim() === DEMO_GOAL);
   const [familiarity, setFamiliarity] = useState<Familiarity | null>(null);
   const [minutes, setMinutes] = useState<number>(10);
   const sounds = useSounds();
