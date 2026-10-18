@@ -3,6 +3,7 @@ import type { StartBossResponse, GradeResponse } from "@/lib/contracts/api";
 import type { LearningMomentInput } from "@/lib/contracts/moment";
 import type { BossState, MomentRecord, Session } from "@/lib/contracts/session";
 import type { XpAward } from "@/lib/contracts/stream";
+import { recordBossFinished, recordBossStarted } from "@/lib/engine";
 import { toBossView, toMomentView } from "@/lib/views";
 import type { BackgroundTask, HandlerResult, LearningDeps } from "./deps";
 import { isSettled } from "./scores";
@@ -90,9 +91,7 @@ export async function startBoss(deps: LearningDeps, session: Session): Promise<H
   for (const r of records) await deps.store.putMoment(r);
   await deps.store.putBoss(boss);
   const concepts = [...new Set(questions.map((q) => q.concept))];
-  await patchSession(deps, session.id, (latest) => ({
-    engine: { ...latest.engine, bosses: [...latest.engine.bosses, { id: bossId, startedAt: now, concepts }] },
-  }));
+  await patchSession(deps, session.id, (latest) => ({ engine: recordBossStarted(latest.engine, { id: bossId, startedAt: now, concepts }) }));
   await appendTranscript(deps, session.id, { kind: "boss", id: `boss-${bossId}`, bossId });
   await deps.store.logEvent({ at: now, anonId: session.anonId, sessionId: session.id, name: "boss_started", props: { bossId, questions: records.length, name: boss.name } });
 
@@ -125,13 +124,7 @@ export async function advanceBoss(deps: LearningDeps, session: Session, bossId: 
     const outcome = deps.engine.bossOutcome(hits, updated.maxHp);
     updated.outcome = outcome;
     xp = await awardXp(deps, session.anonId, session.id, [{ kind: "boss_outcome", outcome }], BOSS_OUTCOME_LABEL[outcome]);
-    await patchSession(deps, session.id, (latest) => ({
-      engine: {
-        ...latest.engine,
-        conceptsSinceBoss: [],
-        bosses: latest.engine.bosses.map((b) => (b.id === bossId ? { ...b, outcome } : b)),
-      },
-    }));
+    await patchSession(deps, session.id, (latest) => ({ engine: recordBossFinished(latest.engine, bossId, outcome) }));
     await deps.store.logEvent({ at: deps.now(), anonId: session.anonId, sessionId: session.id, name: "boss_finished", props: { bossId, outcome, hits, maxHp: updated.maxHp } });
     background.push(async () => {
       await addChapter(deps, session.id, `boss:${bossId}`, "boss", outcome);

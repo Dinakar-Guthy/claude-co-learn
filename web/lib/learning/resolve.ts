@@ -4,7 +4,7 @@ import type { Verdict } from "@/lib/contracts/moment";
 import type { MomentRecord, Session } from "@/lib/contracts/session";
 import type { XpAward } from "@/lib/contracts/stream";
 import type { LearningDeps } from "./deps";
-import { scoreFor } from "./scores";
+import { scoreFor } from "@/lib/engine";
 import { patchSession } from "./sessionStore";
 import { awardXp } from "./xp";
 

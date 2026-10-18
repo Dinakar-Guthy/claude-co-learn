@@ -5,6 +5,7 @@
  */
 import type Anthropic from "@anthropic-ai/sdk";
 import { MODELS } from "@/lib/claude/models";
+import { recordSkipped } from "@/lib/engine";
 import type { TurnEndReason } from "@/lib/contracts/stream";
 import type { ModelParams, WorkDeps } from "./deps";
 import { demoDataNote, renderContext } from "./context";
@@ -155,7 +156,7 @@ async function settlePendingMoment(ctx: ToolContext, plan: TurnPlan): Promise<st
   const { session } = ctx.state;
   const pendingId = session.engine.pendingMomentId;
   if (!pendingId) return null;
-  session.engine = { ...session.engine, pendingMomentId: undefined };
+  session.engine = recordSkipped(session.engine, pendingId);
   ctx.state.markDirty();
   if (plan.request.kind === "moment_response" && plan.request.momentId === pendingId) return null;
 

@@ -6,6 +6,7 @@ import { z } from "zod";
 import type { ChatRequest, GradeRequest, GradeResponse } from "@/lib/contracts/api";
 import type { XpEvent } from "@/lib/contracts/engine";
 import type { MomentRecord, Session } from "@/lib/contracts/session";
+import { recordSkipped } from "@/lib/engine";
 import { toMomentView } from "@/lib/views";
 import { advanceBoss, mergeAwards } from "./boss";
 import { HttpError, type BackgroundTask, type HandlerResult, type LearningDeps } from "./deps";
@@ -142,9 +143,7 @@ async function settleWithoutGrade(ctx: Ctx, action: "skip" | "defer" | "report")
   const next: MomentRecord = { ...record, status: STATUS[effective] };
   await deps.store.putMoment(next);
   if (session.engine.pendingMomentId === record.id) {
-    await patchSession(deps, session.id, (latest) => ({
-      engine: { ...latest.engine, pendingMomentId: latest.engine.pendingMomentId === record.id ? undefined : latest.engine.pendingMomentId },
-    }));
+    await patchSession(deps, session.id, (latest) => ({ engine: recordSkipped(latest.engine, record.id) }));
   }
   await deps.store.logEvent({ at: deps.now(), anonId: session.anonId, sessionId: session.id, name: EVENT[effective], props: { momentId: record.id, type: record.type, concept: record.candidate.concept, boss: !!record.bossId } });
 
