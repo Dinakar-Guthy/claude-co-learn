@@ -16,16 +16,17 @@ export function InsightsView() {
   const [days, setDays] = useState<number>(7);
   const [result, setResult] = useState<Result | null>(null);
   const [reload, setReload] = useState(0);
+  const [includeTest, setIncludeTest] = useState(false);
 
   useEffect(() => {
     const ctrl = new AbortController();
-    apiGet<Insights>(`/api/insights?days=${days}`, ctrl.signal)
+    apiGet<Insights>(`/api/insights?days=${days}${includeTest ? "&includeTest=1" : ""}`, ctrl.signal)
       .then((data) => setResult({ days, data }))
       .catch((err: unknown) => {
         if (!ctrl.signal.aborted) setResult({ days, error: errorMessage(err) });
       });
     return () => ctrl.abort();
-  }, [days, reload]);
+  }, [days, reload, includeTest]);
 
   const current = result?.days === days ? result : null;
   const data = current?.data;
@@ -48,6 +49,14 @@ export function InsightsView() {
           ))}
         </div>
       </header>
+      {data?.testTraffic && (data.testTraffic.testUsers > 0 || data.testTraffic.included) && (
+        <p className="-mt-3 flex flex-wrap items-center gap-2 text-sm text-muted">
+          {data.testTraffic.included
+            ? "Including test traffic (the owner's and automated testing)."
+            : `Excluding test traffic: ${data.testTraffic.eventsExcluded} events from ${data.testTraffic.testUsers} test ${data.testTraffic.testUsers === 1 ? "identity" : "identities"}.`}
+          <Chip selected={includeTest} onClick={() => setIncludeTest((v) => !v)}>Include test traffic</Chip>
+        </p>
+      )}
 
       {!current && (
         <div className="flex justify-center py-16">

@@ -1,5 +1,6 @@
 import { readAnonId, rotateAnonId } from "@/lib/platform/anon";
 import { routeErrorResponse, unauthorized } from "@/lib/platform/http";
+import { tagIfTest } from "@/lib/platform/testTraffic";
 import { getStore } from "@/lib/store";
 import { newUser } from "@/lib/store/defaults";
 import type { UserView } from "@/lib/contracts/api";
@@ -16,6 +17,7 @@ export async function POST() {
   try {
     await getStore().deleteUserData(previous);
     const anonId = await rotateAnonId();
+    await tagIfTest(anonId); // a tester starting over stays a tester
     const user = newUser(anonId);
     await getStore().putUser(user);
     return Response.json(toUserView(user) satisfies UserView);

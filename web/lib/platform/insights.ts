@@ -61,6 +61,8 @@ export interface DayRow {
 
 export interface Insights {
   window: { days: number; from: string; to: string; events: number };
+  /** Test traffic (owner and automated testing) is excluded unless the request asks to include it. */
+  testTraffic?: { included: boolean; testUsers: number; eventsExcluded: number };
   volume: { users: number; sessionsCreated: number; sessionsWrapped: number; completion: Rate; errors: number };
   moments: {
     proposed: number;
@@ -413,4 +415,20 @@ export function computeInsights(days: { day: string; events: InsightEvent[] }[])
     retention: retention(answerList),
     daily,
   };
+}
+
+/** Drops events from test identities (see lib/platform/testTraffic.ts) unless `include` is set. */
+export function withoutTestTraffic<E extends { anonId?: string }>(
+  days: { day: string; events: E[] }[],
+  testUsers: ReadonlySet<string>,
+  include: boolean,
+): { days: { day: string; events: E[] }[]; excluded: number } {
+  if (include || testUsers.size === 0) return { days, excluded: 0 };
+  let excluded = 0;
+  const kept = days.map(({ day, events }) => {
+    const real = events.filter((e) => !(e.anonId && testUsers.has(e.anonId)));
+    excluded += events.length - real.length;
+    return { day, events: real };
+  });
+  return { days: kept, excluded };
 }

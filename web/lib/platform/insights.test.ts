@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { answerScore, band, computeInsights, parseDays, TARGETS, windowDays, type InsightEvent } from "./insights";
+import { answerScore, band, computeInsights, parseDays, TARGETS, windowDays, withoutTestTraffic, type InsightEvent } from "./insights";
 
 const T = Date.parse("2026-10-18T10:00:00Z");
 const D1 = "2026-10-17";
@@ -287,5 +287,17 @@ describe("computeInsights", () => {
       ]),
     );
     expect(out).not.toContain("SECRET");
+  });
+});
+
+describe("withoutTestTraffic", () => {
+  const days = [{ day: "2026-10-18", events: [{ anonId: "real", name: "unlock", at: 1 }, { anonId: "tester", name: "unlock", at: 2 }] }];
+  it("drops test identities' events by default and counts them", () => {
+    const out = withoutTestTraffic(days, new Set(["tester"]), false);
+    expect(out.days[0].events.map((e) => e.anonId)).toEqual(["real"]);
+    expect(out.excluded).toBe(1);
+  });
+  it("keeps everything when asked to include test traffic", () => {
+    expect(withoutTestTraffic(days, new Set(["tester"]), true).days[0].events).toHaveLength(2);
   });
 });

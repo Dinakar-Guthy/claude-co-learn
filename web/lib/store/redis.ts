@@ -27,6 +27,7 @@ export const keys = {
   mastery: (anonId: string) => `mastery:${anonId}`,
   usage: (s: UsageScope, day: string) => `usage:${s.kind}:${s.kind === "global" ? "all" : s.id}:${day}`,
   events: (day: string) => `events:${day}`,
+  testUsers: () => "test_users",
 };
 
 export interface RedisStoreOptions {
@@ -92,6 +93,15 @@ export class RedisStore implements Store {
       .filter((s): s is Session => s !== null) // sessions can expire before the index does
       .map((s) => ({ id: s.id, title: s.title, createdAt: s.createdAt, status: s.status }))
       .sort((a, b) => b.createdAt - a.createdAt);
+  }
+
+  async markTestUser(anonId: string): Promise<void> {
+    await this.run("markTestUser", [["hset", keys.testUsers(), anonId, String(this.now())], ["expire", keys.testUsers(), DATA_TTL_S]]);
+  }
+
+  async listTestUsers(): Promise<string[]> {
+    const [all] = await this.run("listTestUsers", [["hgetall", keys.testUsers()]]);
+    return Object.keys(all ?? {});
   }
 
   async deleteUserData(anonId: string): Promise<void> {
