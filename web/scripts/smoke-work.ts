@@ -1,12 +1,12 @@
 /**
  * Live smoke test for the work loop (real Claude API, in-process MemoryStore).
  *
- *   cd web && node --env-file=.env.local scripts/smoke-work.ts [--upload]
+ *   cd web && node --experimental-transform-types --env-file=.env.local scripts/smoke-work.ts [--upload]
  *
  * Runs two turns of the churn demo, answering any learning moment in between, and prints the stream
  * events. Checks code execution, container reuse across turns, and whether moments get proposed.
  * --upload: upload a small generated churn CSV via the Files API (otherwise uses DEMO_FILE_ID if set,
- * or asks Claude to synthesize the data). Uses only erasable TypeScript so Node can run it directly.
+ * or asks Claude to synthesize the data). The script itself is erasable TypeScript, but app modules it imports use parameter properties, hence the flag.
  */
 import * as nodeModule from "node:module";
 import { existsSync, statSync } from "node:fs";
@@ -31,7 +31,7 @@ const isFile = (p: string) => existsSync(p) && statSync(p).isFile();
 });
 
 if (!process.env.ANTHROPIC_API_KEY) {
-  console.error("ANTHROPIC_API_KEY is not set. Run: node --env-file=.env.local scripts/smoke-work.ts");
+  console.error("ANTHROPIC_API_KEY is not set. Run: node --experimental-transform-types --env-file=.env.local scripts/smoke-work.ts");
   process.exit(1);
 }
 

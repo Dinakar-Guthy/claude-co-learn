@@ -10,12 +10,12 @@ Official deadline: Oct 21, 9:00 AM PT. **Target: complete by end of Sun Oct 18.*
 - [x] Vercel account + CLI login; API key, Upstash, SITE_PASSWORD, DEMO_FILE_ID in Vercel env
 - [x] P0 skeleton + contracts, first deploy (+ reviewer password gate)
 - [x] P1 parallel tracks A–E built and merged (358 tests)
-- [ ] P2 integration (fresh session, see docs/HANDOFF.md)
+- [x] P2 integration (overnight session; see the Morning report in docs/HANDOFF.md)
 
 ## Sun Oct 18
-- [ ] Review and merge P1 tracks
-- [ ] P2 integration → deployed preview by midday
-- [ ] P3 tuning + bug bash; 2 pm cut-line checkpoint
+- [x] Review and merge P1 tracks
+- [x] P2 integration → deployed to production; demo journey verified on the live URL (3 full runs + 1 SQL run)
+- [ ] P3 tuning + bug bash; 2 pm cut-line checkpoint (started overnight: prompt tuning from live runs; Dinakar to review pending decisions + test in Chrome/Safari/mobile)
 - [ ] P4 rationale doc (Dinakar's voice), video ≤ 8 min, transcripts export
 - [ ] Submit (or Monday morning after a fresh-eyes check)
 
