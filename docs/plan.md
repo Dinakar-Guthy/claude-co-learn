@@ -70,7 +70,7 @@ with the browser driver before moving on; new judgment calls marked "pending Din
   - A "Did you learn something?" thumbs prompt at wrap-up.
   - A gated `/insights` page summarizing events: answer/skip/defer/help rates, accuracy vs the ~80% target band, boss outcomes, sessions completed.
 - [x] **Hard delete** option on reset (actually remove the old identity's data)
-- [~] **Novice primer:** not built (decision log: Teach me covers it). for "New to this", a 60-second intro card at the start of the session (only if Teach me doesn't already cover it well)
+- [ ] **Novice primer** (Dinakar overruled skipping it, 2026-10-18 review; build next work session).
 
 ### Not planned (reasons; also listed in docs/backlog.md for triage)
 - Upload your own CSV: moved to `docs/backlog.md` (Dinakar, 2026-10-18)
@@ -85,3 +85,12 @@ with the browser driver before moving on; new judgment calls marked "pending Din
 ### Morning report
 - What works and what doesn't, what needs Dinakar, and next steps.
 - A **manual testing guide**: step-by-step scripts to exercise every feature, including the new ones, with what to expect at each step.
+
+## Next work session
+- [ ] **Novice primer** (decision log 2026-10-18):
+  - **Who and where:** "New to this" only; a dismissible card at the top of the workspace while the first work turn runs.
+  - **Content:** generated from the goal with the session sketch; 3-4 key ideas (≤ 120 words) plus one easy warm-up check question.
+  - **Proposed defaults, to confirm when building:**
+    - The check question is multiple-choice (instant, no model call), worth 5 XP, and doesn't update mastery (it's a warm-up, not practice).
+    - It's generated in the background job that already makes the sketch.
+    - If it isn't ready in time, it's skipped.

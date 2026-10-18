@@ -45,3 +45,7 @@ Each item: what it is, why it might matter, open questions.
 ## More themes and sound packs
 - **What:** more cosmetic unlocks.
 - **Why it's low priority:** cosmetic only.
+
+## Relax the boss nudge for a real launch
+- **What:** once 3 concepts are practised, the turn context currently tells Claude to call `milestone_reached` at the next checkpoint, so a boss reliably appears within a 10-minute demo.
+- **Why it's here:** Dinakar (2026-10-18): fine for the demo, but for a production launch milestones and bosses should follow the work more naturally. Relax or remove the nudge, and tune boss frequency from usage data (`/insights`: offered/declined/skipped rates).
