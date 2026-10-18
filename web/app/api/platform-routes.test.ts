@@ -143,7 +143,7 @@ describe("GET /api/health", () => {
     vi.stubEnv("DEMO_FILE_ID", "");
     const res = await health.GET();
     const body = await res.json();
-    expect(body).toEqual({ ok: true, store: "memory", hasAnthropicKey: true, hasDemoFile: false });
+    expect(body).toEqual({ ok: true, store: "memory", hasAnthropicKey: true, hasDemoFile: false, limitsDegraded: false });
     expect(JSON.stringify(body)).not.toContain("sk-test");
     vi.unstubAllEnvs();
   });
