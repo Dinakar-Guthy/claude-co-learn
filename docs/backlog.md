@@ -29,10 +29,10 @@ Each item: what it is, why it might matter, open questions.
     5. Pacing by mode: a question after every chunk instead of only at rare high-value moments. Bosses become chapter tests.
   - **Later:** topics become ongoing courses ("continue my Roman history course"), with sequel suggestions (from `alternative-projects/learning-quest/`).
 - **Today:** a learning goal partly works already, since Claude's "work" becomes explaining. But the work-first prompt favors long explanations with few questions, there's no path or progress, and the question types are worded for tasks.
-- **How it's accessed** (to decide; discussed 2026-10-18):
-  - `/learn` as a second entry phrase next to `/co-learn` (`/co-learn` = do real work with Claude and learn along the way; `/learn` = study a topic with Claude as tutor). The caption names both.
-  - A mode switch on the intent screen.
-  - A "Study this" button on Codex concepts that starts a `/learn` session on that concept (a bridge from work to deeper learning).
+- **How it's accessed** (decided by Dinakar 2026-10-18: options 1 + 2 at launch, 3 soon after):
+  1. `/learn` as a second entry phrase next to `/co-learn` (`/co-learn` = do real work with Claude and learn along the way; `/learn` = study a topic with Claude as tutor). The caption names both.
+  2. A mode switch on the intent screen, preselected by the phrase typed.
+  3. A "Study this" button on Codex concepts that starts a `/learn` session on that concept (a bridge from work to deeper learning).
   - Possibly a `/learn?topic=…` link for sharing.
 - **Effort:** about half a day to a day (prompt, intent, path UI). Very little touches the engine.
 - **Suggested timing:** after the take-home submission, on a branch. Mention it in the rationale as evidence the design generalizes.

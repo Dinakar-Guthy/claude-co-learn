@@ -1,8 +1,36 @@
 # Handoff: start here in a fresh session
 
-Last updated: 2026-10-18 early morning (second overnight run). **Start with §8 Morning report (overnight run 2)**; §7 is the first run (evening of Oct 17).
+Last updated: 2026-10-18 afternoon. **Start with §0 Current status** (the most recent). §8 and §7 are the overnight reports, with the manual testing guide in §8.
 **Next: P3 (Dinakar's playthrough, pending decisions, prompt polish) and P4 (rationale, video, transcripts).**
 §3 below is the P2 checklist as it was planned (now done; kept for reference).
+
+## 0. Current status (2026-10-18, latest)
+- **The prototype is feature-complete for the submission** and deployed:
+  - https://anthropic-take-home-10-17-26.vercel.app
+  - Repo: https://github.com/Dinakar-Guthy/claude-co-learn (private; renamed from `anthropic-take-home-10-17-26`; Vercel still deploys from it).
+  - 500+ tests; typecheck, lint, and build clean.
+- **Built since the §8 report:**
+  - **Novice primer**, for "New to this".
+  - **Test traffic is tagged per request:** open any page with `?test=1` and that tab (only) tags its events; `/insights` excludes them unless "Include test traffic" is on.
+  - **Production data cleared** by Dinakar (2026-10-18).
+  - **Repo** renamed.
+- **Decisions:** all reviewed with Dinakar on 2026-10-18 except the "primer details as built" entry (pending). See `docs/decision-log.md`.
+- **Remaining work for Dinakar:** the checklist in `docs/plan.md` → "Remaining for Dinakar":
+  1. manual testing and iteration
+  2. the written rationale (run `/rationale-coach`)
+  3. the video (≤ 8 min)
+  4. transcripts
+  5. repo access for reviewers
+  6. the reviewer password in the submission
+  7. a budget check
+  8. submit
+- **Deadline:** Oct 21, 9:00 AM PT.
+- **Backlog** (after submission): `docs/backlog.md`, including **Learn mode** (decided access: `/learn` as a second entry phrase plus a mode switch on the intent screen at launch; "Study this" from the Codex later).
+- **Live-check tools** (now in the repo, `web/scripts/e2e/`):
+  - **`chrome.sh` + `drive.mjs`:** a headless-Chrome driver. `login <origin>` turns on per-tab test mode.
+  - **`events.mjs`, `spend.mjs`, `context.mjs`, `keys.mjs`:** read Upstash telemetry, spend, a session's context, and keys. Run with `node --env-file=web/.env.local …`.
+  - **`help-probe.mjs`:** a live leak probe for the help prompts.
+  - **`keys.mjs --delete`:** bulk deletes; Dinakar runs those himself.
 
 ## 1. Where things stand
 - **Deadline:** Oct 21, 9:00 AM PT. **Target:** everything done by end of Sun Oct 18; Oct 19–21 are buffer.
