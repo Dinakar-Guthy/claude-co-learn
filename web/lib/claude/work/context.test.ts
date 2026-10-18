@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { EngineSummary } from "@/lib/contracts/engine";
-import { demoDataNote, renderContext, sessionEndsAt, timeLine } from "./context";
+import { demoDataNote, renderContext, reviewLine, sessionEndsAt, timeLine } from "./context";
 import { makeSession } from "./testing";
 
 const MIN = 60_000;
@@ -9,6 +9,7 @@ const summary: EngineSummary = {
   valueThreshold: 4,
   targetDifficulty: { firstExposure: 2, practice: 3 },
   masteredConcepts: ["train/test split"],
+  dueForReview: ["data leakage", "precision vs recall"],
   conceptsSinceBoss: ["class imbalance"],
   rollingAccuracy: 0.8,
   recentOutcomes: [{ concept: "class imbalance", type: "predict", score: 1 }],
@@ -50,10 +51,19 @@ describe("renderContext", () => {
     expect(out).toContain("- extra note");
   });
 
+  it("lists concepts due for review on one line, as review rather than first exposure", () => {
+    const out = renderContext({ session: makeSession(), summary, now: 0 });
+    const line = out.split("\n").find((l) => l.startsWith("- Due for review from earlier sessions:"));
+    expect(line).toBe(`- ${reviewLine(["data leakage", "precision vs recall"])}`);
+    expect(line).toContain("data leakage, precision vs recall.");
+    expect(line).toContain("first_exposure to false");
+  });
+
   it("handles an empty engine state", () => {
-    const out = renderContext({ session: makeSession(), summary: { ...summary, masteredConcepts: [], rollingAccuracy: null, recentOutcomes: [] }, now: 0 });
+    const out = renderContext({ session: makeSession(), summary: { ...summary, masteredConcepts: [], dueForReview: [], rollingAccuracy: null, recentOutcomes: [] }, now: 0 });
     expect(out).toContain("no graded answers yet");
     expect(out).not.toContain("Session sketch");
+    expect(out).not.toContain("Due for review");
   });
 });
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { LevelInfo } from "@/lib/contracts/engine";
 import { useNow } from "@/lib/ui/useNow";
 import { XPBar, type XpGain } from "./XPBar";
@@ -14,6 +15,8 @@ export interface TopBarProps {
   muted: boolean;
   onToggleMute: () => void;
   onOpenSettings: () => void;
+  /** Link to the cross-session Codex (e.g. `/codex?from=/s/<id>`). The book button is hidden when omitted. */
+  codexHref?: string;
 }
 
 export function formatRemaining(ms: number): string {
@@ -37,7 +40,7 @@ export function SessionTimer({ endsAt }: { endsAt: number }) {
 
 const iconBtn = `flex h-9 w-9 items-center justify-center rounded-full text-muted hover:bg-surface-2 hover:text-text ${focusRing}`;
 
-export function TopBar({ title, level, xpGain, endsAt, muted, onToggleMute, onOpenSettings }: TopBarProps) {
+export function TopBar({ title, level, xpGain, endsAt, muted, onToggleMute, onOpenSettings, codexHref }: TopBarProps) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-12 max-w-5xl items-center gap-3 px-4">
@@ -55,6 +58,11 @@ export function TopBar({ title, level, xpGain, endsAt, muted, onToggleMute, onOp
         <button type="button" onClick={onToggleMute} aria-pressed={muted} aria-label={muted ? "Unmute sounds" : "Mute sounds"} className={iconBtn}>
           {muted ? <SpeakerOffIcon /> : <SpeakerIcon />}
         </button>
+        {codexHref && (
+          <Link href={codexHref} aria-label="Codex" title="Codex" className={iconBtn}>
+            <BookIcon />
+          </Link>
+        )}
         <button type="button" onClick={onOpenSettings} aria-label="Settings" aria-haspopup="dialog" className={iconBtn}>
           <GearIcon />
         </button>
@@ -77,6 +85,16 @@ function SpeakerOffIcon() {
     <svg viewBox="0 0 20 20" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3.5 8v4h3l4 3.5v-11L6.5 8h-3Z" />
       <path d="m13.5 8 4 4m0-4-4 4" />
+    </svg>
+  );
+}
+
+function BookIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      {/* Open book: two pages meeting at the spine */}
+      <path d="M12 6.5C10.3 5.2 7.9 4.6 4 4.75v13c3.9-.15 6.3.45 8 1.75 1.7-1.3 4.1-1.9 8-1.75v-13c-3.9-.15-6.3.45-8 1.75Z" />
+      <path d="M12 6.5v13" />
     </svg>
   );
 }

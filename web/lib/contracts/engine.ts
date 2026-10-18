@@ -79,6 +79,8 @@ export interface EngineSummary {
   valueThreshold: number;
   targetDifficulty: { firstExposure: number; practice: number }; // for a typical unseen/seen concept
   masteredConcepts: string[];
+  /** Concepts from earlier sessions worth a quick review moment (stale mastered or still shaky), most valuable first, ≤ 3. */
+  dueForReview: string[];
   conceptsSinceBoss: string[];
   rollingAccuracy: number | null; // over last 5 graded outcomes
   recentOutcomes: { concept: string; type: string; score: number }[]; // last 3

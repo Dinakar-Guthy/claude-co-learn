@@ -43,5 +43,16 @@ export {
   recordSkipped,
   recordWorkTurn,
 } from "./state";
+export {
+  conceptStatus,
+  dueForReview,
+  isShaky,
+  MAX_DUE_FOR_REVIEW,
+  REVIEW_MIN_GAP_MS,
+  reviewReason,
+  SHAKY_P_THRESHOLD,
+  strength,
+  type ConceptStatus,
+} from "./review";
 export { summarize } from "./summary";
 export { XP, xpFor } from "./xp";
