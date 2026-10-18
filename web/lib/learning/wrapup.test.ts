@@ -1,3 +1,4 @@
+import { handleGrade } from "./grade";
 import { describe, expect, it, vi } from "vitest";
 import { initialEngineState } from "@/lib/contracts/engine";
 import { newUser } from "@/lib/store/defaults";
@@ -85,5 +86,22 @@ describe("outcomes and summaries", () => {
     const missed = await seedMoment(deps, { status: "answered", verdict: "partial", missingPoints: ["majority class"] });
     const fine = await seedMoment(deps, { id: "m2", status: "answered", verdict: "correct" });
     expect(recentMisconceptions([missed, fine])).toEqual(["majority class", "accuracy is always fine"]);
+  });
+});
+
+describe("saved predict questions at wrap-up", () => {
+  it("become 'what actually happened, and why?' questions graded against the session log", async () => {
+    const deps = makeDeps();
+    await seedSession(deps);
+    await deps.store.putTranscript("s1", [{ kind: "code_run", id: "c1", language: "python", code: "print(acc)", stdout: "baseline accuracy 0.849", fileIds: [] }]);
+    await seedMoment(deps, { type: "predict", status: "deferred", candidate: candidate({ type: "predict", question: "What accuracy will the baseline get?" }) });
+
+    const { body } = await handleWrapUp(deps, ANON, "s1");
+    expect(body.deferred[0]).toMatchObject({ type: "explain_back", explainAtWrapUp: true });
+    expect(body.deferred[0].question).toContain("what actually happened");
+
+    await handleGrade(deps, ANON, { sessionId: "s1", momentId: "m1", action: "submit", answer: "About 85%" });
+    const call = vi.mocked(deps.content.gradeAnswer).mock.calls[0][0];
+    expect(call.sessionLog).toContain("baseline accuracy 0.849");
   });
 });

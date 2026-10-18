@@ -28,8 +28,14 @@ List missing key points (short phrases). If the answer matches a known misconcep
 
 ${DATA_RULE}`;
 
-export const gradeAnswer: ContentApi["gradeAnswer"] = async ({ candidate, answer, retryAvailable = false }) => {
+export const gradeAnswer: ContentApi["gradeAnswer"] = async ({ candidate, answer, retryAvailable = false, sessionLog }) => {
   const user = [
+    ...(sessionLog
+      ? [
+          "This question is about what actually happened in the learner's session. Grade against the session log below; where the answer key's expected numbers differ from what really happened, the log wins.",
+          asData("session_log", truncate(sessionLog, 3000)),
+        ]
+      : []),
     ...(retryAvailable ? ["If (and only if) your verdict is incorrect, a multiple-choice retry follows: keep that why a hint, don't reveal the answer. Partial and correct verdicts get the full explanation."] : []),
     renderQuestion(candidate),
     "Answer key (hidden from the learner):",

@@ -14,6 +14,7 @@ import { answerXpReason, resolveMoment, type Resolution } from "./resolve";
 import { hitFor, isSettled } from "./scores";
 import { loadOwnedSession, patchSession } from "./sessionStore";
 import { revokeXp } from "./xp";
+import { workSummary } from "./workSummary";
 
 const ids = { sessionId: z.string().min(1).max(100), momentId: z.string().min(1).max(100) };
 export const GradeRequestSchema = z.union([
@@ -72,7 +73,8 @@ async function submit(ctx: Ctx, rawAnswer: string): Promise<HandlerResult<GradeR
     return done({ moment: toMomentView(pending), offerMC: false, continueWith: continueWork(ctx) });
   }
 
-  const grade = await deps.content.gradeAnswer({ candidate: record.candidate, answer, retryAvailable: !record.mcOffered });
+  const sessionLog = record.explainAtWrapUp ? workSummary(await deps.store.getTranscript(session.id), 3000) : undefined;
+  const grade = await deps.content.gradeAnswer({ candidate: record.candidate, answer, retryAvailable: !record.mcOffered, sessionLog });
   const answered: MomentRecord = { ...record, answer };
 
   if (grade.verdict === "incorrect" && !record.mcOffered) {

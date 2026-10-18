@@ -46,7 +46,8 @@ export interface HelpContext {
 
 export interface ContentApi {
   /** retryAvailable: an incorrect answer gets a multiple-choice retry next, so the "why" must not give the answer away. */
-  gradeAnswer(input: { candidate: LearningMomentInput; answer: string; retryAvailable?: boolean }): Promise<GradeResult>;
+  /** sessionLog: what actually happened in the session (saved predict questions re-asked at wrap-up are graded against it). */
+  gradeAnswer(input: { candidate: LearningMomentInput; answer: string; retryAvailable?: boolean; sessionLog?: string }): Promise<GradeResult>;
   verifyMoment(input: { candidate: LearningMomentInput }): Promise<VerifyResult>;
   /** One more hint (never the answer). */
   generateHint(input: HelpContext): Promise<{ hint: string }>;

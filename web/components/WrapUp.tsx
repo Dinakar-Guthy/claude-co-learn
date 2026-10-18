@@ -30,10 +30,12 @@ export interface WrapUpProps {
   onTryTheme?: (themeId: string) => void;
   onSuggestion: (text: string) => void;
   onNewSession: () => void;
+  /** Scrolls back to where a saved question came up in the session. */
+  onShowContext?: (momentId: string) => void;
 }
 
 /** End-of-session sequence: deferred quiz → Codex → XP → story → suggestions → new session. */
-export function WrapUp({ data, moments, gradingMomentId, helpBusy, xpByMoment, onMomentAction, chapterLoading = false, onTryTheme, onSuggestion, onNewSession }: WrapUpProps) {
+export function WrapUp({ data, moments, gradingMomentId, helpBusy, xpByMoment, onMomentAction, chapterLoading = false, onTryTheme, onSuggestion, onNewSession, onShowContext }: WrapUpProps) {
   const { level } = data.user;
   const rewards = data.levelUps.flatMap((l) => l.rewards);
   const pct = Math.round(levelProgress(level) * 100);
@@ -50,8 +52,8 @@ export function WrapUp({ data, moments, gradingMomentId, helpBusy, xpByMoment, o
             // Saved questions reopen here for answering.
             const view: MomentView = m.status === "deferred" ? { ...m, status: "awaiting_answer" } : m;
             return (
+              <div key={d.id} className="space-y-1">
               <MomentCard
-                key={d.id}
                 moment={view}
                 grading={gradingMomentId === d.id}
                 helpBusy={helpBusy?.[d.id]}
@@ -59,6 +61,18 @@ export function WrapUp({ data, moments, gradingMomentId, helpBusy, xpByMoment, o
                 canDefer={false}
                 {...momentHandlers((a) => onMomentAction(d.id, a))}
               />
+              {onShowContext && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => onShowContext(d.id)}
+                    className="rounded-full px-2.5 py-1 text-sm text-muted transition hover:bg-surface hover:text-text"
+                  >
+                    See where this came up ↑
+                  </button>
+                </div>
+              )}
+              </div>
             );
           })}
         </div>

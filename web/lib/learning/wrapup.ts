@@ -64,7 +64,7 @@ export async function handleWrapUp(deps: LearningDeps, anonId: string, sessionId
 
   return {
     body: {
-      deferred: moments.filter((m) => m.status === "deferred").map(toMomentView),
+      deferred: (await asWrapUpQuestions(deps, moments.filter((m) => m.status === "deferred"))).map(toMomentView),
       codex: draft.codex,
       sessionXp: sessionXp(deps, latest, moments),
       user: toUserView(await loadUser(deps, anonId)),
@@ -74,4 +74,31 @@ export async function handleWrapUp(deps: LearningDeps, anonId: string, sessionId
     },
     background: [],
   };
+}
+
+/**
+ * A saved *predict* question can't be graded against "the next run" anymore (the work moved on), so at wrap-up
+ * it becomes "what actually happened, and why?", graded against the session log (Dinakar, 2026-10-18).
+ */
+export async function asWrapUpQuestions(deps: LearningDeps, deferred: MomentRecord[]): Promise<MomentRecord[]> {
+  const out: MomentRecord[] = [];
+  for (const m of deferred) {
+    if (m.type !== "predict" || m.bossId || m.explainAtWrapUp) {
+      out.push(m);
+      continue;
+    }
+    const next: MomentRecord = {
+      ...m,
+      type: "explain_back",
+      explainAtWrapUp: true,
+      candidate: {
+        ...m.candidate,
+        type: "explain_back",
+        question: `Earlier, before running the code, you were asked to predict: "${m.candidate.question}" Now that the work has run, what actually happened, and why?`,
+      },
+    };
+    await deps.store.putMoment(next);
+    out.push(next);
+  }
+  return out;
 }

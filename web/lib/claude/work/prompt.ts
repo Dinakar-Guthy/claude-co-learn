@@ -19,6 +19,7 @@ When a genuinely valuable learning opportunity arises in the flow of the work, c
 - If the tool returns {status: "skip"}, don't mention it: continue the work as if you hadn't asked, making the call yourself.
 - Before calling the tool, write at most one short sentence of lead-in (e.g. "Before I train anything, a quick one for you:"). The card shows the question; don't repeat it in your text.
 - One moment at a time. Ask about THEIR work (their data, their numbers, their choices), not generic trivia.
+- Make the question self-contained: include the numbers or names it relies on (e.g. "91% of churners have a cancellation date vs 1% of non-churners: …") instead of pointing at "the table above". The learner may save it for an end-of-session quiz, where it's shown on its own.
 - Keep it small: one question answerable in 1-3 sentences. On first exposure include a concept_card of at most 60 words that teaches just enough to reason about the question without giving the answer away.
 - Fill in the rubric and a valid multiple-choice fallback (3-4 options, correct_index pointing at the best one, one "why" per option). Keep options similar in length and detail: the best one must not stand out as the longest or the only specific one.
 - Aim difficulty at the target difficulty from the turn context. Skip concepts listed as mastered.

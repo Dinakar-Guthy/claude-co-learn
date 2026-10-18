@@ -159,7 +159,9 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
 
       <main className="mx-auto w-full max-w-[720px] flex-1 space-y-5 px-4 pt-6 pb-10">
         {view.transcript.map((item) => (
-          <TranscriptEntry key={item.id} item={item} ws={ws} view={view} revealed={revealed} hideWrapChapter={Boolean(ws.wrap.data)} />
+          <div key={item.id} id={anchorId(item.id)} className="scroll-mt-20 rounded-card transition-shadow duration-700">
+            <TranscriptEntry item={item} ws={ws} view={view} revealed={revealed} hideWrapChapter={Boolean(ws.wrap.data)} />
+          </div>
         ))}
 
         {ws.streaming && ws.status && <StatusLine text={STATUS_LABEL[ws.status]} />}
@@ -234,6 +236,7 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
               onTryTheme={(id) => void ws.changeSettings({ theme: id })}
               onSuggestion={(s) => router.push(`/?start=1&goal=${encodeURIComponent(s)}`)}
               onNewSession={() => router.push("/?start=1")}
+              onShowContext={(momentId) => showContext(view, momentId)}
             />
           </div>
         )}
@@ -262,6 +265,20 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
       )}
     </div>
   );
+}
+
+const anchorId = (itemId: string) => `item-${itemId.replace(/[^\w-]/g, "_")}`;
+
+/** Scrolls to where a moment first came up and briefly highlights it. */
+function showContext(view: SessionView, momentId: string) {
+  const item = view.transcript.find((i) => i.kind === "moment" && i.momentId === momentId);
+  const el = item && document.getElementById(anchorId(item.id));
+  if (!el) return;
+  // Show what led up to the question, not just the card itself.
+  const target = (el.previousElementSibling?.previousElementSibling as HTMLElement | null) ?? el;
+  target.scrollIntoView({ behavior: "smooth", block: "start" });
+  el.classList.add("ring-4", "ring-accent");
+  setTimeout(() => el.classList.remove("ring-4", "ring-accent"), 2500);
 }
 
 function StatusLine({ text }: { text: string }) {
