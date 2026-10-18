@@ -89,6 +89,30 @@ describe.each(factories)("Store conformance: %s", (_name, make) => {
     expect(await store.listMoments("empty")).toEqual([]);
   });
 
+  it("deletes a user's data and leaves other users alone", async () => {
+    const store = make();
+    await store.putUser(newUser("u1"));
+    await store.putUser(newUser("u2"));
+    const s1 = makeSession("s1", "u1", 1);
+    await store.putSession({ ...s1, engine: { ...s1.engine, bosses: [{ id: "b1", startedAt: 1, concepts: [] }] } });
+    await store.putSession(makeSession("s2", "u2", 2));
+    await store.putTranscript("s1", [{ kind: "notice", id: "n1", text: "hi" }]);
+    await store.putMoment(makeMoment("m1", "s1", 1));
+    await store.putBoss(makeBoss("b1", "s1"));
+    await store.putMastery("u1", "leakage", { theta: 2, n: 1, lastSeen: 1 });
+
+    await store.deleteUserData("u1");
+    expect(await store.getUser("u1")).toBeNull();
+    expect(await store.listSessions("u1")).toEqual([]);
+    expect(await store.getSession("s1")).toBeNull();
+    expect(await store.getTranscript("s1")).toEqual([]);
+    expect(await store.listMoments("s1")).toEqual([]);
+    expect(await store.getBoss("s1", "b1")).toBeNull();
+    expect(await store.getMastery("u1")).toEqual({});
+    expect(await store.getUser("u2")).not.toBeNull();
+    expect(await store.getSession("s2")).not.toBeNull();
+  });
+
   it("stores bosses per session", async () => {
     const store = make();
     const boss = makeBoss("b1", "s1");

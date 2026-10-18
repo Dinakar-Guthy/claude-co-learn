@@ -94,6 +94,17 @@ export class RedisStore implements Store {
       .sort((a, b) => b.createdAt - a.createdAt);
   }
 
+  async deleteUserData(anonId: string): Promise<void> {
+    const [ids] = await this.run("deleteUserData", [["zrevrange", keys.userSessions(anonId)]]);
+    const raws = ids.length ? (await this.run("deleteUserData", [["mget", ids.map(keys.session)]]))[0] : [];
+    const sessionKeys = ids.flatMap((id, i) => {
+      const session = raws[i] ? this.decode<Session>("deleteUserData", raws[i]) : null;
+      const bossKeys = (session?.engine.bosses ?? []).map((b) => keys.boss(id, b.id));
+      return [keys.session(id), keys.messages(id), keys.transcript(id), keys.moments(id), ...bossKeys];
+    });
+    await this.run("deleteUserData", [["del", [keys.user(anonId), keys.userSessions(anonId), keys.mastery(anonId), ...sessionKeys]]]);
+  }
+
   async getSession(sessionId: string): Promise<Session | null> {
     const [raw] = await this.run("getSession", [["get", keys.session(sessionId)]]);
     return this.decode<Session>("getSession", raw);

@@ -265,11 +265,18 @@ function SettingsBody({ settings, level, unlocks, onChange, sessions = [], curre
         </Section>
       )}
 
+      <Section title="How Co-learn is doing">
+        <p className="text-sm text-muted">
+          For reviewers: anonymous usage numbers (answer and help rates, accuracy against the target bands, bosses, retention).{" "}
+          <a href="/insights" className={`rounded font-semibold text-primary underline underline-offset-2 ${focusRing}`}>Open Insights</a>
+        </p>
+      </Section>
+
       {onResetData && (
         <Section title="Your data">
           {confirmReset ? (
             <div className="space-y-3 rounded-2xl bg-surface-2 p-3">
-              <p className="text-sm">This clears your XP, unlocks, and past sessions on this browser. Are you sure?</p>
+              <p className="text-sm">This deletes your XP, unlocks, and past sessions, and starts you over as a new user. Are you sure?</p>
               <div className="flex gap-2">
                 <Button size="sm" variant="primary" onClick={() => { setConfirmReset(false); onResetData(); }}>Yes, reset</Button>
                 <Button size="sm" onClick={() => setConfirmReset(false)}>Cancel</Button>

@@ -46,6 +46,8 @@ export interface Store {
   getUsage(scopes: UsageScope[]): Promise<number[]>;
 
   logEvent(event: AppEvent): Promise<void>;
+  /** Deletes a user's profile, mastery, and every session's data ("Reset my data"). Telemetry events are kept. */
+  deleteUserData(anonId: string): Promise<void>;
   /** Telemetry events logged on a UTC day (`yyyy-mm-dd`), oldest first. Read-only; used by /api/insights. */
   listEvents(day: string): Promise<AppEvent[]>;
 }

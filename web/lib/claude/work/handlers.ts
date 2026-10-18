@@ -177,7 +177,7 @@ async function resolvePrediction(ctx: ToolContext, block: Anthropic.Beta.BetaToo
   gate.mastery[concept] = mastery;
   await deps.store.putMastery(ctx.anonId, concept, mastery);
   state.session.engine = deps.engine.recordOutcome(state.session.engine, { momentId: moment.id, concept, type: moment.type, score, at: now });
-  await ctx.log("moment_answered", { momentId: moment.id, type: moment.type, concept, verdict: input.verdict, xp });
+  await ctx.log("moment_answered", { momentId: moment.id, type: moment.type, concept, verdict: input.verdict, xp, score, help: help ?? null });
 
   const itemId = `prediction:${moment.id}`;
   state.addItem({ kind: "prediction_reveal", id: itemId, momentId: moment.id, actualResult: input.actual_result, verdict: input.verdict, why: input.why, xp });

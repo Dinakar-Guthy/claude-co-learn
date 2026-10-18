@@ -19,6 +19,19 @@ export class MemoryStore implements Store {
   private usage = new Map<string, number>();
   readonly events: AppEvent[] = [];
 
+  async deleteUserData(anonId: string) {
+    for (const id of this.userSessions.get(anonId) ?? []) {
+      this.sessions.delete(id);
+      this.apiMessages.delete(id);
+      this.transcripts.delete(id);
+      this.moments.delete(id);
+      for (const key of [...this.bosses.keys()]) if (key.startsWith(`${id}:`)) this.bosses.delete(key);
+    }
+    this.userSessions.delete(anonId);
+    this.users.delete(anonId);
+    this.mastery.delete(anonId);
+  }
+
   async getUser(anonId: string) { const u = this.users.get(anonId); return u ? clone(u) : null; }
   async putUser(user: User) { this.users.set(user.anonId, clone(user)); }
 

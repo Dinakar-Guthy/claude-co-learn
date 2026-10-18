@@ -160,7 +160,7 @@ describe("POST /api/user/reset", () => {
     expect((await reset.POST()).status).toBe(401);
   });
 
-  it("gives the browser a fresh level-1 identity and leaves the old user untouched", async () => {
+  it("deletes the old identity's data and gives the browser a fresh level-1 identity", async () => {
     await store.putUser({ ...newUser(ANON), xp: 300 });
     const res = await reset.POST();
     expect(res.status).toBe(200);
@@ -168,6 +168,6 @@ describe("POST /api/user/reset", () => {
     const newId = cookie.set.mock.calls[0][0].value as string;
     expect(newId).not.toBe(ANON);
     expect(await store.getUser(newId)).toMatchObject({ xp: 0 });
-    expect((await store.getUser(ANON))?.xp).toBe(300);
+    expect(await store.getUser(ANON)).toBeNull();
   });
 });

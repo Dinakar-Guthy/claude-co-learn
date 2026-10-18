@@ -6,13 +6,15 @@ import type { UserView } from "@/lib/contracts/api";
 import { toUserView } from "@/lib/views";
 
 /**
- * POST /api/user/reset: "Start over as a new user". This browser gets a fresh anonymous identity (level 1,
- * no past sessions). The previous identity's data isn't reachable from this browser anymore and ages out
- * with the normal 60-day TTL.
+ * POST /api/user/reset: "Reset my data" / "Start over as a new user". Deletes the current identity's profile,
+ * mastery, and sessions, then gives this browser a fresh anonymous identity (level 1, no past sessions).
+ * Anonymous telemetry events are kept (they feed /insights).
  */
 export async function POST() {
-  if (!(await readAnonId())) return unauthorized();
+  const previous = await readAnonId();
+  if (!previous) return unauthorized();
   try {
+    await getStore().deleteUserData(previous);
     const anonId = await rotateAnonId();
     const user = newUser(anonId);
     await getStore().putUser(user);
