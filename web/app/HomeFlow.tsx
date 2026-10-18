@@ -129,6 +129,7 @@ function Welcome({ sessions, onNew }: { sessions: SessionSummary[]; onNew: () =>
         {recent.map((s) => (
           <Button key={s.id} onClick={() => router.push(`/s/${s.id}`)} className="w-full justify-between">
             <span className="truncate">{s.status === "wrapped" ? "Revisit" : "Continue"}: {s.title}</span>
+            <span className="shrink-0 text-xs font-normal text-muted">{shortDate(s.createdAt)}</span>
           </Button>
         ))}
       </div>
@@ -136,6 +137,8 @@ function Welcome({ sessions, onNew }: { sessions: SessionSummary[]; onNew: () =>
     </div>
   );
 }
+
+const shortDate = (at: number) => new Date(at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
 function Intent({ initialGoal }: { initialGoal: string }) {
   const router = useRouter();
