@@ -70,7 +70,7 @@ with the browser driver before moving on; new judgment calls marked "pending Din
   - A "Did you learn something?" thumbs prompt at wrap-up.
   - A gated `/insights` page summarizing events: answer/skip/defer/help rates, accuracy vs the ~80% target band, boss outcomes, sessions completed.
 - [x] **Hard delete** option on reset (actually remove the old identity's data)
-- [ ] **Novice primer** (Dinakar overruled skipping it, 2026-10-18 review; build next work session).
+- [x] **Novice primer** (Dinakar overruled skipping it, 2026-10-18 review; built and verified on production the same day).
 
 ### Not planned (reasons; also listed in docs/backlog.md for triage)
 - Upload your own CSV: moved to `docs/backlog.md` (Dinakar, 2026-10-18)
@@ -87,10 +87,20 @@ with the browser driver before moving on; new judgment calls marked "pending Din
 - A **manual testing guide**: step-by-step scripts to exercise every feature, including the new ones, with what to expect at each step.
 
 ## Next work session
-- [ ] **Novice primer** (decision log 2026-10-18):
-  - **Who and where:** "New to this" only; a dismissible card at the top of the workspace while the first work turn runs.
-  - **Content:** generated from the goal with the session sketch; 3-4 key ideas (≤ 120 words) plus one easy warm-up check question.
-  - **Proposed defaults, to confirm when building:**
-    - The check question is multiple-choice (instant, no model call), worth 5 XP, and doesn't update mastery (it's a warm-up, not practice).
-    - It's generated in the background job that already makes the sketch.
-    - If it isn't ready in time, it's skipped.
+- [x] **Novice primer** (decision log 2026-10-18), verified on production:
+  - Appears during the first turn; the warm-up gives +5 XP.
+  - "Skip" persists across reloads.
+  - The work model is told which basics it covered.
+
+## Remaining for Dinakar (before the Oct 21, 9:00 AM PT deadline)
+- [ ] **Manual testing:** follow HANDOFF §8 "Manual testing guide" (Chrome, Safari, phone, sound on), and iterate on what you find.
+- [ ] **Written design rationale** (`docs/design-rationale.md`, in your voice): option and why, process, agency, learning principles, measuring success, scaling, sister-team adoption. Source material: `docs/decision-log.md`, `docs/design-principles.md`, `docs/design-plan.md` §15, `/insights`.
+- [ ] **Video (≤ 8 min screenshare walkthrough):** required by the brief.
+- [ ] **Transcripts (required, complete):** run `python3 scripts/collect_transcripts.py` at the very end, un-ignore `transcripts/raw/`, and commit.
+- [ ] **Repo access:** the GitHub repo is private; give the reviewers access (or decide to make it public).
+- [ ] **Reviewer access info:** include the prototype URL and the site password in the submission.
+- [ ] **Budget:**
+  - Check the Anthropic Console spend limit on the key covers the review period.
+  - Daily caps in the app: $5 per browser, $25 per IP, $75 global.
+- [ ] **Optional:** decide whether to clear your test data from production before submitting, so `/insights` shows only reviewer usage. Or keep it as example data.
+- [ ] **Submit via Greenhouse:** repo link, prototype link, transcripts, video, written doc.

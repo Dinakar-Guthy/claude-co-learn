@@ -209,6 +209,11 @@ Three full demo runs and one non-ML run (a SQL query), each in a fresh session:
    Optionally make deferred questions self-contained (have the wrap-up rephrase them, or tell Claude in the moment schema that questions may be shown later).
 3. P4: rationale doc in your voice, the ≤ 8-minute video (the journey above is the script), and transcripts (`python3 scripts/collect_transcripts.py`).
 
+### Housekeeping note
+- **Possible iCloud duplicates:** the repo lives in `~/Documents`, which looks iCloud-synced. Files named `… 2` keep appearing (`web/.next/… 2.ts`, `.git/index 2`).
+  - They're harmless so far: build output gets regenerated, and git ignores `index 2`.
+  - Consider moving the repo out of iCloud-synced folders, or excluding it, so a sync conflict can't corrupt `.git` before submission.
+
 ### Testing tools (not committed)
 - `/tmp/e2e/drive.mjs`: a tiny Chrome DevTools driver (`login` reads `SITE_PASSWORD` from `.env.local` without printing it; `type`, `click`, `idle`, `text`, `shot`).
 - `/tmp/e2e/tools/{events,spend}.mjs`: read app events and spend from Upstash.
@@ -223,8 +228,8 @@ Three full demo runs and one non-ML run (a SQL query), each in a fresh session:
 
 ## 8. Morning report (overnight run 2, early Oct 18)
 
-**Bottom line:** everything in the approved overnight plan (`docs/plan.md`, "Overnight run 2") is built, tested, deployed, and verified on the live site, except two items:
-- **The novice primer:** skipped; see the decision log.
+**Bottom line:** everything in the approved overnight plan (`docs/plan.md`, "Overnight run 2") is built, tested, deployed, and verified on the live site. The novice primer was added afterwards, at Dinakar's request, and verified on production. Two notes:
+- **Remaining work for Dinakar:** see `docs/plan.md` → "Remaining for Dinakar".
 - **Spaced review across sessions:** checked live locally (shared Redis) rather than on production, because it needs a 10-minute gap between sessions.
 
 | Check | Status |
@@ -316,6 +321,15 @@ Use https://anthropic-take-home-10-17-26.vercel.app with the site password.
    - **Expect:** "What are you working on?", or "Welcome back!" with past sessions and dates if you have any.
 2. Click "▶ Try the demo", pick a familiarity and time, then "Let's go".
    - **Expect:** the workspace opens and Claude starts loading the CSV right away.
+
+**A2. Novice primer** (pick "New to this" on the intent screen)
+1. Within about 20s, while Claude starts, a "60-second primer" card appears at the top: 3-4 key ideas plus a warm-up question.
+2. Answer the warm-up.
+   - **Expect:** the best answer highlighted, a why, and +5 XP.
+3. Click "Skip" (or "Done") and reload.
+   - **Expect:** it stays hidden.
+4. With "Some experience" or "Comfortable":
+   - **Expect:** no primer.
 
 **B. Help tools (on the first question, usually spot the issue / target leakage)**
 1. Click "Give me a hint", then "Another hint".
