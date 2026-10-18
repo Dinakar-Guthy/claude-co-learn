@@ -255,7 +255,22 @@ export function useWorkspace(sessionId: string) {
       try {
         const res = await apiPost<GradeResponse>("/api/moment/grade", gradeBody(sessionId, momentId, action));
         update((v) => applyGrade(v, res));
-        if (wrap.data) setWrap((w) => (w.data ? { ...w, data: { ...w.data, deferred: w.data.deferred.map((d) => (d.id === momentId ? res.moment : d)) } } : w));
+        if (wrap.data) {
+          const gained = res.xp;
+          setWrap((w) =>
+            w.data
+              ? {
+                  ...w,
+                  data: {
+                    ...w.data,
+                    deferred: w.data.deferred.map((d) => (d.id === momentId ? res.moment : d)),
+                    sessionXp: w.data.sessionXp + (gained?.amount ?? 0),
+                    user: gained ? { ...w.data.user, xp: gained.level.xp, level: gained.level } : w.data.user,
+                  },
+                }
+              : w,
+          );
+        }
         applyXp(res.xp, momentId);
         if (res.boss?.done) void onBossFinished(res);
         else if (res.continueWith) void send(res.continueWith);
