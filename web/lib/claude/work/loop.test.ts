@@ -500,6 +500,12 @@ describe("server tool calls without results", () => {
 
       expect(lastEvent(events)).toEqual({ type: "turn_end", reason: "end_turn" });
       expect(t.deps.compact).toHaveBeenCalledTimes(1);
+      // The learner sees why this turn is slower, then the usual "thinking".
+      expect(events.slice(0, 3)).toEqual([
+        { type: "status", status: "thinking" },
+        { type: "status", status: "summarizing" },
+        { type: "status", status: "thinking" },
+      ]);
       const request = t.calls[0];
       expect(request.betas).toEqual(["server-side-fallback-2026-07-01", "compact-2026-09-04"]);
       expect(request.messages[0]).toEqual({ role: "assistant", content: [summary] });
@@ -530,8 +536,9 @@ describe("server tool calls without results", () => {
     it("leaves small histories alone", async () => {
       const t = await setup();
       t.replies.push(fakeMessage([text("Hi.")]));
-      await t.send({ kind: "message", text: "hello" });
+      const events = await t.send({ kind: "message", text: "hello" });
       expect(t.deps.compact).not.toHaveBeenCalled();
+      expect(events.filter((e) => e.type === "status" && e.status === "summarizing")).toEqual([]);
       expect(t.calls[0].betas).toEqual(["server-side-fallback-2026-07-01"]);
     });
   });

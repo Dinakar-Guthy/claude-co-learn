@@ -21,7 +21,7 @@ export type TurnEndReason =
   | "error";
 
 export type ChatStreamEvent =
-  | { type: "status"; status: "thinking" | "running_code" | "preparing_moment" }
+  | { type: "status"; status: "thinking" | "summarizing" | "running_code" | "preparing_moment" } // summarizing: compacting a long history before the turn
   | { type: "text_delta"; itemId: string; text: string }
   | { type: "code_start"; itemId: string; language: "bash" | "python" | "file"; code: string }
   | { type: "code_result"; itemId: string; stdout: string; stderr: string; returnCode: number; fileIds: string[] }

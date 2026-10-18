@@ -218,8 +218,19 @@ describe("maybeCompact", () => {
   it("does nothing (and calls nothing) for a small history", async () => {
     const h = turns(4);
     const t = await setup(h, async () => compactionResponse());
-    expect(await maybeCompact(t.input)).toBe(h);
+    const onStart = vi.fn();
+    expect(await maybeCompact({ ...t.input, onStart })).toBe(h);
     expect(t.deps.compact).not.toHaveBeenCalled();
+    expect(onStart).not.toHaveBeenCalled();
+  });
+
+  it("calls onStart once, before the summary request", async () => {
+    const h = turns(30, 6_000);
+    const t = await setup(h, async () => compactionResponse());
+    const onStart = vi.fn(() => expect(t.deps.compact).not.toHaveBeenCalled());
+    await maybeCompact({ ...t.input, onStart });
+    expect(onStart).toHaveBeenCalledTimes(1);
+    expect(t.deps.compact).toHaveBeenCalledTimes(1);
   });
 
   it("swaps the older messages for the summary block and keeps the tail verbatim", async () => {

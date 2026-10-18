@@ -58,8 +58,15 @@ export async function runTurn(deps: WorkDeps, plan: TurnPlan, emit: Emit, signal
   // Fail-open: the limits machinery is degraded, so the turn proceeds with a heads-up (not persisted).
   if (limits.warning) emit({ type: "notice", itemId: `notice-limits-${deps.now()}`, text: limits.warning });
 
-  // Large histories are summarized first (never fails the turn; falls back to the full history).
-  const history = await maybeCompact({ deps, session, anonId, ip, history: await store.getApiMessages(session.id), signal });
+  // Large histories are summarized first (never fails the turn; falls back to the full history). That takes a few
+  // seconds, so the learner sees why; "thinking" comes back once it's done.
+  let summarized = false;
+  const onStart = () => {
+    summarized = true;
+    emit({ type: "status", status: "summarizing" });
+  };
+  const history = await maybeCompact({ deps, session, anonId, ip, history: await store.getApiMessages(session.id), signal, onStart });
+  if (summarized) emit({ type: "status", status: "thinking" });
   const state = new TurnState(store, session, history);
   const ctx = new ToolContext(deps, state, user);
 

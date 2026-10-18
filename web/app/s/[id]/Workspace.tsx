@@ -32,6 +32,7 @@ import { useWorkspace, type Workspace as WorkspaceApi } from "./useWorkspace";
 
 const STATUS_LABEL = {
   thinking: "Claude is thinking…",
+  summarizing: "Tidying up my notes so far… (a few extra seconds)",
   running_code: "Running code…",
   preparing_moment: "Preparing a question for you…",
 } as const;

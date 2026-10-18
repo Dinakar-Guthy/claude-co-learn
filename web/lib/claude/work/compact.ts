@@ -186,18 +186,21 @@ export interface CompactInput {
   ip: string;
   history: ApiMessage[];
   signal: AbortSignal;
+  /** Called once, just before the (slow) summary request, so the UI can say why this turn takes longer. */
+  onStart?: () => void;
 }
 
 /**
  * Compacts the stored history if it's large: returns the history to use for this turn (and persists it, plus
  * `session.rollingSummary`). Returns `history` unchanged when there's nothing to do or anything fails.
  */
-export async function maybeCompact({ deps, session, anonId, ip, history, signal }: CompactInput): Promise<ApiMessage[]> {
+export async function maybeCompact({ deps, session, anonId, ip, history, signal, onStart }: CompactInput): Promise<ApiMessage[]> {
   let plan: CompactionPlan | null;
   let block: Anthropic.Beta.BetaCompactionBlock;
   try {
     plan = planCompaction(sanitizeHistory(history).messages);
     if (!plan) return history;
+    onStart?.();
     const response = await deps.compact(buildCompactionParams(plan.older, session.containerId), signal);
     await deps.recordUsage(anonId, ip, response.model, compactionUsage(response.usage)).catch((e) => console.error("compaction usage not recorded:", describeError(e)));
     const found = response.content.find((b): b is Anthropic.Beta.BetaCompactionBlock => b.type === "compaction");

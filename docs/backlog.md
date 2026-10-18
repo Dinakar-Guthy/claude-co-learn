@@ -37,6 +37,14 @@ Each item: what it is, why it might matter, open questions.
 - **Effort:** about half a day to a day (prompt, intent, path UI). Very little touches the engine.
 - **Suggested timing:** after the take-home submission, on a branch. Mention it in the rationale as evidence the design generalizes.
 
+## Faster, friendlier history compaction
+- **Today (built 2026-10-18):** when a long session's history passes ~40k tokens, the next turn first summarizes the older messages (several seconds). The status line says "Tidying up my notes so far… (a few extra seconds)" while it runs.
+- **Option C: summarize in the background** after a turn ends (e.g. Next's `after()`), so no learner-facing turn is ever slower.
+  - Open questions: a message sent mid-summary (lock, or discard the summary if the history changed); cost of summarizing sessions that never continue.
+- **Option D: turn it into a recap card** ("Here's what we've built so far"), shown to the learner as a short reflection moment, possibly with a question about it.
+  - Why: turns a technical step into retrieval practice (P3/P4). Open questions: pacing (it shouldn't interrupt flow), and whether the API summary is written for the learner or for Claude (probably needs its own learner-facing summary).
+- Alternatives considered at the time: a one-off transcript note ("I summarized our earlier work"), rejected as an implementation detail that clutters the chat.
+
 ## Cross-device resume
 - **What:** continue your progress in another browser (resume code or accounts).
 - **Open question:** resume codes are effectively bearer tokens, a security trade-off; accounts add sign-up friction for reviewers.
