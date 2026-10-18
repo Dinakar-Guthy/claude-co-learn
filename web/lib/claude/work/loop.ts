@@ -53,7 +53,7 @@ export async function runTurn(deps: WorkDeps, plan: TurnPlan, emit: Emit, signal
     return;
   }
 
-  const history = (await store.getApiMessages(session.id)) as unknown as ApiMessage[];
+  const history = await store.getApiMessages(session.id);
   const state = new TurnState(store, session, history);
   const ctx = new ToolContext(deps, state, user);
 

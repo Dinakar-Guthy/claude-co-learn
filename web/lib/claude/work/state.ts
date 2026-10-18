@@ -11,7 +11,7 @@ import type { ApiMessages, Session, TranscriptItem } from "@/lib/contracts/sessi
 import type { Store } from "@/lib/contracts/store";
 import { codeResult, dropOrphanServerToolUses, fileIdsFromContent, isPausedAssistant, serverResultIds, transcriptFromContent } from "./blocks";
 
-export type ApiMessage = Anthropic.Beta.BetaMessageParam;
+export type ApiMessage = ApiMessages[number];
 type ContentParam = Anthropic.Beta.BetaContentBlockParam;
 
 /** An assistant turn the API will accept: something besides thinking (an empty turn carries nothing to preserve). */
@@ -147,8 +147,7 @@ export class TurnState {
     };
     await store.putSession({ ...latest, ...owned });
     const { messages, dropped } = sanitizeHistory([...this.history, ...this.pending.slice(0, this.committed)]);
-    // ApiMessages is typed with the non-beta MessageParam; beta blocks (e.g. `fallback`) are wire-compatible.
-    await store.putApiMessages(session.id, messages as unknown as ApiMessages);
+    await store.putApiMessages(session.id, messages);
     // Code runs whose calls were dropped never ran; don't leave them in the transcript.
     for (const id of dropped) this.items.delete(id);
     if (this.items.size || dropped.length) {

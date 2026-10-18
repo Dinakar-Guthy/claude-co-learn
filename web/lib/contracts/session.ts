@@ -125,7 +125,7 @@ export type TranscriptItem =
   | { kind: "notice"; id: string; text: string };
 
 /** Raw conversation as sent to the Claude API. */
-export type ApiMessages = Anthropic.MessageParam[];
+export type ApiMessages = Anthropic.Beta.BetaMessageParam[];
 
 export interface SessionSummary {
   id: string;
