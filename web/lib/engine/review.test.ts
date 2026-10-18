@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { updateMastery } from "./mastery";
 import type { ConceptMastery } from "@/lib/contracts/engine";
 import { isMastered } from "./mastery";
 import { conceptStatus, dueForReview, isShaky, MAX_DUE_FOR_REVIEW, reviewReason, strength } from "./review";
@@ -98,5 +99,16 @@ describe("conceptStatus", () => {
     expect(conceptStatus(m(2, 2, MIN), T0)).toBe("growing"); // shaky but just practised
     expect(conceptStatus(m(3.8, 1, DAY), T0)).toBe("growing"); // on track, not mastered yet
     expect(conceptStatus(m(5, 1, DAY), T0)).toBe("growing"); // strong after one attempt: needs a second
+  });
+});
+
+describe("a newcomer's right answers aren't marked for review", () => {
+  it("is growing, not review, when the last attempt went well, even at low strength", () => {
+    const now = 10 * 24 * 3600_000;
+    const m = updateMastery(undefined, 1, 1, "new", now - 3600_000);
+    expect(m.lastScore).toBe(1);
+    expect(conceptStatus(m, now)).toBe("growing");
+    const missed = updateMastery(undefined, 0, 1, "new", now - 3600_000);
+    expect(conceptStatus(missed, now)).toBe("review");
   });
 });

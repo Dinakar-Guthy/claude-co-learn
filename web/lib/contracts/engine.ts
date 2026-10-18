@@ -19,6 +19,8 @@ export interface ConceptMastery {
   theta: number;
   n: number;
   lastSeen: number; // epoch ms
+  /** Score of the most recent attempt (0..1); drives "Review next time" (struggled last time). */
+  lastScore?: number;
 }
 export type MasteryMap = Record<string, ConceptMastery>;
 

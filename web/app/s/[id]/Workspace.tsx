@@ -121,6 +121,7 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
         muted={!user.settings.sound}
         onToggleMute={() => void ws.changeSettings({ sound: !user.settings.sound })}
         onOpenSettings={openDrawer}
+        codexHref={`/codex?from=/s/${view.id}`}
       />
       <LimitsBanner />
       <SettingsDrawer

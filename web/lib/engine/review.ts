@@ -7,6 +7,11 @@ import { isMastered, MASTERY_REFERENCE_DIFFICULTY, pCorrect, reviewDue } from ".
 
 /** Below this P(correct at b = 3), a practised but unmastered concept is worth revisiting. */
 export const SHAKY_P_THRESHOLD = 0.6;
+/**
+ * The last attempt has to have gone less than well, too: a newcomer's correct answers keep strength low for a
+ * while (θ starts at 1.5), and "Review next time" for something they just got right would feel punishing (P2).
+ */
+export const SHAKY_LAST_SCORE = 0.6;
 
 /**
  * Shaky concepts are only offered for review once they're this old, so a concept practised a few minutes ago isn't
@@ -22,9 +27,14 @@ export function strength(m: ConceptMastery): number {
   return pCorrect(m.theta, MASTERY_REFERENCE_DIFFICULTY);
 }
 
-/** Practised at least once, not mastered, and still below a comfortable success rate on a medium question. */
+/**
+ * Practised at least once, not mastered, below a comfortable success rate on a medium question, and the last
+ * attempt went less than well (missed, partial, revealed, or after a lot of help). Older records without a
+ * lastScore fall back to strength alone.
+ */
 export function isShaky(m: ConceptMastery | undefined): boolean {
-  return !!m && m.n >= 1 && !isMastered(m) && strength(m) < SHAKY_P_THRESHOLD;
+  if (!m || m.n < 1 || isMastered(m) || strength(m) >= SHAKY_P_THRESHOLD) return false;
+  return m.lastScore === undefined || m.lastScore < SHAKY_LAST_SCORE;
 }
 
 export type ReviewReason = "shaky" | "stale";

@@ -65,7 +65,7 @@ export function updateMastery(
   const n = prev?.n ?? 0;
   const k = n < K_EARLY_ATTEMPTS ? K_EARLY : K_LATE;
   const next = theta + k * (score - pCorrect(theta, difficulty));
-  return { theta: clamp(next, THETA_MIN, THETA_MAX), n: n + 1, lastSeen: now };
+  return { theta: clamp(next, THETA_MIN, THETA_MAX), n: n + 1, lastSeen: now, lastScore: score };
 }
 
 export function isMastered(m: ConceptMastery | undefined): boolean {
