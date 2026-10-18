@@ -312,7 +312,8 @@ Anonymous ID: a random UUID in a **server-set HttpOnly cookie** (survives Safari
 - **Anthropic Console:** a monthly spend limit on the key (amount for Dinakar to choose) and, ideally, a dedicated workspace.
 - **Input limits:** ≤ 4,000 characters per message, max_tokens per call, history window (§9).
 - **Failure policy (decided by Dinakar):** if the limits machinery itself fails (counter unreadable, limiter down), requests **still go through**. The UI shows "usage limits aren't working as expected; please let the tool's owner know", and `/api/health` reports `limitsDegraded`.
-- The `/co-learn` "password" is framing only, not security.
+- **Reviewer access gate (added 2026-10-17):** `proxy.ts` puts a site-wide password (env `SITE_PASSWORD`) in front of every page and API route. Pages redirect to `/access`; APIs return 401; only `/access`, `/api/access`, and `/api/health` are public. It fails closed in production if the password isn't set.
+- The `/co-learn` "password" is framing only, not security; the reviewer gate is the real access control.
 
 ---
 
