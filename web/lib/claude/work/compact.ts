@@ -30,6 +30,9 @@ import { WORK_TOOLS } from "./tools";
 export const COMPACTION_BETA = "compact-2026-09-04";
 /** Compact once the stored history is estimated above this many tokens. */
 export const COMPACT_AT_TOKENS = 40_000;
+/** Test hook: COLEARN_COMPACT_AT_TOKENS lowers the threshold (e.g. to exercise compaction in a short live session). */
+const compactAt = () => Number(process.env.COLEARN_COMPACT_AT_TOKENS) || COMPACT_AT_TOKENS;
+const minSummarized = () => (process.env.COLEARN_COMPACT_AT_TOKENS ? 1_000 : MIN_SUMMARIZED_TOKENS);
 /** Aim to keep about this many recent messages verbatim (the cut moves to the nearest clean boundary). */
 export const KEEP_MESSAGES = 12;
 /** Don't bother compacting unless the older part is at least this big (estimated tokens). */
@@ -134,11 +137,11 @@ export interface CompactionPlan {
 
 /** What to compact, or null when the history is small enough or can't be cut cleanly. */
 export function planCompaction(messages: readonly ApiMessage[]): CompactionPlan | null {
-  if (estimateTokens(messages) <= COMPACT_AT_TOKENS) return null;
+  if (estimateTokens(messages) <= compactAt()) return null;
   const k = findCut(messages);
   if (k === null) return null;
   const older = messages.slice(0, k);
-  if (estimateTokens(older) < MIN_SUMMARIZED_TOKENS) return null;
+  if (estimateTokens(older) < minSummarized()) return null;
   return { older, kept: messages.slice(k) };
 }
 

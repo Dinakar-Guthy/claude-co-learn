@@ -92,7 +92,7 @@ export interface EngineSummary {
 
 export type XpEvent =
   | { kind: "answer"; verdict: Verdict; afterMC: boolean; help?: HelpLevel }
-  | { kind: "prediction"; verdict: Verdict }
+  | { kind: "prediction"; verdict: Verdict; help?: HelpLevel }
   | { kind: "boss_hit"; partial: boolean; help?: HelpLevel }
   | { kind: "boss_outcome"; outcome: BossOutcome }
   | { kind: "session_complete" };

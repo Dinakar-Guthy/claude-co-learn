@@ -2,6 +2,7 @@
  * Handlers for our function tools (design-plan §5.2). Each returns the tool_result content and, when the
  * turn must pause, the reason. Browser events go to the outbox, which the loop flushes after persisting.
  */
+import { thetaOf } from "@/lib/engine/mastery";
 import type Anthropic from "@anthropic-ai/sdk";
 import type { z } from "zod";
 import {
@@ -161,14 +162,18 @@ async function resolvePrediction(ctx: ToolContext, block: Anthropic.Beta.BetaToo
     return { content: `No prediction is waiting for a result with moment_id "${input.moment_id}". Don't call resolve_prediction for it again.`, isError: true };
   }
   const now = deps.now();
-  const xp = deps.engine.xpFor({ kind: "prediction", verdict: input.verdict });
-  const award = await awardXp(ctx, xp, `Prediction: ${input.verdict}`);
-  await deps.store.putMoment({ ...moment, status: "answered", verdict: input.verdict, why: input.why, xp, answeredAt: now });
+  // Help used before predicting reduces the credit, as for any answer (decision log 2026-10-18).
+  const help = moment.help?.level;
+  const xp = deps.engine.xpFor({ kind: "prediction", verdict: input.verdict, help });
+  const award = await awardXp(ctx, xp, `Prediction: ${input.verdict}${help ? ` (with ${help === "hint" ? "a hint" : "help"})` : ""}`);
 
   const concept = moment.candidate.concept;
-  const score = scoreFor(input.verdict, false);
+  const score = scoreFor(input.verdict, false, help);
   const gate = await ctx.gateContext(now);
-  const mastery = deps.engine.updateMastery(gate.mastery[concept], score, moment.candidate.difficulty, state.session.intent.familiarity, now);
+  const familiarity = state.session.intent.familiarity;
+  const mastery = deps.engine.updateMastery(gate.mastery[concept], score, moment.candidate.difficulty, familiarity, now);
+  const masteryDelta = mastery.theta - thetaOf(gate.mastery[concept], familiarity);
+  await deps.store.putMoment({ ...moment, status: "answered", verdict: input.verdict, why: input.why, xp, answeredAt: now, masteryDelta });
   gate.mastery[concept] = mastery;
   await deps.store.putMastery(ctx.anonId, concept, mastery);
   state.session.engine = deps.engine.recordOutcome(state.session.engine, { momentId: moment.id, concept, type: moment.type, score, at: now });

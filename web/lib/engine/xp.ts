@@ -25,6 +25,7 @@ export function xpFor(event: XpEvent): number {
       return event.afterMC ? table.correctAfterMC : table.correct;
     }
     case "prediction":
+      if (event.help && event.verdict !== "incorrect") return XP.answerWithHelp[event.help][event.verdict];
       return XP.prediction[event.verdict];
     case "boss_hit": {
       const base = event.partial ? XP.bossHit.partial : XP.bossHit.full;
