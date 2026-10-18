@@ -1,6 +1,6 @@
 # Handoff: start here in a fresh session
 
-Last updated: 2026-10-18 overnight, end of the P2 integration session. **Start with §7 Morning report.**
+Last updated: 2026-10-18 early morning (second overnight run). **Start with §8 Morning report (overnight run 2)**; §7 is the first run (evening of Oct 17).
 **Next: P3 (Dinakar's playthrough, pending decisions, prompt polish) and P4 (rationale, video, transcripts).**
 §3 below is the P2 checklist as it was planned (now done; kept for reference).
 
@@ -220,3 +220,176 @@ Three full demo runs and one non-ML run (a SQL query), each in a fresh session:
   - Where: Settings → Your data → Reset my data, plus a quiet link on the "Welcome back" screen.
   - `POST /api/user/reset` gives this browser a fresh anonymous identity (level 1, no sessions, Frost theme).
   - The old identity's data isn't deleted; it ages out with the 60-day TTL.
+
+## 8. Morning report (overnight run 2, early Oct 18)
+
+**Bottom line:** everything in the approved overnight plan (`docs/plan.md`, "Overnight run 2") is built, tested, deployed, and verified on the live site, except two items:
+- **The novice primer:** skipped; see the decision log.
+- **Spaced review across sessions:** checked locally; see below.
+
+| Check | Status |
+|---|---|
+| Tests | 493 pass |
+| Typecheck, lint, build | Clean |
+| `main` | Deployed |
+| Live API spend | About $2.10 tracked in total for Oct 18 (UTC), plus about $0.40 from probe scripts. Tonight's share is about $1.50; well under $10 |
+
+### What's new (and verified live)
+1. **Help tools on every question card.**
+   - "Give me a hint" (up to 2) sits with the quieter right-hand actions (Show options, Skip, Quiz me later), which got a lighter look. Submit stays the one strong button.
+   - "Help me learn this" opens a panel:
+     - "Teach me the idea first" gives a ~150-word lesson with a worked example on a different scenario.
+     - "Ask Claude…" is a small thread.
+   - "Ask Claude why" stays available after answering.
+   - Bosses get hints only.
+   - The wrap-up quiz gets everything.
+   - **Leak test:** I probed three real question shapes live ("just tell me", "is it B?", "what would you pick?", "what does this term mean?"). Hints and lessons teach without giving the answer. The first "just tell me" gets a kind nudge; the second reveals the answer and closes the question ("Got it. This one will come back for a quick review later.").
+2. **Less credit after help**, per your table:
+   - hint 0.8 / 8 XP
+   - teach or chat 0.6 / 5
+   - partial with help 0.4 / 3
+   - help then options 0.5 / 4
+   - Verified live: +8 after a hint, +5 after asking Claude, +12 for a boss hit after a hint (80% of 15).
+   - Predictions follow the same rules.
+   - A revealed question gets no XP and a score of 0, so it goes to review.
+3. **Boss exits.**
+   - **Opt-in card:** at a milestone, "A boss approaches! Take it on / Keep working" appears before anything is generated. "Keep working", or just typing, resumes the work. The offer comes back at the next milestone, survives a page reload, and is verified live.
+   - **"Skip this boss"** during a fight closes the remaining questions. Answers already given keep their XP; the skipped part earns nothing; there's no story chapter. Work resumes immediately.
+   - **Settings → Boss challenges** on/off toggle.
+4. **Saved-for-later questions.**
+   - Claude now writes self-contained questions (they include the numbers they rely on).
+   - Wrap-up quiz cards have "See where this came up ↑", which scrolls to and highlights the original spot.
+   - A saved predict question comes back as "Earlier you were asked to predict … what actually happened, and why?" and is graded against the session log. Verified live.
+5. **Remaining gaps closed.**
+   - **History compaction:** the API's on-demand compaction. Verified live with a lowered threshold: "15 messages summarized, 8 kept", and the following turns worked.
+   - **Report revokes credit:** reporting a graded question takes back its XP, without ever dropping a level, plus its mastery change.
+   - **Boss reload edge case:** fixed by the persistent offer.
+6. **Codex** (book icon in the top bar → `/codex`).
+   - Every concept across sessions, grouped Mastered / Growing / Review next time, with a strength bar and when it was last practised.
+   - "Review next time" only appears when the last attempt went less than well, so a newcomer's right answers show as "Growing".
+7. **Spaced review across sessions.** Up to 3 concepts due for review go into the next session's context. Claude may bring one back when the work naturally touches it, marked as review, not first exposure.
+8. **Measuring success: `/insights`** (Settings → "How Co-learn is doing").
+   - Shows: answer, skip, defer and reveal rates; help usage; mean accuracy against your P5 target bands; boss offered, declined, skipped and outcomes; pacing-gate decisions; wrap-up thumbs; small-sample delayed retention; daily totals.
+   - It's anonymous (no ids, no free text).
+   - Current numbers show questions landing *above* the bands (too easy). My test answers inflate that, but it's worth watching.
+9. **Wrap-up "Did you learn something?" 👍 / 👎**, recorded for /insights.
+10. **"Reset my data" now actually deletes** the old profile, mastery and sessions, then starts a fresh identity.
+11. **Fixes from live testing:**
+    - **Stale pages after navigation:** Next keeps visited pages mounted, so "Start a new session" showed a stale half-filled intent form. Fixed by keying the pages on `bfcacheId`.
+    - **Time's-up prompt** overlapped the boss offer.
+    - **Option numbering:** help replies referred to options by number.
+    - **Stray `}`** at the end of some help replies.
+    - **Duplicate moment calls:** Claude often proposed a duplicate low-value moment alongside the real one. The prompt now says one call per response.
+    - **Decide before training:** continuations now remind Claude to ask a decide moment before consequential choices. The next production run asked "which metric?" before training.
+
+### Needs Dinakar
+1. **Review the "pending Dinakar's review" entries** dated 2026-10-18 in `docs/decision-log.md` (about 18 now: last night's plus tonight's).
+   - **Rationales to confirm in your own words:**
+     - "Help reduces XP and mastery credit"
+     - "Reveal only after an attempt"
+   - **The biggest calls I made tonight:**
+     - Compaction uses the server feature on Sonnet, not a Haiku summary.
+     - A revealed question counts as a miss for mastery.
+     - What counts as "Review next time".
+     - Reset hard-deletes.
+     - Insights is linked from Settings.
+2. **Play through the testing guide below**, especially with sound on, in Safari, and on a phone.
+3. **Optional:** `docs/backlog.md` is the new untriaged backlog (CSV upload and the other parked ideas).
+
+### Known rough edges
+- **Option lengths:** multiple-choice correct options are still sometimes the longest, despite the prompt rule. Worth a stronger fix later, e.g. having the verifier check it.
+- **Moment quality still varies run to run:** Claude sometimes skips a decide moment. The latest prompt helped on production.
+- **Spaced review:** verified in unit tests and locally (see the end of this report), but not yet across a real day's gap.
+- **Insights "first exposure"** is approximate within the selected window (the page says so).
+- **Compaction latency:** a compacting turn takes longer (a synchronous Sonnet call); there's no UI notice for it yet.
+
+### Manual testing guide
+Use https://anthropic-take-home-10-17-26.vercel.app with the site password.
+
+**Start as a brand-new user:**
+- **Path:** Settings (gear) → Your data → Reset my data → Yes, reset.
+- **Or:** on the "Welcome back" screen, use "Start over as a new user".
+- **Expect:** the intent screen; level 1 and Frost theme on the next session; empty Codex.
+
+**A. Entry and intent**
+1. Go to `/` and type `/co-learn` (with sound on, you hear an unlock chime).
+   - **Expect:** "What are you working on?", or "Welcome back!" with past sessions and dates if you have any.
+2. Click "▶ Try the demo", pick a familiarity and time, then "Let's go".
+   - **Expect:** the workspace opens and Claude starts loading the CSV right away.
+
+**B. Help tools (on the first question, usually spot the issue / target leakage)**
+1. Click "Give me a hint", then "Another hint".
+   - **Expect:** two 💡 hints that point the way without giving the answer. The hint button disappears after two.
+2. Click "Help me learn this", then "Teach me the idea first".
+   - **Expect:** a short lesson with a worked example on a different scenario, ending with an invitation to try.
+3. In "Ask Claude…", ask "what does leakage mean?".
+   - **Expect:** an explanation, not the answer.
+4. Ask "just tell me the answer".
+   - **Expect:** a kind nudge to guess first.
+5. Ask again.
+   - **Expect:** the answer, an "The answer" box, "Got it. This one will come back for a quick review later.", and the work continues.
+6. **Alternative:** answer after a hint.
+   - **Expect:** +8 XP. After Teach me or Ask: +5 XP.
+7. On a later question: "Skip".
+   - **Expect:** a "See the answer" link on the skipped line.
+8. On any answered question: "Ask Claude why".
+   - **Expect:** Claude explains the answer openly.
+
+**C. Answers and feedback**
+1. Answer a question wrongly on purpose.
+   - **Expect:** "Not quite", a hint-style why (not the answer), then "Try it with options".
+2. Pick an option.
+   - **Expect:** your pick and the best answer highlighted, plus the full why.
+3. Predict question: answer it.
+   - **Expect:** "Locked in!", then a Prediction check card graded against the real code output.
+
+**D. Boss exits** (after about 3 concepts, at a milestone)
+1. **Expect:** "A boss approaches!" with "Take it on" and "Keep working". The time's-up prompt never shows at the same time.
+2. Click "Keep working".
+   - **Expect:** the work continues. At the next milestone the offer comes back. Reloading the page while it's showing keeps it.
+3. Click "Take it on".
+   - **Expect:** "A boss approaches…" (~25s), then the boss card with HP and "Question 1 of N".
+   - Hints are available; "Help me learn this" is not.
+4. Answer one question.
+   - **Expect:** feedback stays until "Next question →".
+5. Click "Skip this boss".
+   - **Expect:** "You let … go. It'll be back another time." and Claude resumes right away.
+   - **Or:** win it for confetti, a story chapter, and bonus XP.
+6. Settings → "Offer boss challenges" off.
+   - **Expect:** no more offers.
+
+**E. Saved for later and wrap-up**
+1. On a predict question, click "Quiz me later".
+   - **Expect:** "Saved a question … for your wrap-up quiz", and Claude carries on.
+2. Click "Wrap up session" (or wait for the time's-up prompt → "Wrap up").
+   - **Expect:**
+     - The quick quiz, where the saved predict question is now "what actually happened, and why?".
+     - "See where this came up ↑" scrolls to and highlights the original spot.
+     - The Codex card, XP summary, final story chapter, and suggestions.
+     - "Did you learn something?" 👍 / 👎.
+3. Click a suggestion.
+   - **Expect:** a fresh intent screen prefilled with that goal (no stale form).
+
+**F. Rewards, settings, Codex, insights**
+1. **Level-up:** with about 100 XP total, the "Level 2!" toast with "Try it" (Sunset theme). It auto-dismisses after 12s. Reload: no Frost flash.
+2. **Settings (gear):**
+   - sound and volume
+   - guardrails (Light / Balanced / Strict)
+   - boss toggle
+   - theme and sound pack pickers (locked ones show "Reach level N")
+   - past sessions
+   - "How Co-learn is doing" → `/insights`
+3. **Codex:** the book icon → `/codex`. Expect concepts grouped by status; "Back to your session".
+4. **Insights:** `/insights` with the 1 / 7 / 30-day selector.
+
+**G. A non-demo task**
+- Example: "Help me write a SQL query for our top 10 customers by revenue last quarter."
+- **Expect:** a decide moment (e.g. which order statuses count as revenue), then a query built on your choice.
+
+### Testing tools (not committed)
+These live in `/tmp/e2e/`:
+- `drive.mjs` (Chrome DevTools driver)
+- `tools/events.mjs`, `tools/spend.mjs` (Upstash telemetry and spend)
+- `tools/help-probe.mjs` (live leak probe for the help prompts)
+
+`COLEARN_COMPACT_AT_TOKENS=6000 npm run dev` forces early compaction locally.

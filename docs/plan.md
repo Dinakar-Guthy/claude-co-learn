@@ -22,12 +22,12 @@ Official deadline: Oct 21, 9:00 AM PT. **Target: complete by end of Sun Oct 18.*
 ## Mon Oct 19 – Wed Oct 21 9:00 AM PT
 - Buffer only
 
-## Overnight Oct 18 → 19 (approved by Dinakar; decisions in docs/decision-log.md, 2026-10-18)
+## Overnight run 2, early Oct 18 (approved by Dinakar; decisions in docs/decision-log.md, 2026-10-18)
 Rules: small commits pushed to `main`, all checks green; live API budget well under $10; verify each tier on production
 with the browser driver before moving on; new judgment calls marked "pending Dinakar's review".
 
 ### Tier 1: critical (build, unit-test, verify live)
-- [ ] **Help tools on every question card**
+- [x] **Help tools on every question card**
   - **Card layout:**
     - "Give me a hint" (up to 2, Haiku) joins the quieter right-hand actions: Show options, Skip, Quiz me later. That group gets a lighter visual treatment.
     - "Help me learn this" opens a panel with "Teach me" (a short lesson with a similar worked example; then the learner answers the original question) and "Ask Claude…" (a small thread; Sonnet, low effort).
@@ -41,7 +41,7 @@ with the browser driver before moving on; new judgment calls marked "pending Din
     - The wrap-up quiz gets all three.
     - The work model is told when help was used.
   - **Guard:** prompt rules plus adversarial leak tests.
-- [ ] **Credit after help:**
+- [x] **Credit after help:**
 
   | How the learner got there | Mastery | XP |
   |---|---|---|
@@ -50,27 +50,27 @@ with the browser driver before moving on; new judgment calls marked "pending Din
   | Partial after help | 0.4 | 3 |
   | Help then options | 0.5 | 4 |
 
-- [ ] **Boss exits:**
+- [x] **Boss exits:**
   - An opt-in card before generation ("Take it on / Keep working"), re-offered at every later milestone.
   - "Skip this boss" during a fight (no XP for the skipped part, no chapter, concepts to review, work resumes).
-- [ ] **Saved-for-later questions:**
+- [x] **Saved-for-later questions:**
   - Self-contained question wording.
   - A "See where this came up" link in the wrap-up.
   - Saved predict questions become "explain what happened" questions, graded against the session.
-- [ ] **Gaps:**
+- [x] **Gaps:**
   - History compaction (rolling summary when long).
   - Reporting an answered question takes back its XP and mastery.
   - The boss-start reload edge case.
 
 ### Tier 2: future items pulled in (after Tier 1 is verified live)
-- [ ] **Boss challenges on/off** setting (Settings, next to guardrails)
-- [ ] **Spaced review across sessions:** concepts due for review are fed into the next session's context, so Claude can resurface them naturally; the wrap-up shows "Due for review"
-- [ ] **Codex across sessions:** a Codex view (from the top bar/settings) listing every concept learned, its mastery, and when it was last practised
-- [ ] **Measuring success:**
+- [x] **Boss challenges on/off** setting (Settings, next to guardrails)
+- [x] **Spaced review across sessions:** concepts due for review are fed into the next session's context, so Claude can resurface them naturally (shown as "Review next time" in the Codex and the wrap-up)
+- [x] **Codex across sessions:** a Codex view (from the top bar/settings) listing every concept learned, its mastery, and when it was last practised
+- [x] **Measuring success:**
   - A "Did you learn something?" thumbs prompt at wrap-up.
   - A gated `/insights` page summarizing events: answer/skip/defer/help rates, accuracy vs the ~80% target band, boss outcomes, sessions completed.
-- [ ] **Hard delete** option on reset (actually remove the old identity's data)
-- [ ] **Novice primer:** for "New to this", a 60-second intro card at the start of the session (only if Teach me doesn't already cover it well)
+- [x] **Hard delete** option on reset (actually remove the old identity's data)
+- [~] **Novice primer:** not built (decision log: Teach me covers it). for "New to this", a 60-second intro card at the start of the session (only if Teach me doesn't already cover it well)
 
 ### Not planned (reasons; also listed in docs/backlog.md for triage)
 - Upload your own CSV: moved to `docs/backlog.md` (Dinakar, 2026-10-18)

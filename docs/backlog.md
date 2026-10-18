@@ -16,7 +16,7 @@ Each item: what it is, why it might matter, open questions.
   - Cost.
   - Moment quality on untested data.
   - Whether it's worth it given "depth over breadth" and that reviewers will mostly use the demo.
-- Dropped from the Oct 18 → 19 overnight plan by Dinakar.
+- Dropped from the overnight run 2 plan (early Oct 18) by Dinakar.
 
 ## Explicit topic learning
 - **What:** "teach me about X" sessions, where the goal is to learn a subject rather than do a task.
