@@ -23,6 +23,11 @@ export function timeLine(session: Pick<Session, "createdAt" | "intent">, now: nu
 
 const list = (xs: string[]) => (xs.length ? xs.join(", ") : "none");
 
+/** Spaced review across sessions: concepts the engine says are worth revisiting (EngineSummary.dueForReview). */
+export function reviewLine(concepts: string[]): string {
+  return `Due for review from earlier sessions: ${concepts.join(", ")}. If the work naturally touches one, a quick practice moment on it is welcome (it counts as review, not first exposure: set first_exposure to false and reuse the exact concept name).`;
+}
+
 export interface ContextInput {
   session: Pick<Session, "createdAt" | "intent" | "sketch">;
   summary: EngineSummary;
@@ -42,6 +47,7 @@ export function renderContext({ session, summary, now, notes = [] }: ContextInpu
     `- Moment gate: learning value >= ${summary.valueThreshold}. Target difficulty: ${summary.targetDifficulty.firstExposure} for a new concept, ${summary.targetDifficulty.practice} for practice.`,
     `- Guardrails: ${g.enabled ? `on (${g.mode}); fewer interruptions, so only propose your best moments` : "off"}`,
     `- Mastered concepts (don't quiz unless due for review): ${list(summary.masteredConcepts)}`,
+    ...(summary.dueForReview.length ? [`- ${reviewLine(summary.dueForReview)}`] : []),
     `- Concepts practised since the last boss: ${list(summary.conceptsSinceBoss)}`,
     `- Rolling accuracy: ${summary.rollingAccuracy === null ? "no graded answers yet" : `${Math.round(summary.rollingAccuracy * 100)}%`}`,
     `- Recent outcomes: ${summary.recentOutcomes.length ? summary.recentOutcomes.map((o) => `${o.concept} (${o.type}) ${o.score}`).join("; ") : "none"}`,
