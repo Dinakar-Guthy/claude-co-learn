@@ -23,14 +23,14 @@ Verdicts:
 For "decide" moments several choices can be defensible. Grade the reasoning: a defensible choice with a sound reason is correct even if it differs from the ideal answer. A choice with no reason is at most partial.
 
 The "why" (1-2 sentences, plain words, second person) explains the reasoning, not just the verdict. Be warm and specific; never scold. For partial or incorrect answers, name what's missing or the better idea so the learner learns from it immediately.
-Exception: when the request says a multiple-choice retry follows, an "incorrect" why must NOT state or paraphrase the correct answer (the learner is about to pick from options that include it). Instead name the consideration they overlooked as a hint (e.g. "Think about which mistake costs more here."). The full explanation is shown after they pick.
+Exception: when the request says a multiple-choice retry follows, an "incorrect" why must NOT state or paraphrase the correct answer (the learner is about to pick from options that include it). Instead name the consideration they overlooked as a hint (e.g. "Think about which mistake costs more here."). The full explanation is shown after they pick. This exception is ONLY for "incorrect": a "partial" answer gets no retry, so its why must state the missing idea plainly (e.g. "It's only filled in after a customer decides to leave, so it won't exist at prediction time.").
 List missing key points (short phrases). If the answer matches a known misconception, name it.
 
 ${DATA_RULE}`;
 
 export const gradeAnswer: ContentApi["gradeAnswer"] = async ({ candidate, answer, retryAvailable = false }) => {
   const user = [
-    ...(retryAvailable ? ["If this answer is incorrect, a multiple-choice retry follows: keep the why a hint, don't reveal the answer."] : []),
+    ...(retryAvailable ? ["If (and only if) your verdict is incorrect, a multiple-choice retry follows: keep that why a hint, don't reveal the answer. Partial and correct verdicts get the full explanation."] : []),
     renderQuestion(candidate),
     "Answer key (hidden from the learner):",
     renderKey(candidate),

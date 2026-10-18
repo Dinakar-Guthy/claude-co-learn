@@ -15,7 +15,7 @@ const BossQuestionSchema = z.object({
   key_points: z.array(z.string()).describe("1-4 points a good answer covers"),
   acceptable_variants: z.array(z.string()),
   misconceptions: z.array(z.string()),
-  mc_options: z.array(z.string()).describe("Exactly 4 options; distractors reflect real misconceptions"),
+  mc_options: z.array(z.string()).describe("Exactly 4 options of similar length and detail (the correct one must not stand out as the longest); distractors reflect real misconceptions"),
   mc_correct_index: z.number().int().describe("0-based index of the best option; it must agree with ideal_answer"),
   mc_why: z.array(z.string()).describe("One short explanation per option, same order as mc_options"),
   difficulty: z.number().int().describe("1-5"),
