@@ -27,7 +27,13 @@ swapped in later). Anonymous ID in a cookie, no login. P1: a "resume code" for c
 | StoryState | story bible, chapter summaries, open threads |
 | Usage | per-anonId + per-IP daily token count (spend cap) |
 
-Retention: expire anonymous data after ~30 days (Redis TTL). Store no PII beyond what users type into the chat.
+Retention: expire anonymous data after **60 days** (Redis TTL, refreshed on each visit). Store no PII beyond what users type into the chat.
+
+**Durability (verified, `reference/research/07-storage-durability.md`):** Upstash persists data to disk; it lasts days to weeks.
+Free databases are archived only after ≥30 days of *inactivity* (restorable). Gotchas:
+- Set the anon ID as a **server-set HttpOnly cookie**: Safari deletes JS-set cookies and localStorage after 7 days without interaction.
+- If the demo might sit idle for a month (e.g., a slow review cycle), switch to pay-as-you-go with a $1–5 budget cap.
+- Handle write failures gracefully (writes are rejected when the 250 MB free limit is hit).
 
 ## 2. Model context: what Claude sees per call
 - **Stable prefix (prompt-cached):** system prompt (Co-learn rules, moment types, grading rubric format), session intent brief.
