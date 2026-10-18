@@ -3,12 +3,10 @@
  * - Rate limits (sliding window): 20/min per anon ID, 60/min per IP.
  * - Daily spend caps (UTC day, micro-USD): $5 per anon ID, $25 per IP, $75 global.
  *
- * Failure policy when storage misbehaves:
- * - Rate limiter errors fail OPEN: a limiter outage shouldn't take the demo down, and the spend caps
- *   still bound cost.
- * - Spend-cap reads fail CLOSED: all three totals come from one read, so if it fails the global
- *   circuit breaker can't be checked and we refuse rather than risk unbounded spend.
- * - recordUsage errors are logged and swallowed so a finished response isn't turned into an error.
+ * Failure policy when storage misbehaves (decided by Dinakar, 2026-10-17): everything fails OPEN.
+ * Limits are a safeguard, not a product requirement, so a broken counter must never block learners.
+ * Instead the request proceeds with a `warning` the UI shows ("let the tool's owner know"), and
+ * `limitsStatus()` reports the degradation (surfaced by /api/health).
  */
 import type Anthropic from "@anthropic-ai/sdk";
 import type { Store, UsageScope } from "@/lib/contracts/store";
@@ -21,7 +19,7 @@ import { MemoryRateLimiter, upstashRateLimiter, type RateLimiter } from "./ratel
 export { estimateCostMicroUsd } from "./cost";
 
 export type LimitCheck =
-  | { ok: true }
+  | { ok: true; warning?: string }
   | { ok: false; code: "rate_limited" | "spend_cap"; message: string; retryAfterS?: number };
 
 export const RATE_LIMITS = {
@@ -40,8 +38,14 @@ export const LIMIT_MESSAGES = {
   anonCap: "You've reached today's demo limit, thanks for trying Co-learn! It resets at midnight UTC.",
   ipCap: "Your network has reached today's demo limit, thanks for trying Co-learn! It resets at midnight UTC.",
   globalCap: "Co-learn has reached its demo budget for today, thanks for your interest! It resets at midnight UTC.",
-  capUnavailable: "Co-learn can't check today's demo budget right now, so it's pausing to be safe. Please try again in a minute.",
+  degraded: "Heads up: Co-learn's usage limits aren't working as expected right now. Please let the tool's owner know.",
 } as const;
+
+export interface LimitsStatus {
+  degraded: boolean;
+  lastIssueAt?: number;
+  lastIssue?: "rate_limiter" | "spend_read" | "spend_write";
+}
 
 export interface LimitsDeps {
   store: Store;
@@ -54,7 +58,11 @@ export interface LimitsDeps {
 export interface Limits {
   checkLimits(anonId: string, ip: string): Promise<LimitCheck>;
   recordUsage(anonId: string, ip: string, model: string, usage: UsageLike): Promise<void>;
+  status(): LimitsStatus;
 }
+
+/** A degradation counts as current for this long after the last failure. */
+const DEGRADED_WINDOW_MS = 10 * 60_000;
 
 const scopesFor = (anonId: string, ip: string): UsageScope[] => [
   { kind: "anon", id: anonId },
@@ -63,11 +71,20 @@ const scopesFor = (anonId: string, ip: string): UsageScope[] => [
 ];
 
 export function createLimits({ store, anonLimiter, ipLimiter, now = Date.now, log = (l) => console.error(l) }: LimitsDeps): Limits {
+  let issue: { at: number; kind: NonNullable<LimitsStatus["lastIssue"]> } | null = null;
+  const flag = (kind: NonNullable<LimitsStatus["lastIssue"]>) => { issue = { at: now(), kind }; };
+  const status = (): LimitsStatus =>
+    issue && now() - issue.at < DEGRADED_WINDOW_MS
+      ? { degraded: true, lastIssueAt: issue.at, lastIssue: issue.kind }
+      : { degraded: false };
+  const allow = (): LimitCheck => (status().degraded ? { ok: true, warning: LIMIT_MESSAGES.degraded } : { ok: true });
+
   const tryLimit = async (limiter: RateLimiter, key: string) => {
     try {
       return await limiter.limit(key);
     } catch (e) {
       log(`[limits] rate limiter unavailable, allowing request (${redactError(e)})`);
+      flag("rate_limiter");
       return { success: true, reset: 0 };
     }
   };
@@ -85,14 +102,15 @@ export function createLimits({ store, anonLimiter, ipLimiter, now = Date.now, lo
       try {
         spent = await store.getUsage(scopesFor(anonId, ip));
       } catch (e) {
-        log(`[limits] spend caps unavailable, refusing request (${redactError(e)})`);
-        return { ok: false, code: "spend_cap", message: LIMIT_MESSAGES.capUnavailable, retryAfterS: 60 };
+        log(`[limits] spend caps unavailable, allowing request (${redactError(e)})`);
+        flag("spend_read");
+        return allow();
       }
       const [anon, byIpSpend, global] = spent;
       if (anon >= SPEND_CAPS_MICRO_USD.anon) return { ok: false, code: "spend_cap", message: LIMIT_MESSAGES.anonCap };
       if (byIpSpend >= SPEND_CAPS_MICRO_USD.ip) return { ok: false, code: "spend_cap", message: LIMIT_MESSAGES.ipCap };
       if (global >= SPEND_CAPS_MICRO_USD.global) return { ok: false, code: "spend_cap", message: LIMIT_MESSAGES.globalCap };
-      return { ok: true };
+      return allow();
     },
 
     async recordUsage(anonId, ip, model, usage) {
@@ -102,8 +120,11 @@ export function createLimits({ store, anonLimiter, ipLimiter, now = Date.now, lo
         await store.addUsage(scopesFor(anonId, ip), cost);
       } catch (e) {
         log(`[limits] failed to record ${cost} micro-USD of usage (${redactError(e)})`);
+        flag("spend_write");
       }
     },
+
+    status,
   };
 }
 
@@ -124,6 +145,11 @@ function defaultLimits(): Limits {
 /** Call before every Claude-backed request; on `ok: false` respond with `limitResponse(check)` (lib/platform/http.ts). */
 export async function checkLimits(anonId: string, ip: string): Promise<LimitCheck> {
   return defaultLimits().checkLimits(anonId, ip);
+}
+
+/** Current health of the limits machinery (for /api/health and UI banners). */
+export function limitsStatus(): LimitsStatus {
+  return defaultLimits().status();
 }
 
 /** Call after every Claude response with its usage, to accumulate spend. Never throws. */

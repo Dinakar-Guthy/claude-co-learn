@@ -66,8 +66,9 @@ describe("checkLimits: rate limits", () => {
   it("fails open when the rate limiter errors", async () => {
     const broken: RateLimiter = { limit: () => Promise.reject(new Error("redis down")) };
     limits = build({ anonLimiter: broken, ipLimiter: broken });
-    expect(await limits.checkLimits("a1", "1.1.1.1")).toEqual({ ok: true });
+    expect(await limits.checkLimits("a1", "1.1.1.1")).toEqual({ ok: true, warning: LIMIT_MESSAGES.degraded });
     expect(logs[0]).toMatch(/allowing request/);
+    expect(limits.status()).toMatchObject({ degraded: true, lastIssue: "rate_limiter" });
   });
 });
 
@@ -93,12 +94,18 @@ describe("checkLimits: spend caps", () => {
     expect(await limits.checkLimits("anyone", "9.9.9.9")).toEqual({ ok: false, code: "spend_cap", message: LIMIT_MESSAGES.globalCap });
   });
 
-  it("fails closed when usage can't be read", async () => {
+  it("fails open with an owner-facing warning when usage can't be read", async () => {
     const broken = new MemoryStore();
     broken.getUsage = () => Promise.reject(new StoreError("getUsage"));
     limits = build({ store: broken });
     const check = await limits.checkLimits("a1", "1.1.1.1");
-    expect(check).toEqual({ ok: false, code: "spend_cap", message: LIMIT_MESSAGES.capUnavailable, retryAfterS: 60 });
+    expect(check).toEqual({ ok: true, warning: LIMIT_MESSAGES.degraded });
+    expect(limits.status()).toMatchObject({ degraded: true, lastIssue: "spend_read" });
+  });
+
+  it("reports healthy when nothing has failed", async () => {
+    expect(await limits.checkLimits("a1", "1.1.1.1")).toEqual({ ok: true });
+    expect(limits.status()).toEqual({ degraded: false });
   });
 });
 
@@ -122,5 +129,6 @@ describe("recordUsage", () => {
     limits = build({ store: broken });
     await expect(limits.recordUsage("a1", "1.1.1.1", "claude-sonnet-5-5", { input_tokens: 1, output_tokens: 1 })).resolves.toBeUndefined();
     expect(logs).toHaveLength(1);
+    expect(limits.status()).toMatchObject({ degraded: true, lastIssue: "spend_write" });
   });
 });

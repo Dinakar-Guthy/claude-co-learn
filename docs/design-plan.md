@@ -311,6 +311,7 @@ Anonymous ID: a random UUID in a **server-set HttpOnly cookie** (survives Safari
   - Friendly message when hit.
 - **Anthropic Console:** a monthly spend limit on the key (amount for Dinakar to choose) and, ideally, a dedicated workspace.
 - **Input limits:** ≤ 4,000 characters per message, max_tokens per call, history window (§9).
+- **Failure policy (decided by Dinakar):** if the limits machinery itself fails (counter unreadable, limiter down), requests **still go through**. The UI shows "usage limits aren't working as expected; please let the tool's owner know", and `/api/health` reports `limitsDegraded`.
 - The `/co-learn` "password" is framing only, not security.
 
 ---
