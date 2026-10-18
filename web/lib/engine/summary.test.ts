@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { summarize } from "./summary";
-import { ctx, DAY, outcomes, settings, stateWith, T0 } from "./test-helpers";
+import { ctx, DAY, MIN, outcomes, settings, stateWith, T0 } from "./test-helpers";
 
 describe("summarize", () => {
   it("summarises a fresh session", () => {
@@ -9,6 +9,7 @@ describe("summarize", () => {
       valueThreshold: 4,
       targetDifficulty: { firstExposure: 1, practice: 1 },
       masteredConcepts: [],
+      dueForReview: [],
       conceptsSinceBoss: [],
       rollingAccuracy: null,
       recentOutcomes: [],
@@ -34,6 +35,21 @@ describe("summarize", () => {
       }),
     );
     expect(s.masteredConcepts).toEqual(["alpha", "zeta"]);
+  });
+
+  it("lists concepts due for review from earlier sessions: shaky first, then stale mastered", () => {
+    const s = summarize(
+      ctx({
+        mastery: {
+          stale: { theta: 5, n: 4, lastSeen: T0 - DAY - 1 },
+          shaky: { theta: 2, n: 2, lastSeen: T0 - DAY },
+          justPractised: { theta: 2, n: 1, lastSeen: T0 - MIN },
+          mastered: { theta: 5, n: 4, lastSeen: T0 },
+        },
+      }),
+    );
+    expect(s.dueForReview).toEqual(["shaky", "stale"]);
+    expect(s.masteredConcepts).toEqual(["mastered"]);
   });
 
   it("includes rolling accuracy, the last 3 outcomes, and concepts since boss", () => {

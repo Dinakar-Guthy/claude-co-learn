@@ -3,6 +3,7 @@ import type { EngineSummary, GateContext } from "@/lib/contracts/engine";
 import { rollingAccuracy, targetDifficulty } from "./difficulty";
 import { valueThreshold } from "./guardrails";
 import { isMastered, reviewDue } from "./mastery";
+import { dueForReview } from "./review";
 
 export const SUMMARY_RECENT_OUTCOMES = 3;
 
@@ -20,6 +21,7 @@ export function summarize(ctx: GateContext): EngineSummary {
     masteredConcepts: Object.keys(mastery)
       .filter((c) => isMastered(mastery[c]) && !reviewDue(mastery[c], now))
       .sort(),
+    dueForReview: dueForReview(mastery, now),
     conceptsSinceBoss: [...state.conceptsSinceBoss],
     rollingAccuracy: rollingAccuracy(recent),
     recentOutcomes: recent
