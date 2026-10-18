@@ -1,6 +1,6 @@
 /** Elo-lite mastery model (design-plan §7.3, principle P5). */
 import type { ConceptMastery, Familiarity } from "@/lib/contracts/engine";
-import type { Verdict } from "@/lib/contracts/moment";
+import type { HelpLevel, Verdict } from "@/lib/contracts/moment";
 import { clamp, sigmoid } from "./math";
 
 /** Starting θ by self-reported familiarity (design-plan §7.3). */
@@ -29,9 +29,21 @@ export const REVIEW_AFTER_MS = 24 * 60 * 60 * 1000;
 /** Outcome scores (design-plan §7.3). Skipped answers have no score and never update mastery. */
 export const SCORE = { correct: 1, correctAfterMC: 0.6, partial: 0.5, incorrect: 0 } as const;
 
-export function scoreFor(verdict: Verdict, afterMC: boolean): number {
+/** Reduced credit after learner-requested help (Dinakar, 2026-10-18): more help → less credit. */
+export const HELP_SCORE = {
+  hint: { correct: 0.8, partial: 0.4, correctAfterMC: 0.5 },
+  teach: { correct: 0.6, partial: 0.4, correctAfterMC: 0.5 },
+} as const;
+
+export function scoreFor(verdict: Verdict, afterMC: boolean, help?: HelpLevel): number {
+  if (verdict === "incorrect") return SCORE.incorrect;
+  if (help) {
+    const table = HELP_SCORE[help];
+    if (verdict === "partial") return table.partial;
+    return afterMC ? table.correctAfterMC : table.correct;
+  }
   if (verdict === "correct") return afterMC ? SCORE.correctAfterMC : SCORE.correct;
-  return verdict === "partial" ? SCORE.partial : SCORE.incorrect;
+  return SCORE.partial;
 }
 
 export function thetaOf(m: ConceptMastery | undefined, familiarity: Familiarity): number {

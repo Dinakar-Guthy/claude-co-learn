@@ -22,6 +22,7 @@ const BEAT_GUIDE: Record<BossOutcome | "wrapup", string> = {
   flawless: "The heroes win brilliantly: a triumphant, joyful chapter with a moment of earned pride.",
   victory: "The heroes win after a real struggle: triumphant and warm.",
   retreat: "The challenge slips away for now: end on a hopeful cliffhanger where the heroes regroup and learn something. Never punishing or sad.",
+  skipped: "The challenge was set aside for another day: a quiet, cozy interlude where the heroes get back to their journey. Never punishing.",
   wrapup: "This is the closing chapter for this session: resolve the current thread warmly and leave a small hook for a future adventure.",
 };
 

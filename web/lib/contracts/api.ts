@@ -42,6 +42,8 @@ export interface SessionView {
   moments: Record<string, MomentView>;
   bosses: Record<string, BossView>;
   chapters: Record<string, StoryChapter>;
+  /** A boss is due: show the "Take it on / Keep working" offer. */
+  bossOfferPending?: boolean;
 }
 
 // GET /api/sessions → SessionSummary[]
@@ -51,7 +53,8 @@ export type ChatRequest =
   | { sessionId: string; kind: "message"; text: string }
   | { sessionId: string; kind: "moment_response"; momentId: string } // server builds the text from the stored moment record
   | { sessionId: string; kind: "boss_result"; bossId: string }
-  | { sessionId: string; kind: "continue" }; // auto-continue (e.g. after pause_turn)
+  | { sessionId: string; kind: "continue" } // auto-continue (e.g. after pause_turn)
+  | { sessionId: string; kind: "boss_declined" }; // the learner chose "Keep working" on the boss offer
 
 // POST /api/moment/grade
 export type GradeRequest =
@@ -70,8 +73,21 @@ export interface GradeResponse {
   continueWith?: ChatRequest;
 }
 
+// POST /api/moment/help: learner-requested help on one question (design: decision log 2026-10-18)
+export type HelpRequest =
+  | { sessionId: string; momentId: string; action: "hint" | "teach" }
+  | { sessionId: string; momentId: string; action: "ask"; text: string };
+export interface HelpResponse {
+  moment: MomentView;
+  /** Set when the question closed as "revealed": continue the work. */
+  continueWith?: ChatRequest;
+}
+
 // POST /api/boss
 export interface StartBossRequest { sessionId: string }
+// POST /api/boss/skip
+export interface SkipBossRequest { sessionId: string; bossId: string }
+export interface SkipBossResponse { boss: BossView; moments: Record<string, MomentView>; continueWith: ChatRequest }
 export interface BossView {
   id: string;
   name: string;

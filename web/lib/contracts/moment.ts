@@ -57,7 +57,24 @@ export type MomentStatus =
   | "answered"
   | "skipped"
   | "deferred"
-  | "reported";
+  | "reported"
+  | "revealed"; // the learner asked for the answer before attempting (after one gentle nudge): no credit, goes to review
+
+/** How much help the learner used before their (final) answer. "teach" covers both Teach me and Ask Claude. */
+export type HelpLevel = "hint" | "teach";
+
+export interface HelpMessage {
+  role: "learner" | "claude";
+  text: string;
+  at: number;
+}
+
+/** Learner-requested help on one question (hints, a short lesson, and a small Ask Claude thread). */
+export interface MomentHelpView {
+  hints: string[];
+  lesson?: string;
+  thread: HelpMessage[];
+}
 
 /** What the browser is allowed to see. Never includes ideal_answer, rubric, or correct_index. */
 export interface MomentView {
@@ -76,4 +93,11 @@ export interface MomentView {
   why?: string;
   correctIndex?: number; // only revealed after an MC answer
   xp?: number;
+  help?: MomentHelpView;
+  /** Help used before the final answer (drives reduced credit). */
+  helpLevel?: HelpLevel;
+  /** The ideal answer, only once it's revealed: answered, skipped ("See the answer"), or revealed. */
+  answerExplanation?: string;
+  /** Saved predict questions are re-asked at wrap-up as "what happened, and why?". */
+  explainAtWrapUp?: boolean;
 }

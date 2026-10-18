@@ -12,7 +12,7 @@ import { addChapter } from "./story";
 import { recentMisconceptions, workSummary } from "./workSummary";
 import { awardXp } from "./xp";
 
-const BOSS_OUTCOME_LABEL = { flawless: "Flawless boss win", victory: "Boss defeated", retreat: "The boss retreats" } as const;
+const BOSS_OUTCOME_LABEL = { flawless: "Flawless boss win", victory: "Boss defeated", retreat: "The boss retreats", skipped: "Boss skipped" } as const;
 
 function distinctRecent(values: string[], limit: number): string[] {
   const out: string[] = [];

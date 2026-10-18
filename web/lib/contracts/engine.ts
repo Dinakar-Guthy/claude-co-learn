@@ -2,7 +2,7 @@
  * Pacing-engine contract (Track B implements in lib/engine/, pure + unit-tested).
  * See docs/design-plan.md §7.
  */
-import type { LearningMomentInput, MomentType, Verdict } from "./moment";
+import type { HelpLevel, LearningMomentInput, MomentType, Verdict } from "./moment";
 
 export type Familiarity = "new" | "some" | "comfortable";
 export type GuardrailMode = "light" | "balanced" | "strict";
@@ -30,7 +30,8 @@ export interface Outcome {
   at: number;
 }
 
-export type BossOutcome = "flawless" | "victory" | "retreat";
+/** "skipped": the learner chose "Skip this boss" (no outcome XP, no story chapter). */
+export type BossOutcome = "flawless" | "victory" | "retreat" | "skipped";
 export interface BossRecord {
   id: string;
   startedAt: number;
@@ -45,6 +46,8 @@ export interface EngineState {
   conceptsSinceBoss: string[]; // distinct concepts practised since last boss
   bosses: BossRecord[];
   recentOutcomes: Outcome[]; // most recent last, capped (e.g. 20)
+  /** A boss is due and the learner hasn't chosen "Take it on" / "Keep working" yet (survives reloads). */
+  bossOfferPending?: boolean;
 }
 
 export const initialEngineState = (): EngineState => ({
@@ -82,9 +85,9 @@ export interface EngineSummary {
 }
 
 export type XpEvent =
-  | { kind: "answer"; verdict: Verdict; afterMC: boolean }
+  | { kind: "answer"; verdict: Verdict; afterMC: boolean; help?: HelpLevel }
   | { kind: "prediction"; verdict: Verdict }
-  | { kind: "boss_hit"; partial: boolean }
+  | { kind: "boss_hit"; partial: boolean; help?: HelpLevel }
   | { kind: "boss_outcome"; outcome: BossOutcome }
   | { kind: "session_complete" };
 

@@ -3,7 +3,7 @@
  */
 import type Anthropic from "@anthropic-ai/sdk";
 import type { EngineState, Familiarity, UserSettings, BossOutcome } from "./engine";
-import type { LearningMomentInput, MomentStatus, MomentType, Verdict } from "./moment";
+import type { HelpLevel, LearningMomentInput, MomentHelpView, MomentStatus, MomentType, Verdict } from "./moment";
 
 export interface User {
   anonId: string;
@@ -88,6 +88,11 @@ export interface MomentRecord {
   missingPoints?: string[];
   xp?: number;
   answeredAt?: number;
+  /** Learner-requested help. `level` only grows while the question is still unanswered. */
+  help?: MomentHelpView & { level?: HelpLevel; declinedReveal?: boolean };
+  /** Mastery theta change applied when this moment was graded (so a report can undo it). */
+  masteryDelta?: number;
+  explainAtWrapUp?: boolean;
 }
 
 export interface BossState {
@@ -154,6 +159,14 @@ export interface AppEvent {
     | "session_wrapped"
     | "guardrails_changed"
     | "level_up"
+    | "help_hint"
+    | "help_teach"
+    | "help_ask"
+    | "moment_revealed"
+    | "boss_offered"
+    | "boss_declined"
+    | "boss_skipped"
+    | "learned_feedback"
     | "error";
   props?: Record<string, string | number | boolean | null>;
 }
