@@ -140,6 +140,14 @@ describe("RedisStore events", () => {
     expect(JSON.parse(items[0]).props.i).toBe(EVENTS_MAX + 2);
     expect(redis.ttl("events:2026-10-17")).toBe(DATA_TTL_S);
   });
+
+  it("listEvents skips corrupt entries and logs a count without the contents", async () => {
+    await store.logEvent({ at: T0, anonId: "u1", name: "moment_shown" });
+    await redis.exec([["lpush", "events:2026-10-17", "{not json"]]);
+    await store.logEvent({ at: T0 + 1, anonId: "u1", name: "moment_answered" });
+    expect((await store.listEvents("2026-10-17")).map((e) => e.name)).toEqual(["moment_shown", "moment_answered"]);
+    expect(logs).toEqual(["[store] skipped 1 corrupt event(s) in listEvents"]);
+  });
 });
 
 describe("RedisStore failures", () => {

@@ -46,4 +46,6 @@ export interface Store {
   getUsage(scopes: UsageScope[]): Promise<number[]>;
 
   logEvent(event: AppEvent): Promise<void>;
+  /** Telemetry events logged on a UTC day (`yyyy-mm-dd`), oldest first. Read-only; used by /api/insights. */
+  listEvents(day: string): Promise<AppEvent[]>;
 }

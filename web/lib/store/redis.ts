@@ -196,4 +196,20 @@ export class RedisStore implements Store {
       ["expire", key, DATA_TTL_S],
     ]);
   }
+
+  /** Oldest first (the list is LPUSHed, so it is stored newest first). Corrupt entries are skipped, not fatal. */
+  async listEvents(day: string): Promise<AppEvent[]> {
+    const [raws] = await this.run("listEvents", [["lrange", keys.events(day), 0, -1]]);
+    const out: AppEvent[] = [];
+    let corrupt = 0;
+    for (const raw of raws) {
+      try {
+        out.push(JSON.parse(raw) as AppEvent);
+      } catch {
+        corrupt++;
+      }
+    }
+    if (corrupt > 0) this.log(`[store] skipped ${corrupt} corrupt event(s) in listEvents`);
+    return out.reverse();
+  }
 }
