@@ -232,7 +232,7 @@ Three full demo runs and one non-ML run (a SQL query), each in a fresh session:
 | Tests | 493 pass |
 | Typecheck, lint, build | Clean |
 | `main` | Deployed |
-| Live API spend | About $2.10 tracked in total for Oct 18 (UTC), plus about $0.40 from probe scripts. Tonight's share is about $1.50; well under $10 |
+| Live API spend | $1.76 tracked for Oct 18 (UTC, both nights), plus about $0.40 from probe scripts. Tonight's share is about $1.25; well under $10 |
 
 ### What's new (and verified live)
 1. **Help tools on every question card.**
