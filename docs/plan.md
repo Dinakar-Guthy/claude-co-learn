@@ -97,7 +97,7 @@ with the browser driver before moving on; new judgment calls marked "pending Din
 - [ ] **Written design rationale** (`docs/design-rationale.md`, in your voice). The scaffold has headers, questions, and raw material. Run `/rationale-coach` in Claude Code for a guided, section-by-section session.
 - [ ] **Video (≤ 8 min screenshare walkthrough):** required by the brief. Claude can write a timed script and shot list, and pre-stage demo sessions.
 - [ ] **Transcripts (required, complete):** run `python3 scripts/collect_transcripts.py` at the very end, un-ignore `transcripts/raw/`, and commit.
-- [ ] **Repo access:** private repos can only be shared by inviting GitHub users. Either ask the recruiter for the reviewers' GitHub usernames, or make the repo public (run a secret scan of the history first). Optional rename: `gh repo rename <new-name>`, then update the local remote.
+- [x] Repo renamed to `claude-co-learn` (2026-10-18). [ ] **Repo access:** private repos can only be shared by inviting GitHub users. Either ask the recruiter for the reviewers' GitHub usernames, or make the repo public (run a secret scan of the history first). Optional rename: `gh repo rename <new-name>`, then update the local remote.
 - [ ] **Reviewer access info:** include the prototype URL and the site password in the submission.
 - [ ] **Budget:**
   - Check the Anthropic Console spend limit on the key covers the review period.

@@ -6,7 +6,7 @@ Last updated: 2026-10-18 early morning (second overnight run). **Start with §8 
 
 ## 1. Where things stand
 - **Deadline:** Oct 21, 9:00 AM PT. **Target:** everything done by end of Sun Oct 18; Oct 19–21 are buffer.
-- **Repo:** https://github.com/Dinakar-Guthy/anthropic-take-home-10-17-26 (private), branch `main`. Every push auto-deploys.
+- **Repo:** https://github.com/Dinakar-Guthy/claude-co-learn (private), branch `main`. Every push auto-deploys.
 - **Live:** https://anthropic-take-home-10-17-26.vercel.app. Reviewer gate password: env `SITE_PASSWORD` (also in `web/.env.local`; never write it into the repo).
   `/api/health` (public) currently reports `store: redis`, key present, demo file present.
 - **Merged (380 tests passing as of P2; typecheck, lint, and build clean):**
