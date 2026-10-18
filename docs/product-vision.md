@@ -92,10 +92,18 @@ itself, we show it. No fixed budget or cooldown by default.
 - ASCII characters: guide reactions (Pip the robot), bosses (`reference/ascii-characters.md`).
 - "Frost" theme (light blue / white / silver), Nunito font, Kenney CC0 sounds, minimal on-screen clutter.
 
-## Open question: does Claude actually run the code?
-- **Option 1:** Claude writes code and explains it; results are described or simulated. Simple, but less real.
-- **Option 2:** use Anthropic's server-side code execution tool so Claude actually trains a small model (e.g., scikit-learn on a sample CSV) and returns real metrics. Predict and boss moments become genuine. Feasibility, cost, and latency need checking.
-- Either way, ship a **built-in sample dataset and starter prompt** so reviewers can try the demo in one click. Free-form tasks are allowed too.
+## Real code execution (researched 2026-10-17, `reference/research/08-code-execution.md`)
+- **Plan:** Claude actually runs code using Anthropic's **server-side code execution tool**: real Python + scikit-learn in
+  an isolated, offline sandbox, with only the API key. Files persist across turns via a reused container, so the
+  predict moments and bosses use *real* metrics and charts.
+- **Not feasible for the prototype:** connecting the hosted site to a user's *local* Claude Code (a server can't reach a
+  laptop), or hosting the Claude Agent SDK (needs a container per user; ~8–12 h, high risk).
+- **Future improvement, "local mode":** a small local companion (e.g., `npx co-learn-bridge`) that dials out to Co-learn
+  and lets learning moments run on the user's own Claude Code session, repo, and data.
+- **Demo data:** a seeded **synthetic churn CSV** (~5,000 customers, ~15% churn) bundled with a one-click
+  "try the demo" starter. It has no license issues, and the imbalance sets up a natural "accuracy is misleading" moment.
+  Free-form tasks still work.
+- **Fallback:** a pre-recorded real run, replayed and clearly labeled "replayed", if the sandbox fails during review.
 
 ## Platform and model
 Hosted web app. Next.js on Vercel. Claude via the Vercel AI SDK; Claude-only for now, model-agnostic as P1.
