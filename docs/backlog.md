@@ -18,10 +18,24 @@ Each item: what it is, why it might matter, open questions.
   - Whether it's worth it given "depth over breadth" and that reviewers will mostly use the demo.
 - Dropped from the overnight run 2 plan (early Oct 18) by Dinakar.
 
-## Explicit topic learning
-- **What:** "teach me about X" sessions, where the goal is to learn a subject rather than do a task.
-- **Why:** partly covered already, since Claude's "work" becomes explaining. A full version would bring back structured sections and bosses from `alternative-projects/learning-quest/`.
-- **Open question:** a different product mode; how does it coexist with Co-learn?
+## Learn mode (topic learning without a work task)
+- **What:** a second mode on the same system for "teach me about X" (Dinakar's real use case: learning history).
+  - **Reused unchanged (about 90%):** question cards, pacing engine, help tools, bosses, story, XP, Codex, and cross-session review.
+  - **What changes:**
+    1. Intent offers the mode.
+    2. The background sketch plans a short **learning path** (4–6 chapters) instead of work milestones; the learner can pick or reorder chapters.
+    3. A **tutor prompt** replaces the work prompt: teach about 120 words, then a question, every chunk. History mappings: *decide* → "choose where we go next" or "take a position"; *predict* → "what do you think happened next?"; *spot the issue* → "spot the myth or anachronism".
+    4. No code sandbox; optionally web search with citations so facts are checkable (P9).
+    5. Pacing by mode: a question after every chunk instead of only at rare high-value moments. Bosses become chapter tests.
+  - **Later:** topics become ongoing courses ("continue my Roman history course"), with sequel suggestions (from `alternative-projects/learning-quest/`).
+- **Today:** a learning goal partly works already, since Claude's "work" becomes explaining. But the work-first prompt favors long explanations with few questions, there's no path or progress, and the question types are worded for tasks.
+- **How it's accessed** (to decide; discussed 2026-10-18):
+  - `/learn` as a second entry phrase next to `/co-learn` (`/co-learn` = do real work with Claude and learn along the way; `/learn` = study a topic with Claude as tutor). The caption names both.
+  - A mode switch on the intent screen.
+  - A "Study this" button on Codex concepts that starts a `/learn` session on that concept (a bridge from work to deeper learning).
+  - Possibly a `/learn?topic=…` link for sharing.
+- **Effort:** about half a day to a day (prompt, intent, path UI). Very little touches the engine.
+- **Suggested timing:** after the take-home submission, on a branch. Mention it in the rationale as evidence the design generalizes.
 
 ## Cross-device resume
 - **What:** continue your progress in another browser (resume code or accounts).

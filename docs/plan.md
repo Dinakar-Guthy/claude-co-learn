@@ -104,5 +104,6 @@ with the browser driver before moving on; new judgment calls marked "pending Din
   - Daily caps in the app: $5 per browser, $25 per IP, $75 global.
 - [ ] **Clear the test data** (Dinakar, 2026-10-18). Auto mode blocks the bulk delete, so run it yourself from the repo root:
   `! cd web && node --env-file=.env.local /tmp/e2e/tools/keys.mjs --delete "events:,mastery:,session:,user:,usage:"`
-  Then, in every browser you test with, open `https://anthropic-take-home-10-17-26.vercel.app/api/test-mode?on=1` once. From then on your testing is tagged and left out of `/insights`.
+  Done by Dinakar (2026-10-18).
+  **Test traffic from now on:** open any page with `?test=1` (e.g. `https://anthropic-take-home-10-17-26.vercel.app/?test=1`). That tab, and only that tab, tags its activity as test traffic ("Test traffic (this tab)" badge); `/insights` leaves it out unless you toggle "Include test traffic". Normal tabs count as real usage. `?test=0` or closing the tab ends it.
 - [ ] **Submit via Greenhouse:** repo link, prototype link, transcripts, video, written doc.
