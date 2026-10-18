@@ -242,10 +242,10 @@ Three full demo runs and one non-ML run (a SQL query), each in a fresh session:
   - They're harmless so far: build output gets regenerated, and git ignores `index 2`.
   - Consider moving the repo out of iCloud-synced folders, or excluding it, so a sync conflict can't corrupt `.git` before submission.
 
-### Testing tools (not committed)
-- `/tmp/e2e/drive.mjs`: a tiny Chrome DevTools driver (`login` reads `SITE_PASSWORD` from `.env.local` without printing it; `type`, `click`, `idle`, `text`, `shot`).
-- `/tmp/e2e/tools/{events,spend}.mjs`: read app events and spend from Upstash.
-- Rebuild these if `/tmp` is wiped; they're about 100 lines.
+### Testing tools
+- Now committed in `web/scripts/e2e/` (see §0).
+- `drive.mjs`: a tiny Chrome DevTools driver (`login` reads `SITE_PASSWORD` from `.env.local` without printing it; `type`, `click`, `idle`, `text`, `shot`).
+- `events.mjs`, `spend.mjs`: read app events and spend from Upstash.
 
 ### Follow-ups (morning of 2026-10-18)
 - Dinakar: the reviewer password is intentionally light security; no rotation needed.
@@ -428,10 +428,10 @@ Use https://anthropic-take-home-10-17-26.vercel.app with the site password.
 - Example: "Help me write a SQL query for our top 10 customers by revenue last quarter."
 - **Expect:** a decide moment (e.g. which order statuses count as revenue), then a query built on your choice.
 
-### Testing tools (not committed)
-These live in `/tmp/e2e/`:
+### Testing tools
+These live in `web/scripts/e2e/` (committed):
 - `drive.mjs` (Chrome DevTools driver)
-- `tools/events.mjs`, `tools/spend.mjs` (Upstash telemetry and spend)
-- `tools/help-probe.mjs` (live leak probe for the help prompts)
+- `events.mjs`, `spend.mjs` (Upstash telemetry and spend)
+- `help-probe.mjs` (live leak probe for the help prompts)
 
 `COLEARN_COMPACT_AT_TOKENS=6000 npm run dev` forces early compaction locally.

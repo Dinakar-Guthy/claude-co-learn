@@ -97,13 +97,13 @@ with the browser driver before moving on; new judgment calls marked "pending Din
 - [ ] **Written design rationale** (`docs/design-rationale.md`, in your voice). The scaffold has headers, questions, and raw material. Run `/rationale-coach` in Claude Code for a guided, section-by-section session.
 - [ ] **Video (≤ 8 min screenshare walkthrough):** required by the brief. Claude can write a timed script and shot list, and pre-stage demo sessions.
 - [ ] **Transcripts (required, complete):** run `python3 scripts/collect_transcripts.py` at the very end, un-ignore `transcripts/raw/`, and commit.
-- [x] Repo renamed to `claude-co-learn` (2026-10-18). [ ] **Repo access:** private repos can only be shared by inviting GitHub users. Either ask the recruiter for the reviewers' GitHub usernames, or make the repo public (run a secret scan of the history first). Optional rename: `gh repo rename <new-name>`, then update the local remote.
+- [x] Repo renamed to `claude-co-learn` (2026-10-18). [ ] **Repo access:** decided to make it public (2026-10-18). History secret scan done and clean (2026-10-18); re-scan the transcripts right before flipping visibility, after they're committed.
 - [ ] **Reviewer access info:** include the prototype URL and the site password in the submission.
 - [ ] **Budget:**
   - Check the Anthropic Console spend limit on the key covers the review period.
   - Daily caps in the app: $5 per browser, $25 per IP, $75 global.
 - [ ] **Clear the test data** (Dinakar, 2026-10-18). Auto mode blocks the bulk delete, so run it yourself from the repo root:
-  `! cd web && node --env-file=.env.local /tmp/e2e/tools/keys.mjs --delete "events:,mastery:,session:,user:,usage:"`
+  `! cd web && node --env-file=.env.local scripts/e2e/keys.mjs --delete "events:,mastery:,session:,user:,usage:"`
   Done by Dinakar (2026-10-18).
   **Test traffic from now on:** open any page with `?test=1` (e.g. `https://anthropic-take-home-10-17-26.vercel.app/?test=1`). That tab, and only that tab, tags its activity as test traffic ("Test traffic (this tab)" badge); `/insights` leaves it out unless you toggle "Include test traffic". Normal tabs count as real usage. `?test=0` or closing the tab ends it.
 - [ ] **Submit via Greenhouse:** repo link, prototype link, transcripts, video, written doc.

@@ -1,4 +1,4 @@
-// Live leak probe for the help prompts. Run from web/: node --experimental-transform-types --env-file=.env.local /tmp/e2e/tools/help-probe.mjs
+// Live leak probe for the help prompts. Run from web/: node --experimental-transform-types --env-file=.env.local scripts/e2e/help-probe.mjs
 import * as nodeModule from "node:module";
 import { existsSync, statSync } from "node:fs";
 import path from "node:path";
