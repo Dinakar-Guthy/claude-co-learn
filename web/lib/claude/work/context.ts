@@ -4,6 +4,7 @@
  */
 import type { EngineSummary } from "@/lib/contracts/engine";
 import type { Session } from "@/lib/contracts/session";
+import { BOSS_MIN_CONCEPTS } from "@/lib/engine/boss";
 
 const MINUTE = 60_000;
 
@@ -45,6 +46,9 @@ export function renderContext({ session, summary, now, notes = [] }: ContextInpu
     `- Rolling accuracy: ${summary.rollingAccuracy === null ? "no graded answers yet" : `${Math.round(summary.rollingAccuracy * 100)}%`}`,
     `- Recent outcomes: ${summary.recentOutcomes.length ? summary.recentOutcomes.map((o) => `${o.concept} (${o.type}) ${o.score}`).join("; ") : "none"}`,
   ];
+  if (new Set(summary.conceptsSinceBoss).size >= BOSS_MIN_CONCEPTS) {
+    lines.push("- Enough concepts practised for a boss challenge: call milestone_reached at the next natural checkpoint (e.g. right after you report a result).");
+  }
   if (sketch) {
     lines.push(`- Session sketch (a loose guide, not a curriculum): likely milestones: ${list(sketch.milestones)}`);
     if (sketch.conceptRadar.length) {

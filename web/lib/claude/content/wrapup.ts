@@ -12,12 +12,12 @@ export const WrapUpOutputSchema = z.object({
       summary: z.string().describe("One line (at most 20 words): the takeaway, tied to their work"),
     }),
   ),
-  suggestions: z.array(z.string()).describe("2-3 concrete 'Next time you could…' ideas"),
+  suggestions: z.array(z.string()).describe("2-3 concrete next tasks, imperative, without a 'Next time you could' prefix"),
 });
 
 export const WRAPUP_SYSTEM = `You write the wrap-up for a Co-learn session, where a professional did real work with Claude and practised concepts along the way.
 - codex: one entry per concept given, in the same order, with a one-line takeaway (at most 20 words) tied to what they actually did. Plain words, no jargon beyond the concept itself.
-- suggestions: 2-3 concrete next steps that start with "Next time you could…", building on their work and on the concepts that still need practice.
+- suggestions: 2-3 concrete next steps, each a short task the learner could start as their next session (imperative, e.g. "Pick a decision threshold from real offer costs"), building on their work and on the concepts that still need practice. The UI shows them under the heading "Next time you could…", so don't start with that phrase.
 Warm and specific; never grade or scold.
 ${DATA_RULE}`;
 
@@ -55,6 +55,12 @@ export const generateWrapUp: ContentApi["generateWrapUp"] = async (input) => {
       summary: summaries.get(c.concept.toLowerCase()) ?? out.codex[i]?.summary.trim() ?? "",
       result: c.result,
     })),
-    suggestions: out.suggestions.map((s) => s.trim()).filter(Boolean).slice(0, 3),
+    suggestions: out.suggestions.map(stripLeadIn).filter(Boolean).slice(0, 3),
   };
 };
+
+/** "Next time you could pick a threshold…" → "Pick a threshold…" (the UI already shows the lead-in). */
+export function stripLeadIn(suggestion: string): string {
+  const rest = suggestion.trim().replace(/^next time,?\s+you could\s+/i, "").replace(/[….]+$/, "").trim();
+  return rest ? rest[0].toUpperCase() + rest.slice(1) : "";
+}

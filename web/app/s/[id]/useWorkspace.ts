@@ -105,6 +105,8 @@ export function useWorkspace(sessionId: string) {
     }
   }, []);
 
+  const dismissLevelUp = useCallback(() => setLevelUp(null), []);
+
   // ---- XP ----
   const applyXp = useCallback(
     (award: XpAward | undefined, momentId?: string) => {
@@ -244,6 +246,9 @@ export function useWorkspace(sessionId: string) {
   const act = useCallback(
     async (momentId: string, action: MomentAction) => {
       if (grading[momentId]) return;
+      // Keep an answered boss question on screen (its feedback) until the learner moves on.
+      const bossId = view?.moments[momentId]?.bossId;
+      if (bossId) setBossShown((s) => ({ ...s, [bossId]: momentId }));
       const slow = action.kind === "submit";
       if (slow) setGrading((g) => ({ ...g, [momentId]: true }));
       setNotice(null);
@@ -260,7 +265,7 @@ export function useWorkspace(sessionId: string) {
         if (slow) setGrading((g) => ({ ...g, [momentId]: false }));
       }
     },
-    [applyXp, grading, onBossFinished, send, sessionId, update, wrap.data],
+    [applyXp, grading, onBossFinished, send, sessionId, update, view, wrap.data],
   );
 
   const showBossQuestion = useCallback((bossId: string, momentId: string) => setBossShown((s) => ({ ...s, [bossId]: momentId })), []);
@@ -317,7 +322,7 @@ export function useWorkspace(sessionId: string) {
     xpByMoment,
     xpGain,
     levelUp,
-    dismissLevelUp: () => setLevelUp(null),
+    dismissLevelUp,
     liveIds,
     bossShown,
     bossState,

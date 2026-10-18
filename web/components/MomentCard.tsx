@@ -130,7 +130,8 @@ function announcement(phase: MomentPhase, m: MomentView): string {
   if (phase === "grading") return "Checking your answer…";
   if (phase === "locked_in") return "Locked in! Let's see what really happens.";
   if (m.verdict && (phase === "answered" || phase === "mc_answered" || phase === "choosing")) {
-    return `${VERDICT_LABEL[m.verdict]}. ${m.why ?? ""}${phase === "choosing" ? " Try picking from the options." : ""}`;
+    const label = VERDICT_LABEL[m.verdict];
+    return `${label}${/[.!?]$/.test(label) ? "" : "."} ${m.why ?? ""}${phase === "choosing" ? " Try picking from the options." : ""}`;
   }
   return "";
 }

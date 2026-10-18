@@ -71,7 +71,7 @@ async function submit(ctx: Ctx, rawAnswer: string): Promise<HandlerResult<GradeR
     return done({ moment: toMomentView(pending), offerMC: false, continueWith: continueWork(ctx) });
   }
 
-  const grade = await deps.content.gradeAnswer({ candidate: record.candidate, answer });
+  const grade = await deps.content.gradeAnswer({ candidate: record.candidate, answer, retryAvailable: !record.mcOffered });
   const answered: MomentRecord = { ...record, answer };
 
   if (grade.verdict === "incorrect" && !record.mcOffered) {

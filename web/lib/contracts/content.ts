@@ -31,7 +31,8 @@ export interface WrapUpDraft {
 }
 
 export interface ContentApi {
-  gradeAnswer(input: { candidate: LearningMomentInput; answer: string }): Promise<GradeResult>;
+  /** retryAvailable: an incorrect answer gets a multiple-choice retry next, so the "why" must not give the answer away. */
+  gradeAnswer(input: { candidate: LearningMomentInput; answer: string; retryAvailable?: boolean }): Promise<GradeResult>;
   verifyMoment(input: { candidate: LearningMomentInput }): Promise<VerifyResult>;
   generateSketch(input: { intent: Intent }): Promise<SessionSketch>;
   generateBoss(input: {

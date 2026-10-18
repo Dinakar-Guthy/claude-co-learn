@@ -26,7 +26,7 @@ export function fallbackWrapUp(outcomes: ReturnType<typeof outcomesFrom>): WrapU
       summary: c.result === "strong" ? "You applied this confidently." : c.result === "growing" ? "You're getting there; one more rep will lock it in." : "Worth another look next session.",
       result: c.result,
     })),
-    suggestions: ["Next time you could pick up where you left off and revisit the concepts marked for review."],
+    suggestions: ["Pick up where you left off and revisit the concepts marked for review"],
   };
 }
 

@@ -82,6 +82,14 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
 
   useStickToBottom(view, ws.streaming);
 
+  // The level-up toast steps aside on its own after a while (it's a reward, not a task).
+  const { levelUp, dismissLevelUp } = ws;
+  useEffect(() => {
+    if (!levelUp) return;
+    const t = setTimeout(dismissLevelUp, 12_000);
+    return () => clearTimeout(t);
+  }, [levelUp, dismissLevelUp]);
+
   const pending = openMoment(view);
   const boss = activeBoss(view);
   const wrapped = view.status === "wrapped";
