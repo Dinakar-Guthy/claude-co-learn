@@ -298,6 +298,20 @@ describe("runTurn", () => {
       expect(JSON.parse(String(((await t.store.getApiMessages(t.session.id)).find((m) => JSON.stringify(m).includes("current_part"))!.content as Anthropic.ToolResultBlockParam[])[0].content))).toEqual({ status: "ok", current_part: "Rome in 133 BC" });
     });
 
+    it("a question with no lesson written before it is sent back with 'teach first'", async () => {
+      const t = await setup({ session: { ...learnSession, path: { topic: "Rome", parts: [{ title: "A", summary: "a", status: "current" }] } } });
+      const lesson = "In 133 BC Tiberius Gracchus, a tribune, proposed limiting how much public land one family could hold. ".repeat(3);
+      t.replies.push(
+        fakeMessage([toolUse("learning_moment", momentInput())], "tool_use"),
+        fakeMessage([text(lesson), toolUse("learning_moment", momentInput())], "tool_use"),
+      );
+      const events = await t.send({ kind: "message", text: "go on" });
+      const first = t.calls[1].messages.at(-1)!.content as Anthropic.ToolResultBlockParam[];
+      expect(JSON.parse(String(first[0].content))).toMatchObject({ status: "skip", reason: "teach_first" });
+      expect(events.filter((e) => e.type === "moment")).toHaveLength(1);
+      expect(lastEvent(events)).toEqual({ type: "turn_end", reason: "awaiting_learner" });
+    });
+
     it("a milestone finishes the current part and moves to the next", async () => {
       const t = await setup({ session: learnSession, bossDue: false });
       t.replies.push(fakeMessage([toolUse("set_learning_path", pathInput)], "tool_use"), fakeMessage([text("Part 1…")]));

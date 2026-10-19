@@ -25,6 +25,11 @@ import { LEARNING_MOMENT, MILESTONE_REACHED, RESOLVE_PREDICTION, SET_LEARNING_PA
 
 export type PauseReason = "awaiting_learner" | "boss_due";
 
+/** Learn mode: shortest visible lesson text (or predict setup) a question may follow. */
+export const MIN_LESSON_CHARS = 200;
+export const TEACH_FIRST =
+  "Not shown: the learner sees only the text you write, and this response had no lesson before the question. Write the lesson (about 120 words, from your search) as text now, then ask again.";
+
 export interface ToolOutcome {
   content: string;
   isError?: boolean;
@@ -33,6 +38,8 @@ export interface ToolOutcome {
 
 export class ToolContext {
   readonly outbox: ChatStreamEvent[] = [];
+  /** Characters of visible text Claude wrote in the response whose tools are being handled (set by the loop). */
+  responseTextChars = 0;
   private mastery?: MasteryMap;
   readonly deps: WorkDeps;
   readonly state: TurnState;
@@ -102,6 +109,10 @@ async function learningMoment(ctx: ToolContext, block: Anthropic.Beta.BetaToolUs
   if (!parsed.success) return invalid(parsed.error);
   const candidate = parsed.data;
   const { deps, state } = ctx;
+  // Learn mode: the learner only sees Claude's text, so a question needs the lesson written before it.
+  if (modeOf(state.session.intent) === "learn" && ctx.responseTextChars < MIN_LESSON_CHARS) {
+    return { content: json({ status: "skip", reason: "teach_first", instruction: TEACH_FIRST }) };
+  }
   const now = deps.now();
   const moment: MomentRecord = {
     id: deps.newId(),
