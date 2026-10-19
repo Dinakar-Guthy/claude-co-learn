@@ -185,12 +185,17 @@ async function resolvePrediction(ctx: ToolContext, block: Anthropic.Beta.BetaToo
   return { content: "recorded" };
 }
 
+/** Claude sometimes adds a placeholder milestone (label "x") alongside a learning moment; those aren't shown. */
+export const PLACEHOLDER_MILESTONE_RESULT =
+  "Ignored, nothing was shown: call milestone_reached only when a meaningful chunk of work has just completed, with a real label and summary.";
+
 export const BOSS_INSTRUCTION =
   "Stop here and wait: the learner is offered a short boss challenge and chooses whether to take it on. Don't continue the work until you're told what they chose (and the result, if they played).";
 
 async function milestone(ctx: ToolContext, block: Anthropic.Beta.BetaToolUseBlock): Promise<ToolOutcome> {
   const parsed = MilestoneInputSchema.safeParse(block.input);
   if (!parsed.success) return invalid(parsed.error);
+  if (parsed.data.label.trim().length < 3) return { content: PLACEHOLDER_MILESTONE_RESULT };
   const { deps, state } = ctx;
   const engineState = state.session.engine;
   // A moment shown in the same response takes priority; the boss can come at a later milestone.

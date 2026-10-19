@@ -276,6 +276,16 @@ describe("runTurn", () => {
     expect(lastEvent(events)).toEqual({ type: "turn_end", reason: "end_turn" });
   });
 
+  it("ignores a placeholder milestone (label \"x\"): no item, no boss offer, and Claude is told why", async () => {
+    const t = await setup({ bossDue: true });
+    t.replies.push(fakeMessage([toolUse("milestone_reached", { label: "x", summary: "x", concepts_involved: [] }, "toolu_x")], "tool_use"), fakeMessage([text("Next.")]));
+    const events = await t.send({ kind: "message", text: "go" });
+    expect(events.some((e) => e.type === "milestone")).toBe(false);
+    expect(lastEvent(events)).toEqual({ type: "turn_end", reason: "end_turn" });
+    expect((await t.store.getSession(t.session.id))!.engine.bossOfferPending).toBeFalsy();
+    expect(JSON.stringify(t.calls[1].messages.at(-1))).toContain("Ignored, nothing was shown");
+  });
+
   it("re-sends after pause_turn and caps the loop at MAX_STEPS", async () => {
     const t = await setup();
     for (let i = 0; i < MAX_STEPS; i++) t.replies.push(fakeMessage([bash(`echo ${i}`)], "pause_turn"));
