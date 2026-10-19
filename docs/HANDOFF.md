@@ -16,7 +16,7 @@ Last updated: 2026-10-18 afternoon. **Start with §0 Current status** (the most 
   - **Compaction status line:** while a long history is summarized (several seconds), the status reads "Tidying up my notes so far… (a few extra seconds)". Verified locally with a lowered threshold (~13s summary). Background compaction and a recap card are in `docs/backlog.md`.
   - **Repo:** decided to make it public at submission time; history secret scan is clean (2026-10-18).
   - **Sources and "Learn more" (both modes):** Claude web-searches before explaining a concept and its cited sentences get [n] markers with source links; wrap-up ends with "Learn more" (3-5 real readings from a search, saved with the session). Verified live: a cited answer with 3 sources; 4 readings (arXiv, scikit-learn docs), all links load.
-  - **Learn mode:** being built (plan: `docs/plan.md` → "Learn mode + sources build").
+  - **Learn mode (`/learn`)** — built and verified live with the Roman Republic sample: the tutor plans a 3-part path (path card at the top, reorderable), teaches ~120-word cited lessons through a `teach` tool (Sonnet 5.5 hides text written between tool calls, so lessons can't be plain text there), asks a question after each (Take a position / What happened next? / Spot the myth…, predictions graded right away), offers a boss at part ends (questions built from the lessons), story chapters on, wrap-up suggestions as "Teach me…" topics, and "Learn more" readings. First question ~35s after start.
   - **Questions land at the real fork:** after an answer, Claude runs the settled steps and any work that doesn't depend on the next decision before asking again (verified live: drop column → encode → split → then "which metric?"). Parallel-moment ideas B–E are in `docs/backlog.md`.
   - **Placeholder milestones ignored:** Claude sometimes called `milestone_reached` with label "x" next to a question (a stray "◆ x" divider); those are no longer shown.
   - **Story removed from Co-learn** (Dinakar, after playtesting): no story bible, boss chapters or final chapter; boss wins give bonus XP and confetti, and the work resumes right away. Switched off per mode in `lib/modes.ts` for the future Learn mode; P2 updated.
@@ -430,6 +430,20 @@ Use https://anthropic-take-home-10-17-26.vercel.app/?test=1 with the site passwo
    - "How Co-learn is doing" → `/insights`
 3. **Codex:** the book icon → `/codex`. Expect concepts grouped by status; "Back to your session".
 4. **Insights:** `/insights` with the 1 / 7 / 30-day selector.
+
+**H. Learn mode**
+1. Type `/learn` on the home page (or switch to "Learn a topic" on the intent screen).
+   - **Expect:** "What do you want to learn?" and "▶ Try a sample: the fall of the Roman Republic".
+2. Start the sample (10 min).
+   - **Expect:** within ~35s, a "Your path · Part 1 of 3" card, a short lesson with [n] source links, then a question card.
+3. Open the path card: parts not started yet have Next / ↑ / ↓.
+4. Answer a few questions.
+   - **Expect:** a "What happened next?" question graded right away; at the end of a part the path moves on and Claude starts the next part; a boss offer ("Keep learning") once ~3 concepts are practised; a story chapter after the boss.
+5. Wrap up.
+   - **Expect:** Codex, final story chapter, "Learn more" readings, and "Teach me…" suggestions that start a new Learn session.
+
+**Sources (both modes):** ask Claude a conceptual question (e.g. "why does class_weight='balanced' distort probabilities?").
+- **Expect:** "Looking up sources…", then an answer with [n] markers and numbered links underneath. At wrap-up, "Learn more" lists 3-5 real readings.
 
 **G. A non-demo task**
 - Example: "Help me write a SQL query for our top 10 customers by revenue last quarter."

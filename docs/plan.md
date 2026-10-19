@@ -101,17 +101,18 @@ Order: Phase 1 helps both modes (and the Co-learn hero), so it goes first. Each 
 - [x] "Learn more" at wrap-up: a separate Sonnet call with web search (no structured output; citations and structured outputs don't mix) returns 3-5 readings (title, site, one line on why) for the session's concepts. Only URLs that came back from a search are kept, so there are no made-up links. Saved with the session (shown again on reload).
 - [x] Spend: search count recorded on the existing spend-cap path ($10 per 1,000).
 
-### Phase 2: Learn mode core
-- [ ] `mode` on the intent and session (`co-learn` | `learn`; missing = `co-learn`), from `lib/modes.ts` (story on for Learn). `/learn` unlock phrase; mode switch on the intent screen ("What do you want to learn?"); "▶ Try a sample: the fall of the Roman Republic".
-- [ ] Tutor prompt: ~120 words of teaching, then a question, every chunk; question types reworded for topics (Take a position / What happened next? / Spot the myth / Explain it back / Fill the gap); no code sandbox; web search on.
-- [ ] The path: the tutor calls `set_learning_path` in its first response (3 parts for 10 min, 4 for 20, 5-6 for 30); `milestone_reached` marks the current part done. Turn context shows the path and the current part.
-- [ ] Predict questions are graded right away. Bosses are offered at the end of a part when the existing rule allows (≥3 concepts since the last one). Story chapters on.
-- [ ] Mode-aware wording: boss, help, grading, wrap-up suggestions, summarizing (compaction), primer off in Learn mode, mode badge in the top bar, `sessionMode` on events.
+### Phase 2: Learn mode core — done 2026-10-19, verified live
+- [x] `mode` on the intent and session (`co-learn` | `learn`; missing = `co-learn`), from `lib/modes.ts` (story on for Learn). `/learn` unlock phrase; mode switch on the intent screen ("What do you want to learn?"); "▶ Try a sample: the fall of the Roman Republic".
+- [x] Tutor prompt: ~120 words of teaching, then a question, every chunk; question types reworded for topics (Take a position / What happened next? / Spot the myth / Explain it back / Fill the gap); no code sandbox; web search on.
+- [x] The path: the tutor calls `set_learning_path` in its first response (3 parts for 10 min, 4 for 20, 5-6 for 30); `milestone_reached` marks the current part done. Turn context shows the path and the current part.
+- [x] Predict questions are graded right away. Bosses are offered at the end of a part when the existing rule allows (≥3 concepts since the last one). Story chapters on.
+- [x] Mode-aware wording: boss, help, grading, wrap-up suggestions, summarizing (compaction), primer off in Learn mode, mode badge in the top bar, `sessionMode` on events.
 
-### Phase 3: path card
-- [ ] Path card at the top: parts with done / now / next; pick what's next or move parts up/down (saved; the tutor is told next turn); collapses to one line while reading.
+### Phase 3: path card — done 2026-10-19
+- [x] Path card at the top: parts with done / now / next; pick what's next or move parts up/down (saved; the tutor is told next turn); collapses to one line while reading.
 
 ### Phase 4: polish and checks
+- Note: lessons go through a `teach` tool (Sonnet 5.5 hides text written between tool calls), with sources kept only if their URL came back from a search.
 - [ ] Sources on question cards (concept cards) and "Teach me the idea first" lessons, if time allows.
 - [ ] Live runs of both modes; docs (HANDOFF §0, testing guide, README).
 
