@@ -4,7 +4,7 @@
  */
 import type { MomentView, Verdict } from "./moment";
 import type { LevelInfo, LevelReward } from "./engine";
-import type { Source } from "./session";
+import type { LearningPath, Source } from "./session";
 
 export interface XpAward {
   amount: number;
@@ -32,6 +32,8 @@ export type ChatStreamEvent =
   | { type: "prediction_reveal"; itemId: string; momentId: string; actualResult: string; verdict: Verdict; why: string; xp: XpAward }
   | { type: "milestone"; itemId: string; label: string; bossDue: boolean }
   | { type: "notice"; itemId: string; text: string }
+  /** Learn mode: the learning path was set or moved on. */
+  | { type: "path"; path: LearningPath }
   /** A streamed item that turned out not to happen (code requested next to a question or milestone never runs). */
   | { type: "remove_item"; itemId: string }
   | { type: "turn_end"; reason: TurnEndReason; detail?: string }

@@ -40,7 +40,7 @@ export function outcomeCopy(outcome: BossOutcome, name: string): { title: string
     case "retreat":
       return { title: `${name} retreats… it'll be back.`, detail: "These concepts will come back for a quick review." };
     case "skipped":
-      return { title: `You let ${name} go. It'll be back another time.`, detail: "Back to your work. These concepts will come back for a quick review." };
+      return { title: `You let ${name} go. It'll be back another time.`, detail: "Back to it. These concepts will come back for a quick review." };
   }
 }
 

@@ -13,12 +13,14 @@ export const GradeOutputSchema = z.object({
   misconception: z.string().nullable().describe("A misconception the answer shows, or null"),
 });
 
-export const GRADE_SYSTEM = `You grade a learner's short answer to a learning moment that came up while they did real work with Claude.
+export const GRADE_SYSTEM = `You grade a learner's short answer to a learning moment that came up while they did real work with Claude, or studied a topic with Claude as a tutor.
 
 Verdicts:
 - correct: the answer captures the core of the ideal answer or an acceptable variant. Terse is fine: a few words that are right earn "correct". Do not demand the exact wording, every key point, or extra detail the question didn't ask for.
 - partial: on the right track but missing an essential point, or right conclusion with shaky reasoning.
 - incorrect: wrong, off-topic, empty, "I don't know", or built on a misconception.
+
+For "predict" moments about a topic (what happened next, what would follow), grade against what really happened in the ideal answer; a well-reasoned prediction that misses the outcome is partial, not incorrect.
 
 For "decide" moments several choices can be defensible. Grade the reasoning: a defensible choice with a sound reason is correct even if it differs from the ideal answer. A choice with no reason is at most partial.
 

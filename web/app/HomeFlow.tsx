@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { CreateSessionResponse, UnlockResponse, UserView } from "@/lib/contracts/api";
 import type { Intent, SessionSummary } from "@/lib/contracts/session";
-import { UNLOCK_PHRASE } from "@/lib/contracts/api";
+import { modeForPhrase, SESSION_MODES, type SessionMode } from "@/lib/modes";
 import { IntentFlow } from "@/components/IntentFlow";
 import { LimitsBanner } from "@/components/LimitsBanner";
 import { Pip } from "@/components/Pip";
@@ -31,6 +31,8 @@ function HomeFlowInner() {
   const params = useSearchParams();
   const startDirectly = params.get("start") === "1";
   const initialGoal = params.get("goal") ?? "";
+  const modeParam = params.get("mode");
+  const [mode, setMode] = useState<SessionMode>(SESSION_MODES.find((m) => m === modeParam) ?? "co-learn");
   const [stage, setStage] = useState<Stage>(startDirectly ? "checking" : "unlock");
   const [user, setUser] = useState<UserView | null>(null);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
@@ -59,6 +61,7 @@ function HomeFlowInner() {
         {stage === "unlock" && (
           <UnlockBox
             onUnlocked={(res) => {
+              setMode(res.mode);
               setUser(res.user);
               setSessions(res.sessions);
               setStage(res.sessions.length ? "home" : "intent");
@@ -77,7 +80,7 @@ function HomeFlowInner() {
             }}
           />
         )}
-        {stage === "intent" && <Intent initialGoal={initialGoal} />}
+        {stage === "intent" && <Intent initialGoal={initialGoal} initialMode={mode} />}
       </main>
     </UiProviders>
   );
@@ -91,7 +94,7 @@ function UnlockBox({ onUnlocked }: { onUnlocked: (res: UnlockResponse) => void }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (value.trim().toLowerCase() !== UNLOCK_PHRASE) {
+    if (!modeForPhrase(value)) {
       setState("wrong");
       sounds.play("gentle");
       return;
@@ -113,7 +116,7 @@ function UnlockBox({ onUnlocked }: { onUnlocked: (res: UnlockResponse) => void }
     <>
       <Pip mood={state === "unlocked" ? "celebrating" : state === "wrong" || state === "error" ? "encouraging" : "neutral"} />
       <form onSubmit={submit} className="w-full max-w-md">
-        <label htmlFor="unlock" className="sr-only">Type /co-learn to begin</label>
+        <label htmlFor="unlock" className="sr-only">Type /co-learn or /learn to begin</label>
         <input
           id="unlock"
           autoFocus
@@ -121,19 +124,19 @@ function UnlockBox({ onUnlocked }: { onUnlocked: (res: UnlockResponse) => void }
           spellCheck={false}
           value={value}
           onChange={(e) => { setValue(e.target.value); if (state === "wrong" || state === "error") setState("idle"); }}
-          placeholder={UNLOCK_PHRASE}
+          placeholder="/co-learn"
           disabled={state === "checking" || state === "unlocked"}
           className={`w-full rounded-full border bg-surface px-6 py-4 text-center text-lg shadow-soft outline-none transition focus:border-primary focus:ring-4 focus:ring-primary-soft ${state === "unlocked" ? "scale-105 border-primary" : "border-border"}`}
         />
       </form>
       <p className="text-sm text-muted" aria-live="polite">
         {state === "unlocked"
-          ? "Co-learn mode is on."
+          ? `${modeForPhrase(value) === "learn" ? "Learn" : "Co-learn"} mode is on.`
           : state === "wrong"
-            ? "Almost: type /co-learn to switch on Co-learn mode."
+            ? "Almost: type /co-learn to work on something with Claude, or /learn to study a topic."
             : state === "error"
               ? error
-              : "Type /co-learn to switch on Co-learn mode."}
+              : "Type /co-learn to work on something with Claude, or /learn to study a topic."}
       </p>
     </>
   );
@@ -175,7 +178,7 @@ function Welcome({ sessions, onNew, onStartOver }: { sessions: SessionSummary[];
 
 const shortDate = (at: number) => new Date(at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
-function Intent({ initialGoal }: { initialGoal: string }) {
+function Intent({ initialGoal, initialMode }: { initialGoal: string; initialMode: SessionMode }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -194,7 +197,7 @@ function Intent({ initialGoal }: { initialGoal: string }) {
 
   return (
     <div className="flex w-full flex-col items-center gap-4">
-      <IntentFlow onComplete={start} busy={busy} initialGoal={initialGoal} />
+      <IntentFlow onComplete={start} busy={busy} initialGoal={initialGoal} initialMode={initialMode} />
       {error && <p role="alert" className="text-sm text-muted">{error}</p>}
     </div>
   );

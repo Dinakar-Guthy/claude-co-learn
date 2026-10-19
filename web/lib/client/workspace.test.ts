@@ -9,7 +9,7 @@ const moment = (id: string, extra: Partial<MomentView> = {}): MomentView => ({
 
 const view = (extra: Partial<SessionView> = {}): SessionView => ({
   id: "s1", title: "t", intent: { goal: "g", familiarity: "new", minutes: 10, demo: true }, status: "active",
-  createdAt: 0, endsAt: 600_000, transcript: [], moments: {}, bosses: {}, chapters: {}, storyEnabled: false, ...extra,
+  createdAt: 0, endsAt: 600_000, transcript: [], moments: {}, bosses: {}, chapters: {}, storyEnabled: false, mode: "co-learn", ...extra,
 });
 
 const boss = (extra: Partial<BossView> = {}): BossView => ({
@@ -57,5 +57,14 @@ describe("workspace view updates", () => {
     const local = view({ bosses: { b1: boss({ hp: 0, outcome: "victory" }) } });
     const server = view({ bosses: { b1: boss() } });
     expect(reconcile(local, server).bosses.b1.outcome).toBe("victory");
+  });
+});
+
+describe("path events (Learn mode)", () => {
+  it("replace the path and use the topic as the title", () => {
+    const path = { topic: "The fall of the Roman Republic", parts: [{ title: "A", summary: "a", status: "current" as const }] };
+    const next = applyStreamEvent(view(), { type: "path", path });
+    expect(next.path).toEqual(path);
+    expect(next.title).toBe("The fall of the Roman Republic");
   });
 });

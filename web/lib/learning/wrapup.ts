@@ -8,6 +8,7 @@ import type { HandlerResult, LearningDeps } from "./deps";
 import { momentScore } from "./scores";
 import { loadOwnedSession, patchSession } from "./sessionStore";
 import { addChapter } from "./story";
+import { modeOf, type SessionMode } from "@/lib/modes";
 import { workSummary } from "./workSummary";
 import { awardXp, loadUser } from "./xp";
 
@@ -64,7 +65,7 @@ export async function handleWrapUp(deps: LearningDeps, anonId: string, sessionId
 
   return {
     body: {
-      deferred: (await asWrapUpQuestions(deps, moments.filter((m) => m.status === "deferred"))).map(toMomentView),
+      deferred: (await asWrapUpQuestions(deps, moments.filter((m) => m.status === "deferred"), modeOf(session.intent))).map(toMomentView),
       codex: draft.codex,
       sessionXp: sessionXp(deps, latest, moments),
       user: toUserView(await loadUser(deps, anonId)),
@@ -80,7 +81,9 @@ export async function handleWrapUp(deps: LearningDeps, anonId: string, sessionId
  * A saved *predict* question can't be graded against "the next run" anymore (the work moved on), so at wrap-up
  * it becomes "what actually happened, and why?", graded against the session log (Dinakar, 2026-10-18).
  */
-export async function asWrapUpQuestions(deps: LearningDeps, deferred: MomentRecord[]): Promise<MomentRecord[]> {
+export async function asWrapUpQuestions(deps: LearningDeps, deferred: MomentRecord[], mode: SessionMode = "co-learn"): Promise<MomentRecord[]> {
+  // Learn mode's predictions were never tied to a run, so they're asked as they were.
+  if (mode === "learn") return deferred;
   const out: MomentRecord[] = [];
   for (const m of deferred) {
     if (m.type !== "predict" || m.bossId || m.explainAtWrapUp) {

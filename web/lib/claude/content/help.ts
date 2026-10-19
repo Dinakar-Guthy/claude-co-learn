@@ -20,7 +20,7 @@ const STYLE = `Style: warm, plain words, second person, concrete, no lectures. M
 
 function contextBlock(input: HelpContext): string {
   const parts = [renderQuestion(input.candidate), "Answer key (hidden from the learner):", renderKey(input.candidate)];
-  if (input.workContext.trim()) parts.push("What they've done so far in their work:", asData("work_summary", truncate(input.workContext, 2000)));
+  if (input.workContext.trim()) parts.push("What they've done or learned so far in the session:", asData("work_summary", truncate(input.workContext, 2000)));
   if (input.answer?.trim()) parts.push("Their attempt so far:", asData("learner_answer", truncate(input.answer, 1000)));
   if (input.hints.length) parts.push("Hints already shown:", input.hints.map((h, i) => `${i + 1}. ${h}`).join("\n"));
   if (input.lesson) parts.push("Lesson already shown:", truncate(input.lesson, 1500));
@@ -41,7 +41,7 @@ export function tidy(text: string): string {
 
 // ---- hints ----
 
-export const HINT_SYSTEM = `You give one short hint for a learning question that came up while a professional did real work with Claude.
+export const HINT_SYSTEM = `You give one short hint for a learning question that came up while someone worked on a real task with Claude, or studied a topic with Claude as a tutor.
 - One or two sentences. A nudge, not a lecture.
 - Hint 1 points at what to think about (the key consideration or the relevant idea). Hint 2 is a more specific next step (e.g. a quick calculation to do, or the question to ask yourself), still without the answer.
 - Each hint must add something new beyond the hints already shown.
@@ -63,10 +63,10 @@ export const generateHint: ContentApi["generateHint"] = async (input) => {
 
 // ---- teach me ----
 
-export const TEACH_SYSTEM = `The learner pressed "Teach me" on a learning question that came up while they did real work with Claude. Give them a short lesson so they can answer it themselves right after.
+export const TEACH_SYSTEM = `The learner pressed "Teach me" on a learning question that came up while they worked on a real task with Claude, or studied a topic with Claude as a tutor. Give them a short lesson so they can answer it themselves right after.
 Structure (about 120-180 words in total):
 1. The idea in plain words (2-3 sentences).
-2. A small worked example on a DIFFERENT, simple scenario (different domain and numbers from their data), walked through step by step.
+2. A small worked example on a DIFFERENT, simple scenario (a different domain, case, or numbers from theirs), walked through step by step.
 3. One closing line inviting them to try the original question now (don't restate it).
 For "decide" questions, teach how to weigh the trade-off, not which choice to make.
 
@@ -85,7 +85,7 @@ export const teachConcept: ContentApi["teachConcept"] = async (input) => {
 
 // ---- ask Claude ----
 
-export const ASK_SYSTEM = `You're Claude, answering a learner's question about one learning question that came up in their real work (a small help thread inside the question card).
+export const ASK_SYSTEM = `You're Claude, answering a learner's question about one learning question that came up in their session (real work with Claude, or a topic Claude is teaching them; a small help thread inside the question card).
 
 First decide wants_answer: true if the learner is asking to be told the answer to THIS question (e.g. "just tell me", "what's the answer?", "is it B?", "which should I pick?"); false for questions about concepts, terms, or how to approach it.
 

@@ -3,11 +3,32 @@
 import { useId, useState } from "react";
 import type { Familiarity } from "@/lib/contracts/engine";
 import type { Intent } from "@/lib/contracts/session";
+import type { SessionMode } from "@/lib/modes";
 import { Pip } from "./Pip";
 import { useSounds } from "./SoundProvider";
 import { Button, Chip, focusRing } from "./ui";
 
 export const DEMO_GOAL = "Help me train a model to predict customer churn from this CSV.";
+/** Learn mode's sample topic (decision log 2026-10-18). */
+export const LEARN_SAMPLE_GOAL = "Teach me about the fall of the Roman Republic.";
+
+const COPY: Record<SessionMode, { ask: string; placeholder: string; sample: string; label: string; working: string }> = {
+  "co-learn": {
+    ask: "What are you working on?",
+    placeholder: "e.g. Analyze our signup funnel in SQL, or draft a project plan…",
+    sample: "Try the demo: train a churn model",
+    label: "Work on something",
+    working: "Working on: ",
+  },
+  learn: {
+    ask: "What do you want to learn?",
+    placeholder: "e.g. How vaccines work, the basics of investing, the history of jazz…",
+    sample: "Try a sample: the fall of the Roman Republic",
+    label: "Learn a topic",
+    working: "Learning: ",
+  },
+};
+const MODE_ORDER: SessionMode[] = ["co-learn", "learn"];
 
 const FAMILIARITY: { id: Familiarity; label: string }[] = [
   { id: "new", label: "New to this" },
@@ -23,10 +44,13 @@ export interface IntentFlowProps {
   autoFocus?: boolean;
   /** Prefills the goal (e.g. a "Next time you could…" suggestion from a wrap-up). */
   initialGoal?: string;
+  /** Preselected by the phrase typed (/co-learn or /learn); the learner can switch. */
+  initialMode?: SessionMode;
 }
 
-/** Intent step: goal (or the demo starter), then familiarity + time chips. */
-export function IntentFlow({ onComplete, busy = false, autoFocus = true, initialGoal = "" }: IntentFlowProps) {
+/** Intent step: mode, goal (or the sample starter), then familiarity + time chips. */
+export function IntentFlow({ onComplete, busy = false, autoFocus = true, initialGoal = "", initialMode = "co-learn" }: IntentFlowProps) {
+  const [mode, setMode] = useState<SessionMode>(initialMode);
   const [step, setStep] = useState<"goal" | "details">("goal");
   const [goal, setGoal] = useState(initialGoal);
   const [demo, setDemo] = useState(initialGoal.trim() === DEMO_GOAL);
@@ -42,30 +66,41 @@ export function IntentFlow({ onComplete, busy = false, autoFocus = true, initial
     setStep("details");
   }
 
+  const copy = COPY[mode];
+  const modeLabel = useId();
+
   function startDemo() {
     sounds.play("click");
-    setGoal(DEMO_GOAL);
-    setDemo(true);
+    setGoal(mode === "learn" ? LEARN_SAMPLE_GOAL : DEMO_GOAL);
+    setDemo(mode === "co-learn");
     setStep("details");
   }
 
   function finish() {
     if (!familiarity || busy) return;
-    onComplete({ goal: goal.trim(), familiarity, minutes, demo: demo && goal.trim() === DEMO_GOAL });
+    onComplete({ goal: goal.trim(), familiarity, minutes, demo: mode === "co-learn" && demo && goal.trim() === DEMO_GOAL, mode });
   }
 
   if (step === "goal") {
     return (
       <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-5">
         <Pip mood="happy" />
-        <label htmlFor={goalId} className="text-center text-xl font-bold">What are you working on?</label>
+        <div role="group" aria-labelledby={modeLabel} className="flex flex-wrap justify-center gap-2">
+          <span id={modeLabel} className="sr-only">Mode</span>
+          {MODE_ORDER.map((m) => (
+            <Chip key={m} selected={mode === m} onClick={() => { sounds.play("click"); setMode(m); }}>
+              {COPY[m].label}
+            </Chip>
+          ))}
+        </div>
+        <label htmlFor={goalId} className="text-center text-xl font-bold">{copy.ask}</label>
         <textarea
           id={goalId}
           autoFocus={autoFocus}
           rows={3}
           value={goal}
           maxLength={1000}
-          placeholder="e.g. Analyze our signup funnel in SQL, or draft a project plan…"
+          placeholder={copy.placeholder}
           onChange={(e) => { setGoal(e.target.value); setDemo(e.target.value.trim() === DEMO_GOAL); }}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); next(); }
@@ -78,7 +113,7 @@ export function IntentFlow({ onComplete, busy = false, autoFocus = true, initial
             onClick={startDemo}
             className={`rounded-full bg-primary px-5 py-2.5 font-semibold text-primary-foreground shadow-soft transition hover:brightness-110 ${focusRing}`}
           >
-            <span aria-hidden="true">▶ </span>Try the demo: train a churn model
+            <span aria-hidden="true">▶ </span>{copy.sample}
           </button>
           <Button onClick={next} disabled={!goal.trim()}>Next</Button>
         </div>
@@ -90,7 +125,7 @@ export function IntentFlow({ onComplete, busy = false, autoFocus = true, initial
     <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-6">
       <Pip mood="neutral" />
       <div className="w-full rounded-card bg-surface-2 px-4 py-3 text-sm">
-        <span className="font-bold text-muted">Working on: </span>
+        <span className="font-bold text-muted">{copy.working}</span>
         <span>{goal.trim()}</span>{" "}
         <button type="button" onClick={() => setStep("goal")} className={`rounded font-semibold text-primary underline underline-offset-2 ${focusRing}`}>
           Change

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { BossState, MomentRecord } from "@/lib/contracts/session";
-import { bossResultText, momentResponseText } from "./userText";
+import { bossDeclinedText, bossResultText, continueText, momentResponseText, skippedPendingNote } from "./userText";
 import { momentInput } from "./testing";
 
 const moment = (over: Partial<MomentRecord>): MomentRecord => ({
@@ -57,5 +57,16 @@ describe("bossResultText", () => {
   });
   it("returns null before the boss is finished", () => {
     expect(bossResultText(boss, [])).toBeNull();
+  });
+});
+
+describe("Learn mode wording", () => {
+  it("continues teaching instead of the work", () => {
+    expect(momentResponseText(moment({ answer: "x", verdict: "correct" }), "learn")).toContain("Continue teaching");
+    expect(momentResponseText(moment({ status: "skipped" }), "learn")).toContain("Give the key point briefly yourself");
+    expect(bossDeclinedText("learn")).toContain("keep learning");
+    expect(continueText("learn")).toBe("Please continue teaching where you left off.");
+    expect(skippedPendingNote(moment({}), "learn")).toContain("Answer what they wrote");
+    expect(momentResponseText(moment({ answer: "x", verdict: "correct" }))).toContain("Continue the work");
   });
 });

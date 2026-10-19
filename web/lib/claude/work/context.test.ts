@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { EngineSummary } from "@/lib/contracts/engine";
-import { demoDataNote, renderContext, reviewLine, sessionEndsAt, timeLine } from "./context";
+import { demoDataNote, pathLines, renderContext, reviewLine, sessionEndsAt, timeLine } from "./context";
 import { makeSession } from "./testing";
 
 const MIN = 60_000;
@@ -71,5 +71,31 @@ describe("demoDataNote", () => {
   it("points at the uploaded file or asks for synthetic data", () => {
     expect(demoDataNote(true)).toContain("uploaded to your sandbox");
     expect(demoDataNote(false)).toContain("cancellation_request_date");
+  });
+});
+
+describe("pathLines (Learn mode)", () => {
+  it("asks for a path sized to the session when there's none", () => {
+    expect(pathLines(undefined, 20)).toEqual(["- Learning path: not set yet. Call set_learning_path first with 4 parts (for a 20-minute session), then teach part 1."]);
+  });
+
+  it("shows the parts in the learner's order and names the current one", () => {
+    const lines = pathLines({ topic: "Rome", parts: [{ title: "A", summary: "a", status: "done" }, { title: "B", summary: "b", status: "current" }, { title: "C", summary: "c", status: "todo" }] }, 10);
+    expect(lines).toContain("  ✓ 1. A: a");
+    expect(lines).toContain("  ▶ 2. B: b");
+    expect(lines.at(-1)).toContain("Current part: 2. B.");
+  });
+
+  it("says when every part is done", () => {
+    expect(pathLines({ topic: "Rome", parts: [{ title: "A", summary: "a", status: "done" }] }, 10).at(-1)).toContain("Every part is done");
+  });
+
+  it("is used only in Learn mode, which also drops the work sketch", () => {
+    const session = makeSession({ intent: { goal: "Rome", familiarity: "some", minutes: 10, demo: false, mode: "learn" }, sketch: { title: "t", goalSummary: "g", novice: false, milestones: ["m"], conceptRadar: [] } });
+    const summary = { guardrails: { enabled: false, mode: "balanced" }, valueThreshold: 3, targetDifficulty: { firstExposure: 2, practice: 3 }, masteredConcepts: [], dueForReview: [], conceptsSinceBoss: [], rollingAccuracy: null, recentOutcomes: [] } as unknown as EngineSummary;
+    const text = renderContext({ session, summary, now: session.createdAt });
+    expect(text).toContain("Learn context for this turn");
+    expect(text).toContain("Call set_learning_path first with 3 parts");
+    expect(text).not.toContain("Session sketch");
   });
 });

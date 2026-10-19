@@ -29,7 +29,9 @@ describe("createSession", () => {
     expect(CreateSessionRequestSchema.safeParse({ intent: { goal: "  ", familiarity: "new" } }).success).toBe(false);
     expect(CreateSessionRequestSchema.safeParse({ intent: { goal: "x", familiarity: "expert" } }).success).toBe(false);
     const ok = CreateSessionRequestSchema.parse({ intent: { goal: " SQL report ", familiarity: "some" } });
-    expect(ok.intent).toEqual({ goal: "SQL report", familiarity: "some", minutes: 10, demo: false });
+    expect(ok.intent).toEqual({ goal: "SQL report", familiarity: "some", minutes: 10, demo: false, mode: "co-learn" });
+    expect(CreateSessionRequestSchema.parse({ intent: { goal: "Rome", familiarity: "new", mode: "learn" } }).intent.mode).toBe("learn");
+    expect(CreateSessionRequestSchema.safeParse({ intent: { goal: "x", familiarity: "new", mode: "chat" } }).success).toBe(false);
   });
 
   it("derives a short title at a word boundary", () => {
@@ -70,6 +72,22 @@ describe("enrichSession", () => {
     expect(s?.story.bible).toBeUndefined();
     expect(deps.content.generateStoryBible).not.toHaveBeenCalled();
     expect(deps.store.events.find((e) => e.name === "error")).toBeUndefined();
+  });
+
+  it("Learn mode: no sketch or primer (the tutor plans the path), but a story bible", async () => {
+    const deps = makeDeps();
+    await seedSession(deps, { intent: { goal: "Rome", familiarity: "new", minutes: 10, demo: false, mode: "learn" }, story: { enabled: true, chapters: [] } });
+    await enrichSession(deps, "s1");
+    expect(deps.content.generateSketch).not.toHaveBeenCalled();
+    expect(deps.content.generatePrimer).not.toHaveBeenCalled();
+    expect((await deps.store.getSession("s1"))?.story.bible).toBeDefined();
+  });
+
+  it("a new Learn session has the story on", async () => {
+    const deps = makeDeps();
+    const { body } = await createSession(deps, ANON, { ...intent, mode: "learn" });
+    expect((await deps.store.getSession(body.sessionId))?.story.enabled).toBe(true);
+    expect(deps.store.events[0].props).toMatchObject({ sessionMode: "learn" });
   });
 
   it("keeps whatever succeeded and logs the failure", async () => {

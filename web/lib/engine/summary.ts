@@ -12,7 +12,7 @@ export function summarize(ctx: GateContext): EngineSummary {
   const recent = state.recentOutcomes;
   return {
     guardrails: { ...settings.guardrails },
-    valueThreshold: valueThreshold(settings),
+    valueThreshold: valueThreshold(settings, ctx.mode),
     targetDifficulty: {
       firstExposure: targetDifficulty(undefined, "first_exposure", familiarity, recent),
       practice: targetDifficulty(undefined, "practice", familiarity, recent),

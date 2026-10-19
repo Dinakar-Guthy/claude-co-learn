@@ -10,6 +10,12 @@ describe("valueThreshold", () => {
     expect(valueThreshold(settings({ enabled: true, mode: "balanced" }))).toBe(4);
     expect(valueThreshold(settings({ enabled: true, mode: "strict" }))).toBe(5);
   });
+
+  it("is one lower in Learn mode, never below 3", () => {
+    expect(valueThreshold(settings(), "learn")).toBe(3);
+    expect(valueThreshold(settings({ enabled: true, mode: "strict" }), "learn")).toBe(4);
+    expect(valueThreshold(settings(), "co-learn")).toBe(4);
+  });
 });
 
 describe("momentsInWindow", () => {

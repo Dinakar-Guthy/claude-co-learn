@@ -68,6 +68,7 @@ export function applyEvent(items: TranscriptItem[], event: ChatStreamEvent): Tra
       return addOnce(items, { kind: "notice", id: event.itemId, text: event.text });
     case "remove_item":
       return items.some((i) => i.id === event.itemId) ? items.filter((i) => i.id !== event.itemId) : items;
+    case "path":
     case "status":
     case "turn_end":
     case "error":

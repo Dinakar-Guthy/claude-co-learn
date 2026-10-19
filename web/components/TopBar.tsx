@@ -17,6 +17,8 @@ export interface TopBarProps {
   onOpenSettings: () => void;
   /** Link to the cross-session Codex (e.g. `/codex?from=/s/<id>`). The book button is hidden when omitted. */
   codexHref?: string;
+  /** Learn mode shows a small badge next to the brand. */
+  learn?: boolean;
 }
 
 export function formatRemaining(ms: number): string {
@@ -40,12 +42,13 @@ export function SessionTimer({ endsAt }: { endsAt: number }) {
 
 const iconBtn = `flex h-9 w-9 items-center justify-center rounded-full text-muted hover:bg-surface-2 hover:text-text ${focusRing}`;
 
-export function TopBar({ title, level, xpGain, endsAt, muted, onToggleMute, onOpenSettings, codexHref }: TopBarProps) {
+export function TopBar({ title, level, xpGain, endsAt, muted, onToggleMute, onOpenSettings, codexHref, learn = false }: TopBarProps) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-12 max-w-5xl items-center gap-3 px-4">
         <div className="flex min-w-0 flex-1 items-baseline gap-2">
           <span className="font-extrabold tracking-tight text-primary">co-learn</span>
+          {learn && <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary">Learn</span>}
           {title && (
             <>
               <span aria-hidden="true" className="text-muted">·</span>

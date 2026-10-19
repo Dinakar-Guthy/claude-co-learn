@@ -23,9 +23,9 @@ import type { MessageCreateParamsNonStreaming } from "@anthropic-ai/sdk/resource
 import { isPausedAssistant } from "./blocks";
 import type { WorkDeps } from "./deps";
 import { describeError } from "./errors";
-import { WORK_SYSTEM } from "./prompt";
+import { modeSetup } from "./modeSetup";
+import { modeOf, type SessionMode } from "@/lib/modes";
 import { sanitizeHistory, type ApiMessage } from "./state";
-import { WORK_TOOLS } from "./tools";
 
 export const COMPACTION_BETA = "compact-2026-09-04";
 /** Compact once the stored history is estimated above this many tokens. */
@@ -54,6 +54,18 @@ This is a Co-learn session: a learner and Claude do real data / ML work together
 - Open threads and the next planned step.
 
 Use short bullet points under headings. Quote exact names, paths, column names, and numbers. Do not invent anything. Do not call any tools; respond with the summary text only.`;
+
+/** Learn mode's version: a tutoring session along a path, no sandbox. */
+export const LEARN_COMPACTION_INSTRUCTIONS = `Summarize the conversation so far. Your summary replaces these messages: the session will continue from it, followed by the most recent messages, so a later turn must be able to carry on the lesson from your summary alone.
+
+This is a Learn session: Claude tutors a learner on a topic they chose, along a short path of parts, teaching in small chunks with a question after each. Keep, concretely:
+- The topic, the learner's familiarity, and any preferences or questions they raised.
+- The learning path: each part's title and whether it's done, current, or still to come.
+- What was taught so far, part by part: the key facts, names, dates, and explanations, with the sources cited (titles and URLs).
+- Questions asked (type, concept, the question in brief) and how the learner did, including misconceptions to revisit; boss challenges reached.
+- Where the lesson stands and what comes next.
+
+Use short bullet points under headings. Quote exact names, dates, and figures. Do not invent anything. Do not call any tools; respond with the summary text only.`;
 
 type Block = { type: string; id?: unknown; tool_use_id?: unknown };
 
@@ -150,19 +162,20 @@ export function planCompaction(messages: readonly ApiMessage[]): CompactionPlan 
  * kept turns' thinking stays valid only if `system` and `tools` are unchanged, and the shared prefix can be
  * read from the prompt cache.
  */
-export function buildCompactionParams(older: ApiMessage[], containerId: string | undefined): CompactionParams {
+export function buildCompactionParams(older: ApiMessage[], containerId: string | undefined, mode: SessionMode = "co-learn"): CompactionParams {
   const route = MODELS.work;
+  const { system, tools } = modeSetup(mode);
   return {
     model: route.model,
     max_tokens: COMPACT_MAX_TOKENS,
     output_config: { effort: route.effort },
-    system: WORK_SYSTEM,
-    tools: WORK_TOOLS,
+    system,
+    tools,
     messages: older,
     cache_control: { type: "ephemeral" },
     ...(containerId ? { container: containerId } : {}),
     betas: [COMPACTION_BETA],
-    compaction: { type: "summarize", instructions: COMPACTION_INSTRUCTIONS },
+    compaction: { type: "summarize", instructions: mode === "learn" ? LEARN_COMPACTION_INSTRUCTIONS : COMPACTION_INSTRUCTIONS },
   };
 }
 
@@ -201,7 +214,7 @@ export async function maybeCompact({ deps, session, anonId, ip, history, signal,
     plan = planCompaction(sanitizeHistory(history).messages);
     if (!plan) return history;
     onStart?.();
-    const response = await deps.compact(buildCompactionParams(plan.older, session.containerId), signal);
+    const response = await deps.compact(buildCompactionParams(plan.older, session.containerId, modeOf(session.intent)), signal);
     await deps.recordUsage(anonId, ip, response.model, compactionUsage(response.usage)).catch((e) => console.error("compaction usage not recorded:", describeError(e)));
     const found = response.content.find((b): b is Anthropic.Beta.BetaCompactionBlock => b.type === "compaction");
     if (response.stop_reason !== "compaction" || !found?.content) {

@@ -11,6 +11,7 @@ import { MOMENT_TYPES } from "@/lib/contracts/moment";
 export const LEARNING_MOMENT = "learning_moment";
 export const RESOLVE_PREDICTION = "resolve_prediction";
 export const MILESTONE_REACHED = "milestone_reached";
+export const SET_LEARNING_PATH = "set_learning_path";
 
 type JsonSchema = Record<string, unknown>;
 
@@ -28,7 +29,7 @@ export const learningMomentSchema = obj(
     type: { type: "string", enum: [...MOMENT_TYPES], description: "Moment type (see the guide in the system prompt)." },
     concept: str("Short canonical concept name, e.g. \"class imbalance\" (max 60 chars). Reuse the same name for the same concept."),
     concept_card: str("Mini lesson shown before the question. Include on first exposure; at most 60 words."),
-    question: str("One clear question about the learner's actual work, answerable in 1-3 sentences. Never include the answer."),
+    question: str("One clear question about the learner's actual work (or, in Learn mode, what you're teaching), answerable in 1-3 sentences. Never include the answer."),
     ideal_answer: str("A model answer (hidden from the learner)."),
     rubric: obj(
       {
@@ -58,6 +59,15 @@ export const resolvePredictionSchema = obj({
   actual_result: str("The real result from the code you just ran, in one or two sentences with the key number(s)."),
   verdict: { type: "string", enum: ["correct", "partial", "incorrect"], description: "How the learner's prediction compares to the real result." },
   why: str("1-2 friendly sentences explaining why the result came out this way."),
+});
+
+export const setLearningPathSchema = obj({
+  topic: str("Short title for the topic, e.g. \"The fall of the Roman Republic\" (max 80 chars)."),
+  parts: {
+    type: "array",
+    description: "The parts of the path, in teaching order (as many as the turn context asks for).",
+    items: obj({ title: str("Short part title (max 80 chars)."), summary: str("One line on what this part covers.") }),
+  },
 });
 
 export const milestoneSchema = obj({
@@ -94,6 +104,30 @@ export const WORK_TOOLS: Anthropic.Beta.BetaToolUnion[] = [
   functionTool(
     MILESTONE_REACHED,
     "Mark that a meaningful chunk of work just completed (e.g. data explored, first model trained, model improved). " +
+      "If the result says boss_due:true, stop and wait.",
+    milestoneSchema,
+  ),
+];
+
+/** Learn mode's tools: no code sandbox and no prediction reveal (predictions are graded right away). Stable order. */
+export const LEARN_TOOLS: Anthropic.Beta.BetaToolUnion[] = [
+  WEB_SEARCH_TOOL,
+  functionTool(
+    LEARNING_MOMENT,
+    "Give the learner a short question about what you just taught (or what comes next). Call it after each teaching " +
+      "chunk. The app may show it (the turn then ends and waits for the learner) or skip it (you get " +
+      "{status:\"skip\"} and simply keep teaching). Never answer the question yourself.",
+    learningMomentSchema,
+  ),
+  functionTool(
+    SET_LEARNING_PATH,
+    "Set (or revise) the learning path for this topic: a short title and the parts in teaching order. Call it once in " +
+      "your first response, before teaching; call it again only if the learner wants a different direction.",
+    setLearningPathSchema,
+  ),
+  functionTool(
+    MILESTONE_REACHED,
+    "Mark the current part of the path as finished (label: the part's title). The app moves to the next part. " +
       "If the result says boss_due:true, stop and wait.",
     milestoneSchema,
   ),

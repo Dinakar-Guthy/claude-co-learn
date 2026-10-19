@@ -3,6 +3,7 @@
  * See docs/design-plan.md §7.
  */
 import type { HelpLevel, LearningMomentInput, MomentType, Verdict } from "./moment";
+import type { SessionMode } from "@/lib/modes";
 
 export type Familiarity = "new" | "some" | "comfortable";
 export type GuardrailMode = "light" | "balanced" | "strict";
@@ -68,6 +69,8 @@ export interface GateContext {
   settings: UserSettings;
   familiarity: Familiarity;
   now: number;
+  /** Learn mode asks a question after every teaching chunk, so its value bar is one lower (missing: Co-learn). */
+  mode?: SessionMode;
 }
 
 export type GateDecision =

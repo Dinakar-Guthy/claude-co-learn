@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { WrapUpResponse } from "@/lib/contracts/api";
 import type { MomentView } from "@/lib/contracts/moment";
 import type { Reading } from "@/lib/contracts/session";
+import type { SessionMode } from "@/lib/modes";
 import type { XpAward } from "@/lib/contracts/stream";
 import { hostOf } from "@/lib/sources";
 import type { HelpBusy } from "./MomentHelp";
@@ -40,10 +41,11 @@ export interface WrapUpProps {
   onFeedback?: (helpful: boolean) => void;
   /** "Learn more" further reading (fetched after the wrap-up); omit to hide. */
   reading?: { loading: boolean; items: Reading[] };
+  mode?: SessionMode;
 }
 
 /** End-of-session sequence: deferred quiz → Codex → XP → story → learn more → suggestions → new session. */
-export function WrapUp({ data, moments, gradingMomentId, helpBusy, xpByMoment, onMomentAction, chapterLoading = false, onTryTheme, onSuggestion, onNewSession, onShowContext, onFeedback, reading }: WrapUpProps) {
+export function WrapUp({ data, moments, gradingMomentId, helpBusy, xpByMoment, onMomentAction, chapterLoading = false, onTryTheme, onSuggestion, onNewSession, onShowContext, onFeedback, reading, mode }: WrapUpProps) {
   const { level } = data.user;
   const rewards = data.levelUps.flatMap((l) => l.rewards);
   const pct = Math.round(levelProgress(level) * 100);
@@ -62,6 +64,7 @@ export function WrapUp({ data, moments, gradingMomentId, helpBusy, xpByMoment, o
             return (
               <div key={d.id} className="space-y-1">
               <MomentCard
+                mode={mode}
                 moment={view}
                 grading={gradingMomentId === d.id}
                 helpBusy={helpBusy?.[d.id]}

@@ -3,6 +3,7 @@ import type { MomentView } from "@/lib/contracts/moment";
 import type { BossState, MomentRecord, Primer, Session, TranscriptItem, User } from "@/lib/contracts/session";
 import type { BossView, PrimerView, SessionView, UserView } from "@/lib/contracts/api";
 import { engine } from "@/lib/engine";
+import { modeOf } from "@/lib/modes";
 
 export function toMomentView(m: MomentRecord): MomentView {
   const revealMC = m.mcOffered;
@@ -56,6 +57,8 @@ export function toSessionView(s: Session, transcript: TranscriptItem[], moments:
     bosses: Object.fromEntries(bosses.map((b) => [b.id, toBossView(b, moments)])),
     chapters: Object.fromEntries(s.story.chapters.map((c) => [c.id, c])),
     storyEnabled: s.story.enabled === true,
+    mode: modeOf(s.intent),
+    path: s.path,
     bossOfferPending: Boolean(s.engine.bossOfferPending) && bosses.every((b) => b.outcome),
     primer: s.primer ? toPrimerView(s.primer) : undefined,
   };

@@ -15,6 +15,7 @@ import { hitFor, isSettled } from "./scores";
 import { loadOwnedSession, patchSession } from "./sessionStore";
 import { revokeXp } from "./xp";
 import { workSummary } from "./workSummary";
+import { modeOf } from "@/lib/modes";
 
 const ids = { sessionId: z.string().min(1).max(100), momentId: z.string().min(1).max(100) };
 export const GradeRequestSchema = z.union([
@@ -65,8 +66,9 @@ async function submit(ctx: Ctx, rawAnswer: string): Promise<HandlerResult<GradeR
   const answer = rawAnswer.trim();
   if (!answer) throw new HttpError(400, "Answer is empty");
 
-  // Predictions are graded against the real run by the work loop (resolve_prediction), not here.
-  if (record.type === "predict" && !record.bossId && !ctx.fromWrapUp) {
+  // Co-learn predictions are graded against the real run by the work loop (resolve_prediction), not here.
+  // Learn mode has no run: "what happened next?" is graded right away against what really happened.
+  if (record.type === "predict" && !record.bossId && !ctx.fromWrapUp && modeOf(session.intent) === "co-learn") {
     const pending: MomentRecord = { ...record, answer, status: "awaiting_prediction_result", answeredAt: deps.now() };
     await deps.store.putMoment(pending);
     await deps.store.logEvent({ at: deps.now(), anonId: session.anonId, sessionId: session.id, name: "moment_answered", props: { momentId: record.id, type: record.type, pendingPrediction: true } });

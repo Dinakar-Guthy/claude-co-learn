@@ -268,6 +268,60 @@ describe("runTurn", () => {
     expect(JSON.stringify(t.calls.at(-1)!.messages)).toContain("keep working instead of taking on the boss");
   });
 
+  describe("Learn mode", () => {
+    const learnSession = { intent: { goal: "Teach me about the fall of the Roman Republic.", familiarity: "some" as const, minutes: 10, demo: false, mode: "learn" as const } };
+    const pathInput = {
+      topic: "The fall of the Roman Republic",
+      parts: [
+        { title: "Rome in 133 BC", summary: "The Republic at its height" },
+        { title: "The Gracchi", summary: "Reform and violence" },
+        { title: "Caesar", summary: "The Rubicon" },
+      ],
+    };
+
+    it("uses the tutor prompt and tools (no sandbox), sets the path, and tells Claude the current part", async () => {
+      const t = await setup({ session: learnSession });
+      t.replies.push(fakeMessage([toolUse("set_learning_path", pathInput, "toolu_path")], "tool_use"), fakeMessage([text("Rome in 133 BC was…")]));
+      const events = await t.send({ kind: "message", text: "Teach me about the fall of the Roman Republic." });
+
+      const request = t.calls[0];
+      expect((request.system as { text: string }[])[0].text).toContain("You are Claude in Learn mode");
+      expect(request.tools?.map((x) => (x as { name: string }).name)).toEqual(["web_search", "learning_moment", "set_learning_path", "milestone_reached"]);
+      expect(request.container).toBeUndefined();
+      expect(JSON.stringify(request.messages)).toContain("Call set_learning_path first with 3 parts");
+
+      const path = events.find((e) => e.type === "path");
+      expect(path).toMatchObject({ path: { topic: "The fall of the Roman Republic", parts: [{ status: "current" }, { status: "todo" }, { status: "todo" }] } });
+      const stored = await t.store.getSession(t.session.id);
+      expect(stored?.path?.parts.map((p) => p.status)).toEqual(["current", "todo", "todo"]);
+      expect(stored?.title).toBe("The fall of the Roman Republic");
+      expect(JSON.parse(String(((await t.store.getApiMessages(t.session.id)).find((m) => JSON.stringify(m).includes("current_part"))!.content as Anthropic.ToolResultBlockParam[])[0].content))).toEqual({ status: "ok", current_part: "Rome in 133 BC" });
+    });
+
+    it("a milestone finishes the current part and moves to the next", async () => {
+      const t = await setup({ session: learnSession, bossDue: false });
+      t.replies.push(fakeMessage([toolUse("set_learning_path", pathInput)], "tool_use"), fakeMessage([text("Part 1…")]));
+      await t.send({ kind: "message", text: "start" });
+      t.replies.push(fakeMessage([toolUse("milestone_reached", { label: "Rome in 133 BC", summary: "s", concepts_involved: [] }, "toolu_m1")], "tool_use"), fakeMessage([text("Now the Gracchi…")]));
+      const events = await t.send({ kind: "message", text: "next" });
+
+      expect(events).toContainEqual(expect.objectContaining({ type: "path", path: expect.objectContaining({ parts: [expect.objectContaining({ status: "done" }), expect.objectContaining({ status: "current" }), expect.objectContaining({ status: "todo" })] }) }));
+      expect((await t.store.getSession(t.session.id))?.path?.parts.map((p) => p.status)).toEqual(["done", "current", "todo"]);
+      const results = t.calls.at(-1)!.messages.flatMap((m) => (Array.isArray(m.content) ? m.content : [])).filter((b) => b.type === "tool_result");
+      expect(JSON.parse(String((results.at(-1) as Anthropic.ToolResultBlockParam).content))).toEqual({ boss_due: false, next_part: "The Gracchi" });
+    });
+
+    it("a revised path keeps finished parts done", async () => {
+      const t = await setup({ session: { ...learnSession, path: { topic: "Rome", parts: [{ title: "Rome in 133 BC", summary: "x", status: "done" }, { title: "The Gracchi", summary: "y", status: "current" }] } } });
+      t.replies.push(fakeMessage([toolUse("set_learning_path", { topic: "Rome", parts: [{ title: "Rome in 133 BC", summary: "x" }, { title: "Women in Rome", summary: "z" }] })], "tool_use"), fakeMessage([text("OK.")]));
+      await t.send({ kind: "message", text: "Can we cover women in Rome instead?" });
+      expect((await t.store.getSession(t.session.id))?.path?.parts).toEqual([
+        { title: "Rome in 133 BC", summary: "x", status: "done" },
+        { title: "Women in Rome", summary: "z", status: "current" },
+      ]);
+    });
+  });
+
   it("continues after a milestone when no boss is due", async () => {
     const t = await setup({ bossDue: false });
     t.replies.push(fakeMessage([toolUse("milestone_reached", { label: "Data explored", summary: "s", concepts_involved: [] })], "tool_use"), fakeMessage([text("Next.")]));

@@ -4,11 +4,11 @@
  */
 import type { MomentView, Verdict } from "./moment";
 import type { LevelInfo, LevelReward, UserSettings, BossOutcome } from "./engine";
-import type { Intent, Reading, SessionSketch, SessionSummary, StoryChapter, TranscriptItem } from "./session";
+import type { Intent, LearningPath, Reading, SessionSketch, SessionSummary, StoryChapter, TranscriptItem } from "./session";
+import type { SessionMode } from "@/lib/modes";
 import type { XpAward } from "./stream";
 
 export const ANON_COOKIE = "cl_anon";
-export const UNLOCK_PHRASE = "/co-learn";
 
 export interface UserView {
   xp: number;
@@ -19,7 +19,7 @@ export interface UserView {
 
 // POST /api/unlock
 export interface UnlockRequest { phrase: string }
-export interface UnlockResponse { ok: true; user: UserView; sessions: SessionSummary[] }
+export interface UnlockResponse { ok: true; user: UserView; sessions: SessionSummary[]; mode: SessionMode }
 
 // GET /api/user  → UserView
 // PATCH /api/user  (partial settings)
@@ -44,6 +44,9 @@ export interface SessionView {
   chapters: Record<string, StoryChapter>;
   /** Whether this session earns story chapters (off in Co-learn; see lib/modes.ts). */
   storyEnabled: boolean;
+  mode: SessionMode;
+  /** Learn mode: the learning path, once the tutor has planned it. */
+  path?: LearningPath;
   /** A boss is due: show the "Take it on / Keep working" offer. */
   bossOfferPending?: boolean;
   primer?: PrimerView;

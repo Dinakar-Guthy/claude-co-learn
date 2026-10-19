@@ -7,7 +7,8 @@ import type { Session, User } from "@/lib/contracts/session";
 import type { Store } from "@/lib/contracts/store";
 import { newUser } from "@/lib/store/defaults";
 import { isPausedAssistant } from "./blocks";
-import { BOSS_DECLINED_TEXT, bossResultText, CONTINUE_TEXT, momentResponseText } from "./userText";
+import { bossDeclinedText, bossResultText, continueText, momentResponseText } from "./userText";
+import { modeOf } from "@/lib/modes";
 
 export { isPausedAssistant } from "./blocks";
 
@@ -46,6 +47,7 @@ export async function prepareTurn(store: Store, anonId: string, ip: string, body
   const session = await store.getSession(request.sessionId);
   if (!session || session.anonId !== anonId) return fail(404, "Session not found.");
   const user = (await store.getUser(anonId)) ?? newUser(anonId);
+  const mode = modeOf(session.intent);
 
   const plan = (modelText: string | null, userText?: string): PrepareResult => ({
     ok: true,
@@ -63,22 +65,22 @@ export async function prepareTurn(store: Store, anonId: string, ip: string, body
       const moment = await store.getMoment(session.id, request.momentId);
       if (!moment) return fail(404, "Moment not found.");
       if (moment.bossId) return fail(400, "Boss questions continue via boss_result.");
-      const text = momentResponseText(moment);
+      const text = momentResponseText(moment, mode);
       return text ? plan(text) : fail(409, "This moment hasn't been answered yet.");
     }
     case "boss_result": {
       const boss = await store.getBoss(session.id, request.bossId);
       if (!boss) return fail(404, "Boss not found.");
       const concepts = await bossConcepts(store, session, boss.id);
-      const text = bossResultText(boss, concepts);
+      const text = bossResultText(boss, concepts, mode);
       return text ? plan(text) : fail(409, "This boss challenge isn't finished yet.");
     }
     case "boss_declined":
       if (!session.engine.bossOfferPending) return fail(409, "There's no boss offer to decline.");
-      return plan(BOSS_DECLINED_TEXT);
+      return plan(bossDeclinedText(mode));
     case "continue": {
       const last = (await store.getApiMessages(session.id)).at(-1);
-      return plan(isPausedAssistant(last) ? null : CONTINUE_TEXT);
+      return plan(isPausedAssistant(last) ? null : continueText(mode));
     }
   }
 }

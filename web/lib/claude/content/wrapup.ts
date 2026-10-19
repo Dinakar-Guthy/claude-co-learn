@@ -21,6 +21,13 @@ export const WRAPUP_SYSTEM = `You write the wrap-up for a Co-learn session, wher
 Warm and specific; never grade or scold.
 ${DATA_RULE}`;
 
+/** Learn mode: the session was a lesson on a topic, so suggestions are what to learn next. */
+export const WRAPUP_SYSTEM_LEARN = `You write the wrap-up for a Learn session, where Claude tutored the learner on a topic of their choice and they answered questions along the way.
+- codex: one entry per concept given, in the same order, with a one-line takeaway (at most 20 words) in plain words about what they now understand.
+- suggestions: 2-3 topics to learn next, each phrased as a request the learner could start their next Learn session with (imperative, e.g. "Teach me how Augustus turned the Republic into an empire"): the natural sequel, a deeper look at a concept that still needs practice, or a connected topic. The UI shows them under the heading "Next time you could…", so don't start with that phrase.
+Warm and specific; never grade or scold.
+${DATA_RULE}`;
+
 type Outcome = { concept: string; type: string; score: number };
 export type CodexResult = WrapUpDraft["codex"][number]["result"];
 
@@ -40,14 +47,14 @@ export function wrapUpPrompt(input: WrapUpInput, classified: ReturnType<typeof c
   return [
     asData("learner_goal", truncate(input.intent.goal, 1000)),
     `Concepts practised (average score 0-1, result):\n${bullets(classified.map((c) => `${c.concept}: ${c.avg.toFixed(2)}, ${c.result}`))}`,
-    "What they built:",
+    input.intent.mode === "learn" ? "What they learned:" : "What they built:",
     asData("work_summary", truncate(input.workSummary, 2500) || "(no details)"),
   ].join("\n\n");
 }
 
 export const generateWrapUp: ContentApi["generateWrapUp"] = async (input) => {
   const classified = classifyConcepts(input.outcomes);
-  const out = await callStructured({ task: "generateWrapUp", route: MODELS.wrapup, system: WRAPUP_SYSTEM, user: wrapUpPrompt(input, classified), schema: WrapUpOutputSchema, timeoutMs: 120_000 });
+  const out = await callStructured({ task: "generateWrapUp", route: MODELS.wrapup, system: input.intent.mode === "learn" ? WRAPUP_SYSTEM_LEARN : WRAPUP_SYSTEM, user: wrapUpPrompt(input, classified), schema: WrapUpOutputSchema, timeoutMs: 120_000 });
   const summaries = new Map(out.codex.map((c) => [c.concept.trim().toLowerCase(), c.summary.trim()]));
   return {
     codex: classified.map((c, i) => ({

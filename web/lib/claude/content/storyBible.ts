@@ -14,8 +14,8 @@ export const BibleOutputSchema = z.object({
   arc: z.array(z.string()).describe("3-4 planned beats; the last resolves at the session wrap-up"),
 });
 
-export const BIBLE_SYSTEM = `You create the story bible for a short serialized reward story. The learner earns chapters by beating challenges while doing real work; each chapter is 150-250 words.
-Use the given genre, narrator voice, and twist card. Theme the world lightly to the learner's work through a motif (for model training, perhaps a lighthouse that learns to predict storms), but keep it a story, not a lesson.
+export const BIBLE_SYSTEM = `You create the story bible for a short serialized reward story. The learner earns chapters by beating challenges while learning a topic (or doing real work); each chapter is 150-250 words.
+Use the given genre, narrator voice, and twist card. Theme the world lightly to what the learner is studying or working on through a motif (for model training, perhaps a lighthouse that learns to predict storms; for Roman history, perhaps a city of talking bridges), but keep it a story, not a lesson. Don't retell the real history or facts they are learning.
 Suitable for all ages: no violence beyond cartoon peril, no romance, no frightening content. Hopeful and playful.
 ${DATA_RULE}`;
 
@@ -24,7 +24,7 @@ export function biblePrompt(intent: Intent, seeds: StorySeeds): string {
     `Genre: ${seeds.genre}`,
     `Narrator voice: ${seeds.narrator}`,
     `Twist card (use it somewhere in the arc): ${seeds.twist}`,
-    "The learner's work, for the motif:",
+    "What the learner is studying or working on, for the motif:",
     asData("learner_goal", truncate(intent.goal, 600)),
   ].join("\n");
 }

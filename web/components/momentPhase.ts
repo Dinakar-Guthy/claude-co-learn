@@ -1,4 +1,5 @@
 import type { MomentView, Verdict } from "@/lib/contracts/moment";
+import type { SessionMode } from "@/lib/modes";
 
 /** What a MomentCard shows, derived purely from the server's MomentView plus the client's `grading` flag. */
 export type MomentPhase =
@@ -38,6 +39,17 @@ export const MOMENT_TYPE_LABEL: Record<MomentView["type"], string> = {
   fill_gap: "Fill the gap",
   boss: "Boss question",
 };
+
+/** Learn mode words the same question types for a topic (backlog: "Learn mode"). */
+export const LEARN_MOMENT_TYPE_LABEL: Record<MomentView["type"], string> = {
+  ...MOMENT_TYPE_LABEL,
+  decide: "Take a position",
+  predict: "What happened next?",
+  spot_issue: "Spot the myth",
+};
+
+export const momentTypeLabel = (type: MomentView["type"], mode: SessionMode = "co-learn") =>
+  (mode === "learn" ? LEARN_MOMENT_TYPE_LABEL : MOMENT_TYPE_LABEL)[type];
 
 export function pipMoodFor(verdict: Verdict, big = false) {
   if (verdict === "correct") return big ? ("celebrating" as const) : ("happy" as const);

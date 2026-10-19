@@ -44,6 +44,8 @@ export function sanitizeHistory(messages: ApiMessage[]): { messages: ApiMessage[
 export type OwnedSessionFields = Pick<Session, "engine" | "containerId" | "fileIds" | "demoFileAttached">;
 
 export class TurnState {
+  /** Learn mode: the path (and title) changed this turn; otherwise the stored one wins (the learner may reorder it meanwhile). */
+  private pathChanged = false;
   private pending: ApiMessage[] = [];
   private committed = 0;
   private items = new Map<string, TranscriptItem>();
@@ -136,6 +138,14 @@ export class TurnState {
     this.items.set(item.id, item);
   }
 
+  /** Records a path change by a tool (persisted on the next persist). */
+  setPath(path: NonNullable<Session["path"]>, title?: string): void {
+    this.session.path = path;
+    if (title) this.session.title = title;
+    this.pathChanged = true;
+    this.markDirty();
+  }
+
   /** Writes owned session fields onto the latest stored session, committed history, and new transcript items. */
   async persist(): Promise<void> {
     const { store, session } = this;
@@ -146,7 +156,9 @@ export class TurnState {
       fileIds: [...new Set([...latest.fileIds, ...session.fileIds])],
       demoFileAttached: latest.demoFileAttached || session.demoFileAttached,
     };
-    await store.putSession({ ...latest, ...owned });
+    const path = this.pathChanged ? { path: session.path, title: session.title } : {};
+    await store.putSession({ ...latest, ...owned, ...path });
+    this.pathChanged = false;
     const { messages, dropped } = sanitizeHistory([...this.history, ...this.pending.slice(0, this.committed)]);
     await store.putApiMessages(session.id, messages);
     // Code runs whose calls were dropped never ran; don't leave them in the transcript.

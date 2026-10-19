@@ -20,6 +20,7 @@ export function applyStreamEvent(view: SessionView, event: ChatStreamEvent): Ses
   if (event.type === "moment") {
     return { ...view, transcript, moments: { ...view.moments, [event.moment.id]: event.moment } };
   }
+  if (event.type === "path") return { ...view, path: event.path, title: event.path.topic.length <= 40 ? event.path.topic : view.title };
   if (event.type === "prediction_reveal") {
     const m = view.moments[event.momentId];
     const moments = m ? { ...view.moments, [m.id]: { ...m, status: "answered" as const, verdict: event.verdict, why: event.why, xp: event.xp.amount } } : view.moments;

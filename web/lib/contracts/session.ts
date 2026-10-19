@@ -4,6 +4,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { EngineState, Familiarity, UserSettings, BossOutcome } from "./engine";
 import type { HelpLevel, LearningMomentInput, MomentHelpView, MomentStatus, MomentType, Verdict } from "./moment";
+import type { SessionMode } from "@/lib/modes";
 
 export interface User {
   anonId: string;
@@ -19,6 +20,8 @@ export interface Intent {
   familiarity: Familiarity;
   minutes: number; // session length target (default 10)
   demo: boolean; // started from the churn demo starter
+  /** Missing on sessions from before Learn mode: Co-learn (see lib/modes.ts). */
+  mode?: SessionMode;
 }
 
 /** Light "session sketch" generated in the background (Opus, high effort). Not a curriculum. */
@@ -47,6 +50,18 @@ export interface Primer {
   createdAt: number;
   dismissed?: boolean;
   answer?: { choice: number; correct: boolean };
+}
+
+/** Learn mode: the short path the tutor plans in its first response; the learner can reorder what's next. */
+export interface PathPart {
+  title: string;
+  summary: string;
+  status: "todo" | "current" | "done";
+}
+
+export interface LearningPath {
+  topic: string;
+  parts: PathPart[];
 }
 
 /** A web page Claude cited (from web search). Numbered in order of first citation within a message. */
@@ -94,6 +109,8 @@ export interface Session {
   primer?: Primer;
   /** "Learn more" readings, generated once when the session is wrapped up. */
   furtherReading?: Reading[];
+  /** Learn mode: the learning path (set by the tutor's first response). */
+  path?: LearningPath;
 }
 
 /** Full server-side record of a moment (contains answer keys; never sent to the client as-is). */

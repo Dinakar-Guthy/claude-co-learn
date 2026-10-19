@@ -25,7 +25,7 @@ export const JudgeOutputSchema = z.object({
 });
 
 export const BLIND_SYSTEM = `You are checking a short quiz question before a learner sees it. Answer it yourself, as an expert would, from the question alone.
-Then pick the best multiple-choice option and say whether the question is ambiguous. A "decide" question (a judgment call at a fork in real work) is not ambiguous just because several options are defensible, as long as one is reasonably best; it is ambiguous only if the question lacks the information needed to choose.
+Then pick the best multiple-choice option and say whether the question is ambiguous. A "decide" question (a judgment call at a fork in real work, or taking a position on a topic) is not ambiguous just because several options are defensible, as long as one is reasonably best; it is ambiguous only if the question lacks the information needed to choose.
 ${DATA_RULE}`;
 
 export const JUDGE_SYSTEM = `You audit the answer key of a short quiz question generated for a learner. You see the question, the key, and an independent expert's blind answer.

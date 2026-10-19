@@ -40,6 +40,19 @@ Write 2-3 linked application questions:
 Also give the boss a playful name tied to the work (e.g. "The Overfit Bug", "The Leaky Ghost"), choose an ascii character (bug, slime, or ghost) that fits, and write a 1-2 sentence intro. Keep the tone light and friendly, never threatening.
 ${DATA_RULE}`;
 
+/** Learn mode: a chapter test after a part of the learning path (decision log 2026-10-18). */
+export const BOSS_SYSTEM_LEARN = `You design a short "boss" challenge for Learn mode: a checkpoint after a part of a learning path, where the learner recombines the ideas they were just taught about a topic.
+
+Write 2-3 linked application questions:
+- Ground them in what was actually taught: reuse the names, events, causes, and examples from the lesson summary (e.g. "Tiberius went around the Senate to pass his land law. Why did that frighten senators more than the law itself, and what precedent did it set?").
+- Link them: one thread that develops across questions (explain, then compare or connect, then predict a consequence), each combining two or more of the given concepts where possible.
+- Reasoning, not recall of dates or definitions. Each is answerable in 1-3 sentences.
+- Aim near the target difficulty (1-5 scale, where the learner should succeed about 70% of the time). If misconceptions are listed, give the learner a fair chance to show they've moved past them.
+- Every question needs an ideal answer, a rubric, and a 4-option multiple-choice fallback whose keyed option agrees with the ideal answer, with one short why per option.
+
+Also give the boss a playful name tied to the topic (e.g. "The Senate Shade", "The Myth Muncher"), choose an ascii character (bug, slime, or ghost) that fits, and write a 1-2 sentence intro. Keep the tone light and friendly, never threatening.
+${DATA_RULE}`;
+
 type BossInput = Parameters<ContentApi["generateBoss"]>[0];
 
 export function bossPrompt(input: BossInput): string {
@@ -49,7 +62,7 @@ export function bossPrompt(input: BossInput): string {
     `Target difficulty: ${input.targetDifficulty}`,
     `Concepts practised since the last boss:\n${bullets(input.concepts)}`,
     `Recent misconceptions or gaps:\n${bullets(input.misconceptions)}`,
-    "What was built so far (assistant notes and real code output):",
+    input.intent.mode === "learn" ? "What was taught so far (tutor notes):" : "What was built so far (assistant notes and real code output):",
     asData("work_summary", truncate(input.workSummary, 2500) || "(no details yet)"),
   ].join("\n\n");
 }
@@ -86,7 +99,7 @@ export function toMomentInput(q: z.infer<typeof BossQuestionSchema>): LearningMo
 }
 
 export const generateBoss: ContentApi["generateBoss"] = async (input) => {
-  const out = await callStructured({ task: "generateBoss", route: MODELS.boss, system: BOSS_SYSTEM, user: bossPrompt(input), schema: BossOutputSchema, timeoutMs: 180_000 });
+  const out = await callStructured({ task: "generateBoss", route: MODELS.boss, system: input.intent.mode === "learn" ? BOSS_SYSTEM_LEARN : BOSS_SYSTEM, user: bossPrompt(input), schema: BossOutputSchema, timeoutMs: 180_000 });
   return normalizeBoss(out);
 };
 

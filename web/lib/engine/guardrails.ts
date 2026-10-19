@@ -1,5 +1,6 @@
 /** Value thresholds and optional guardrail caps (design-plan §7.2, product-vision "Pacing engine"). */
 import type { EngineState, GuardrailMode, UserSettings } from "@/lib/contracts/engine";
+import type { SessionMode } from "@/lib/modes";
 
 /** Minimum learning_value with guardrails off (the default). */
 export const DEFAULT_VALUE_THRESHOLD = 4;
@@ -24,8 +25,10 @@ export const CAPS: Record<GuardrailMode, Caps> = {
   strict: { maxPerWindow: 2 },
 };
 
-export function valueThreshold(settings: UserSettings): number {
-  return settings.guardrails.enabled ? VALUE_THRESHOLD[settings.guardrails.mode] : DEFAULT_VALUE_THRESHOLD;
+/** Learn mode: one lower (4 → 3), since teaching then asking is the point there; never below 3. */
+export function valueThreshold(settings: UserSettings, mode: SessionMode = "co-learn"): number {
+  const base = settings.guardrails.enabled ? VALUE_THRESHOLD[settings.guardrails.mode] : DEFAULT_VALUE_THRESHOLD;
+  return mode === "learn" ? Math.max(3, base - 1) : base;
 }
 
 /** Moments shown in the half-open window (now − CAP_WINDOW_MS, now]. */

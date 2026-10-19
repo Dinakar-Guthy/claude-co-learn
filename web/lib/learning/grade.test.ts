@@ -79,6 +79,16 @@ describe("handleGrade: submit", () => {
     expect((await deps.store.getSession("s1"))?.engine.recentOutcomes.at(-1)?.score).toBe(0);
   });
 
+  it("Learn mode grades a prediction right away (there's no run to wait for)", async () => {
+    const { deps, content } = setup();
+    await seedSession(deps, { intent: { goal: "Rome", familiarity: "some", minutes: 10, demo: false, mode: "learn" } });
+    await seedMoment(deps, { type: "predict", candidate: candidate({ type: "predict", timing: "before_step" }) });
+    const { body } = await handleGrade(deps, ANON, req({ action: "submit", answer: "He marches on Rome" }));
+    expect(content.gradeAnswer).toHaveBeenCalled();
+    expect(body.moment.status).toBe("answered");
+    expect(body.continueWith).toEqual({ sessionId: "s1", kind: "moment_response", momentId: "m1" });
+  });
+
   it("stores a prediction without grading and waits for the real result", async () => {
     const { deps, content } = setup();
     await seedSession(deps);

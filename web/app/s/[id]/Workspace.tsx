@@ -14,6 +14,7 @@ import { MomentCard, momentHandlers } from "@/components/MomentCard";
 import { PredictionReveal } from "@/components/PredictionReveal";
 import { BossCard } from "@/components/BossCard";
 import { BossOffer } from "@/components/BossOffer";
+import { PathCard } from "@/components/PathCard";
 import { PrimerCard } from "@/components/PrimerCard";
 import { AsciiBoss } from "@/components/AsciiBoss";
 import { StoryChapterCard } from "@/components/StoryChapterCard";
@@ -115,10 +116,11 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
     void ws.loadSessions();
   }, [ws]);
 
+  const learn = view.mode === "learn";
   const inputPlaceholder = boss
-    ? "Finish or skip the boss challenge above to keep working…"
+    ? `Finish or skip the boss challenge above to keep ${learn ? "learning" : "working"}…`
     : view.bossOfferPending
-      ? "Or just keep typing to carry on with your work…"
+      ? `Or just keep typing to carry on with your ${learn ? "lesson" : "work"}…`
     : pending
       ? "Answer the question above, or type to skip it…"
       : "Message Claude…";
@@ -134,6 +136,7 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
         onToggleMute={() => void ws.changeSettings({ sound: !user.settings.sound })}
         onOpenSettings={openDrawer}
         codexHref={`/codex?from=/s/${view.id}`}
+        learn={view.mode === "learn"}
       />
       <LimitsBanner />
       <SettingsDrawer
@@ -167,6 +170,7 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
       )}
 
       <main className="mx-auto w-full max-w-[720px] flex-1 space-y-5 px-4 pt-6 pb-10">
+        {view.path && <div className="sticky top-14 z-20"><PathCard path={view.path} /></div>}
         {view.primer && !view.primer.dismissed && (
           <PrimerCard primer={view.primer} xp={ws.primerXp} busy={ws.primerBusy} onAnswer={ws.answerPrimer} onDismiss={ws.dismissPrimer} />
         )}
@@ -179,7 +183,7 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
         {ws.streaming && ws.status && <StatusLine text={STATUS_LABEL[ws.status]} />}
 
         {view.bossOfferPending && !ws.streaming && ws.bossState !== "loading" && !boss && (
-          <BossOffer onTake={ws.takeBoss} onDecline={ws.declineBoss} story={view.storyEnabled} />
+          <BossOffer onTake={ws.takeBoss} onDecline={ws.declineBoss} story={view.storyEnabled} learn={view.mode === "learn"} />
         )}
 
         {ws.bossState === "loading" && (
@@ -246,8 +250,9 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
               xpByMoment={ws.xpByMoment}
               onMomentAction={(id, a) => void ws.act(id, a)}
               onTryTheme={(id) => void ws.changeSettings({ theme: id })}
-              onSuggestion={(s) => router.push(`/?start=1&goal=${encodeURIComponent(s)}`)}
-              onNewSession={() => router.push("/?start=1")}
+              onSuggestion={(s) => router.push(`/?start=1&mode=${view.mode}&goal=${encodeURIComponent(s)}`)}
+              onNewSession={() => router.push(`/?start=1&mode=${view.mode}`)}
+              mode={view.mode}
               onShowContext={(momentId) => showContext(view, momentId)}
               onFeedback={(helpful) => void apiPost("/api/feedback", { sessionId: view.id, helpful }).catch(() => undefined)}
               reading={ws.reading}
@@ -343,6 +348,7 @@ function TranscriptEntry({
       const shown = m.type === "predict" && revealed.has(m.id) ? { ...m, status: "awaiting_prediction_result" as const } : m;
       return (
         <MomentCard
+          mode={view.mode}
           moment={shown}
           grading={Boolean(ws.grading[m.id])}
           helpBusy={ws.helpBusy[m.id]}

@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { CreateSessionResponse } from "@/lib/contracts/api";
 import { initialEngineState } from "@/lib/contracts/engine";
 import type { Intent, Session } from "@/lib/contracts/session";
-import { MODES } from "@/lib/modes";
+import { MODES, modeOf, SESSION_MODES } from "@/lib/modes";
 import type { HandlerResult, LearningDeps } from "./deps";
 import { patchSession } from "./sessionStore";
 
@@ -12,6 +12,7 @@ export const IntentSchema = z.object({
   familiarity: z.enum(["new", "some", "comfortable"]),
   minutes: z.number().int().min(5).max(120).default(10),
   demo: z.boolean().default(false),
+  mode: z.enum(SESSION_MODES).default("co-learn"),
 });
 export const CreateSessionRequestSchema = z.object({ intent: IntentSchema });
 
@@ -36,11 +37,11 @@ export async function createSession(deps: LearningDeps, anonId: string, intent: 
     demoFileAttached: false,
     status: "active",
     engine: initialEngineState(),
-    story: { enabled: MODES["co-learn"].story, chapters: [] },
+    story: { enabled: MODES[modeOf(intent)].story, chapters: [] },
   };
   await deps.store.putSession(session);
   await deps.store.putTranscript(session.id, []);
-  await deps.store.logEvent({ at: now, anonId, sessionId: session.id, name: "session_created", props: { demo: intent.demo, familiarity: intent.familiarity, minutes: intent.minutes } });
+  await deps.store.logEvent({ at: now, anonId, sessionId: session.id, name: "session_created", props: { demo: intent.demo, familiarity: intent.familiarity, minutes: intent.minutes, sessionMode: modeOf(intent) } });
   return { body: { sessionId: session.id }, background: [() => enrichSession(deps, session.id)] };
 }
 
@@ -51,20 +52,22 @@ export async function createSession(deps: LearningDeps, anonId: string, intent: 
 export async function enrichSession(deps: LearningDeps, sessionId: string): Promise<void> {
   const session = await deps.store.getSession(sessionId);
   if (!session) return;
+  // Learn mode: the tutor plans the path and teaches from the start, so there's no sketch or primer.
+  const learn = modeOf(session.intent) === "learn";
   // The primer is the fastest call and is meant to appear during the first work turn, so it saves on its own.
   const primerTask =
-    session.intent.familiarity === "new" && !session.primer
+    !learn && session.intent.familiarity === "new" && !session.primer
       ? deps.content.generatePrimer({ intent: session.intent }).then((draft) =>
           patchSession(deps, sessionId, (latest) => ({ primer: latest.primer ?? { ...draft, createdAt: deps.now() } })),
         )
       : Promise.resolve(null);
   const [sketch, bible, primer] = await Promise.allSettled([
-    deps.content.generateSketch({ intent: session.intent }),
+    learn ? Promise.resolve(undefined) : deps.content.generateSketch({ intent: session.intent }),
     !session.story.enabled || session.story.bible ? Promise.resolve(session.story.bible) : deps.content.generateStoryBible({ intent: session.intent }),
     primerTask,
   ]);
   await patchSession(deps, sessionId, (latest) => ({
-    ...(sketch.status === "fulfilled" ? { sketch: sketch.value, title: sketch.value.title || latest.title } : {}),
+    ...(sketch.status === "fulfilled" && sketch.value ? { sketch: sketch.value, title: sketch.value.title || latest.title } : {}),
     story: { ...latest.story, bible: latest.story.bible ?? (bible.status === "fulfilled" ? bible.value : undefined) },
   }));
   for (const r of [sketch, bible, primer]) {

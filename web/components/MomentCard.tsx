@@ -7,7 +7,8 @@ import { Markdown } from "./Markdown";
 import { Pip } from "./Pip";
 import { useSounds } from "./SoundProvider";
 import { Button, Spinner, VERDICT_LABEL, VerdictChip, XpChip, focusRing } from "./ui";
-import { MOMENT_TYPE_LABEL, feedbackKey, momentPhase, pipMoodFor, type MomentPhase } from "./momentPhase";
+import { feedbackKey, momentPhase, momentTypeLabel, pipMoodFor, type MomentPhase } from "./momentPhase";
+import type { SessionMode } from "@/lib/modes";
 import { AnswerReveal, HelpPanel, HintList, MAX_HINTS, QuietAction, type HelpBusy } from "./MomentHelp";
 
 export interface MomentHandlers {
@@ -63,6 +64,8 @@ export interface MomentCardProps extends MomentHandlers {
   helpMode?: "full" | "hints" | "none";
   /** Which help request is in flight. */
   helpBusy?: HelpBusy;
+  /** Learn mode words the question types for a topic. */
+  mode?: SessionMode;
 }
 
 const PLACEHOLDER: Record<MomentView["type"], string> = {
@@ -77,7 +80,7 @@ const PLACEHOLDER: Record<MomentView["type"], string> = {
 const LETTERS = ["A", "B", "C", "D", "E", "F"];
 
 /** An inline learning moment in the chat (never a modal). States: see momentPhase(). */
-export function MomentCard({ moment, grading = false, xp, canDefer = true, autoFocus = false, className = "", helpMode = "full", helpBusy, ...handlers }: MomentCardProps) {
+export function MomentCard({ moment, grading = false, xp, canDefer = true, autoFocus = false, className = "", helpMode = "full", helpBusy, mode, ...handlers }: MomentCardProps) {
   const phase = momentPhase(moment, grading);
   const hasHelp = Boolean(moment.help?.lesson || moment.help?.thread.length);
   const [helpOpen, setHelpOpen] = useState(hasHelp);
@@ -112,7 +115,7 @@ export function MomentCard({ moment, grading = false, xp, canDefer = true, autoF
     <section aria-labelledby={headingId} className={`rounded-card bg-primary-soft p-5 shadow-soft sm:p-6 ${className}`}>
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-surface px-3 py-1 text-xs font-bold tracking-wide text-primary uppercase">
-          {MOMENT_TYPE_LABEL[moment.type]}
+          {momentTypeLabel(moment.type, mode)}
         </span>
         <span className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-muted">{moment.concept}</span>
       </div>

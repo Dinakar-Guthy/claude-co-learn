@@ -13,25 +13,26 @@ import { demoDataNote, renderContext } from "./context";
 import { describeError, isAbort, isContainerError, REFUSAL_ERROR, toErrorEvent } from "./errors";
 import { handleTool, ToolContext, type PauseReason, type ToolOutcome } from "./handlers";
 import type { TurnPlan } from "./prepare";
-import { WORK_SYSTEM } from "./prompt";
 import { TurnState, type ApiMessage } from "./state";
 import { consumeStream, type Emit } from "./stream";
-import { WORK_TOOLS } from "./tools";
-import { BOSS_DECLINED_TEXT, CONTAINER_RESET_NOTE, skippedPendingNote } from "./userText";
+import { bossDeclinedText, CONTAINER_RESET_NOTE, skippedPendingNote } from "./userText";
+import { modeOf, type SessionMode } from "@/lib/modes";
+import { modeSetup } from "./modeSetup";
 
 /** Model requests per user turn (pause_turn re-sends included). */
 export const MAX_STEPS = 8;
 
 const CUT_OFF_TOOL_RESULT = "Your response hit the output limit, so this tool call was cut off and not run. Call it again with a shorter input.";
 
-export function buildParams(messages: ApiMessage[], containerId: string | undefined): ModelParams {
+export function buildParams(messages: ApiMessage[], containerId: string | undefined, mode: SessionMode = "co-learn"): ModelParams {
   const route = MODELS.work;
+  const { system, tools } = modeSetup(mode);
   return {
     model: route.model,
     max_tokens: route.maxTokens,
     output_config: { effort: route.effort },
-    system: WORK_SYSTEM,
-    tools: WORK_TOOLS,
+    system,
+    tools,
     messages,
     // Top-level breakpoint: caches the growing conversation prefix across loop steps and turns.
     cache_control: { type: "ephemeral" },
@@ -92,7 +93,7 @@ export async function runTurn(deps: WorkDeps, plan: TurnPlan, emit: Emit, signal
       let started = false;
       let message: Anthropic.Beta.BetaMessage;
       try {
-        const stream = deps.startStream(buildParams(state.messages(), session.containerId), signal);
+        const stream = deps.startStream(buildParams(state.messages(), session.containerId, modeOf(session.intent)), signal);
         message = await consumeStream(stream, emit, () => (started = true));
       } catch (err) {
         if (started || resetTried || !session.containerId || !isContainerError(err)) throw err;
@@ -173,7 +174,7 @@ async function settleBossOffer(ctx: ToolContext, plan: TurnPlan): Promise<string
   session.engine = { ...session.engine, bossOfferPending: false };
   ctx.state.markDirty();
   await ctx.log("boss_declined", { via: plan.request.kind });
-  return plan.request.kind === "boss_declined" ? null : BOSS_DECLINED_TEXT;
+  return plan.request.kind === "boss_declined" ? null : bossDeclinedText(modeOf(plan.session.intent));
 }
 
 /** Clears a pending moment the learner moved past; returns a note for Claude if it was skipped. */
@@ -189,7 +190,7 @@ async function settlePendingMoment(ctx: ToolContext, plan: TurnPlan): Promise<st
   if (moment?.status !== "awaiting_answer") return null;
   await ctx.deps.store.putMoment({ ...moment, status: "skipped" });
   await ctx.log("moment_skipped", { momentId: moment.id, via: plan.request.kind });
-  return skippedPendingNote(moment);
+  return skippedPendingNote(moment, modeOf(plan.session.intent));
 }
 
 async function addUserTurn(ctx: ToolContext, plan: TurnPlan, prefix: string | null): Promise<void> {

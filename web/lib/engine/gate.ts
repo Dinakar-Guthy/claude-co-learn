@@ -20,7 +20,7 @@ export function gate(candidate: LearningMomentInput, ctx: GateContext): GateDeci
 
   if (state.pendingMomentId !== undefined) return { action: "skip", reason: "one_at_a_time" };
 
-  if (candidate.learning_value < valueThreshold(settings) && !breakthrough) {
+  if (candidate.learning_value < valueThreshold(settings, ctx.mode) && !breakthrough) {
     return { action: "skip", reason: "low_value" };
   }
 

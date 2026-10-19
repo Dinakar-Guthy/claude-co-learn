@@ -50,6 +50,13 @@ export const MilestoneInputSchema = z.object({
 });
 export type MilestoneInput = z.infer<typeof MilestoneInputSchema>;
 
+/** Input for `set_learning_path` (Learn mode): the tutor's plan for the topic. */
+export const SetLearningPathInputSchema = z.object({
+  topic: z.string().max(80),
+  parts: z.array(z.object({ title: z.string().max(80), summary: z.string().max(300) })).max(8),
+});
+export type SetLearningPathInput = z.infer<typeof SetLearningPathInputSchema>;
+
 export type Verdict = "correct" | "partial" | "incorrect";
 export type MomentStatus =
   | "awaiting_answer"

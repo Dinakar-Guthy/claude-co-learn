@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { MemoryStore } from "@/lib/store/memory";
 import { MAX_MESSAGE_CHARS, isPausedAssistant, prepareTurn } from "./prepare";
 import { makeSession, momentInput } from "./testing";
-import { CONTINUE_TEXT } from "./userText";
+import { continueText } from "./userText";
 
 async function setup() {
   const store = new MemoryStore();
@@ -60,7 +60,7 @@ describe("prepareTurn", () => {
   it("continue: resumes a paused turn, otherwise asks Claude to continue", async () => {
     const { store, anonId, session } = await setup();
     const ok = await prepareTurn(store, anonId, "ip", { sessionId: "s1", kind: "continue" });
-    expect(ok.ok && ok.plan.modelText).toBe(CONTINUE_TEXT);
+    expect(ok.ok && ok.plan.modelText).toBe(continueText("co-learn"));
     await store.putApiMessages(session.id, [{ role: "assistant", content: [{ type: "server_tool_use", id: "x", name: "bash_code_execution", input: {} }] }]);
     const resumed = await prepareTurn(store, anonId, "ip", { sessionId: "s1", kind: "continue" });
     expect(resumed.ok && resumed.plan.modelText).toBeNull();

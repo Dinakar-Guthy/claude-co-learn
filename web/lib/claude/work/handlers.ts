@@ -9,17 +9,19 @@ import {
   LearningMomentInputSchema,
   MilestoneInputSchema,
   ResolvePredictionInputSchema,
+  SetLearningPathInputSchema,
   type LearningMomentInput,
 } from "@/lib/contracts/moment";
 import type { GateContext, GateDecision, MasteryMap } from "@/lib/contracts/engine";
-import type { AppEvent, MomentRecord, User } from "@/lib/contracts/session";
+import type { AppEvent, LearningPath, MomentRecord, PathPart, User } from "@/lib/contracts/session";
 import type { ChatStreamEvent, XpAward } from "@/lib/contracts/stream";
 import { scoreFor } from "@/lib/engine";
 import { toMomentView } from "@/lib/views";
+import { modeOf } from "@/lib/modes";
 import type { WorkDeps } from "./deps";
 import { sessionEndsAt } from "./context";
 import type { TurnState } from "./state";
-import { LEARNING_MOMENT, MILESTONE_REACHED, RESOLVE_PREDICTION } from "./tools";
+import { LEARNING_MOMENT, MILESTONE_REACHED, RESOLVE_PREDICTION, SET_LEARNING_PATH } from "./tools";
 
 export type PauseReason = "awaiting_learner" | "boss_due";
 
@@ -54,6 +56,7 @@ export class ToolContext {
       settings: this.user.settings,
       familiarity: this.state.session.intent.familiarity,
       now,
+      mode: modeOf(this.state.session.intent),
     };
   }
 
@@ -77,6 +80,8 @@ export async function handleTool(ctx: ToolContext, block: Anthropic.Beta.BetaToo
       return resolvePrediction(ctx, block);
     case MILESTONE_REACHED:
       return milestone(ctx, block);
+    case SET_LEARNING_PATH:
+      return setLearningPath(ctx, block);
     default:
       return { content: `Unknown tool: ${block.name}`, isError: true };
   }
@@ -198,6 +203,7 @@ async function milestone(ctx: ToolContext, block: Anthropic.Beta.BetaToolUseBloc
   if (parsed.data.label.trim().length < 3) return { content: PLACEHOLDER_MILESTONE_RESULT };
   const { deps, state } = ctx;
   const engineState = state.session.engine;
+  const next = state.session.path ? advancePath(ctx, state.session.path) : undefined;
   // A moment shown in the same response takes priority; the boss can come at a later milestone.
   const bossesOn = ctx.user.settings.bosses !== false;
   const bossDue = bossesOn && !engineState.pendingMomentId && deps.engine.bossDue(engineState, deps.now(), sessionEndsAt(state.session));
@@ -209,7 +215,38 @@ async function milestone(ctx: ToolContext, block: Anthropic.Beta.BetaToolUseBloc
   }
   state.addItem({ kind: "milestone", id: block.id, label: parsed.data.label });
   ctx.outbox.push({ type: "milestone", itemId: block.id, label: parsed.data.label, bossDue });
+  const pathNote = next === undefined ? {} : { next_part: next ?? "none: every part is done" };
   return bossDue
-    ? { content: json({ boss_due: true, instruction: BOSS_INSTRUCTION }), pause: "boss_due" }
-    : { content: json({ boss_due: false }) };
+    ? { content: json({ boss_due: true, instruction: BOSS_INSTRUCTION, ...pathNote }), pause: "boss_due" }
+    : { content: json({ boss_due: false, ...pathNote }) };
+}
+
+/** Learn mode: marks the current part done and makes the next unfinished part current. Returns its title (null: all done). */
+function advancePath(ctx: ToolContext, path: LearningPath): string | null {
+  const parts = path.parts.map((p): PathPart => (p.status === "current" ? { ...p, status: "done" } : p));
+  const at = parts.findIndex((p) => p.status === "todo");
+  if (at !== -1) parts[at] = { ...parts[at], status: "current" };
+  const next = { ...path, parts };
+  ctx.state.setPath(next);
+  ctx.outbox.push({ type: "path", path: next });
+  return at === -1 ? null : parts[at].title;
+}
+
+/** Learn mode: the tutor's plan (first response), or a revision that keeps finished parts (matched by title) done. */
+async function setLearningPath(ctx: ToolContext, block: Anthropic.Beta.BetaToolUseBlock): Promise<ToolOutcome> {
+  const parsed = SetLearningPathInputSchema.safeParse(block.input);
+  if (!parsed.success) return invalid(parsed.error);
+  const titles = parsed.data.parts.map((p) => p.title.trim()).filter(Boolean);
+  if (!titles.length || !parsed.data.topic.trim()) return { content: "Invalid input: give a topic and at least one part.", isError: true };
+  const done = new Set((ctx.state.session.path?.parts ?? []).filter((p) => p.status === "done").map((p) => p.title.toLowerCase()));
+  const parts = parsed.data.parts
+    .filter((p) => p.title.trim())
+    .map((p): PathPart => ({ title: p.title.trim(), summary: p.summary.trim(), status: done.has(p.title.trim().toLowerCase()) ? "done" : "todo" }));
+  const first = parts.findIndex((p) => p.status === "todo");
+  if (first !== -1) parts[first] = { ...parts[first], status: "current" };
+  const topic = parsed.data.topic.trim();
+  const path: LearningPath = { topic, parts };
+  ctx.state.setPath(path, topic.length <= 40 ? topic : `${topic.slice(0, 39).trimEnd()}…`);
+  ctx.outbox.push({ type: "path", path });
+  return { content: json({ status: "ok", current_part: first === -1 ? null : parts[first].title }) };
 }
