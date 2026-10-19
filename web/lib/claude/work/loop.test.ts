@@ -8,7 +8,7 @@ import { engine as standIn } from "@/lib/engine";
 import { MemoryStore } from "@/lib/store/memory";
 import { newUser } from "@/lib/store/defaults";
 import type { ModelParams, WorkDeps } from "./deps";
-import { MAX_STEPS, NOT_RUN, runTurn } from "./loop";
+import { MAX_STEPS, runTurn } from "./loop";
 import type { ApiMessage } from "./state";
 import { prepareTurn } from "./prepare";
 import type { ModelStream } from "./stream";
@@ -418,7 +418,7 @@ describe("server tool calls without results", () => {
     const events = await t.send({ kind: "message", text: "train it" });
 
     expect(events).toContainEqual({ type: "code_start", itemId: "srv_orphan", language: "file", code: "# view /tmp" });
-    expect(events).toContainEqual({ type: "code_result", itemId: "srv_orphan", stdout: NOT_RUN, stderr: "", returnCode: 0, fileIds: [] });
+    expect(events).toContainEqual({ type: "remove_item", itemId: "srv_orphan" });
     expect(lastEvent(events)).toEqual({ type: "turn_end", reason: "awaiting_learner" });
 
     const history = await t.store.getApiMessages(t.session.id);

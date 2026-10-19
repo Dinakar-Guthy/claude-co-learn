@@ -27,6 +27,12 @@ describe("applyEvent", () => {
     expect(items).toEqual([{ kind: "code_run", id: "c", language: "python", code: "print(1)", stdout: "1\n", stderr: "", returnCode: 0, fileIds: ["f"] }]);
   });
 
+  it("removes a code block that never ran", () => {
+    const items = applyEvent([], { type: "code_start", itemId: "srv_x", language: "python", code: "print(1)" });
+    expect(applyEvent(items, { type: "remove_item", itemId: "srv_x" })).toEqual([]);
+    expect(applyEvent(items, { type: "remove_item", itemId: "other" })).toBe(items);
+  });
+
   it("creates a code_run if a result arrives without a start", () => {
     expect(reduce([{ type: "code_result", itemId: "c", stdout: "", stderr: "x", returnCode: 1, fileIds: [] }])[0]).toMatchObject({ kind: "code_run", returnCode: 1 });
   });

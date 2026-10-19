@@ -32,5 +32,7 @@ export type ChatStreamEvent =
   | { type: "prediction_reveal"; itemId: string; momentId: string; actualResult: string; verdict: Verdict; why: string; xp: XpAward }
   | { type: "milestone"; itemId: string; label: string; bossDue: boolean }
   | { type: "notice"; itemId: string; text: string }
+  /** A streamed item that turned out not to happen (code requested next to a question or milestone never runs). */
+  | { type: "remove_item"; itemId: string }
   | { type: "turn_end"; reason: TurnEndReason; detail?: string }
   | { type: "error"; message: string; retryable: boolean; code?: "rate_limited" | "spend_cap" | "bad_request" | "upstream" };

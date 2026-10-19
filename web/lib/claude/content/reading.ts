@@ -18,7 +18,7 @@ export const MAX_READINGS = 5;
 export const READING_SYSTEM = `You recommend further reading for someone who just finished a short learning session with Claude. They will keep the list for their own reference.
 Use web search (one to three searches) to find 3-5 freely accessible, trustworthy readings that go one step deeper than the session: official documentation, university course notes, standard references, or well-known explainers from reputable sources. Prefer one reading per key concept, and include any good source already cited in the session if it fits.
 Reply with only the list, one reading per line, exactly in this form:
-- [Title](URL) | One sentence on what they'll get from it, naming the concept it deepens.
+- [Title](URL) | One plain sentence on what they'll get from it (e.g. "Shows how to pick a threshold from the costs of each kind of mistake.").
 Only use URLs that appeared in your search results or in the cited sources given to you. Never write a URL from memory.
 ${DATA_RULE}`;
 
