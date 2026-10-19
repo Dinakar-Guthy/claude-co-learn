@@ -8,6 +8,7 @@ and turns the work into a short challenge the learner solves themselves. The lea
 - **Try it:**
   1. Type `/co-learn`.
   2. Click **Try the demo: train a churn model** and pick a familiarity and time (10 min).
+  3. Or type `/learn` for **Learn mode** (study a topic with Claude as a tutor) and try the sample: the fall of the Roman Republic.
 - **Option chosen:** B, learning through collaboration with Claude
 - **Deadline:** Oct 21, 2026, 9:00 AM PT
 
@@ -20,6 +21,8 @@ and turns the work into a short challenge the learner solves themselves. The lea
   - Free-form answers first, graded with a short "why".
   - A multiple-choice fallback after a miss.
   - Predictions are graded against the real code output.
+- **Sources you can check:** Claude web-searches before explaining a concept; cited sentences get [n] markers with links. Every session ends with **Learn more**: 3-5 real readings from a search (links are never written from memory).
+- **Learn mode** (`/learn`): the same engine, question cards, help, bosses and Codex, with Claude as a tutor: a short reorderable path of parts, a ~120-word cited lesson then a question each time, and story chapters as boss rewards.
 - **Help when stuck:**
   - Hints, **Teach me** (a short lesson with a worked example), and **Ask Claude**.
   - The answer is revealed only after an attempt, or after asking twice.
@@ -27,6 +30,7 @@ and turns the work into a short challenge the learner solves themselves. The lea
 - **Game layer:**
   - XP and levels (themes and sound packs unlock).
   - Optional **boss** challenges at milestones ("Take it on / Keep working", or "Skip this boss").
+  - Story chapters as boss rewards in Learn mode only (in Co-learn the work itself carries engagement).
   - A wrap-up with a quiz of saved questions, a Codex of concepts, and suggestions for next time.
 - **Across sessions:**
   - The **Codex** (`/codex`) tracks every concept.
