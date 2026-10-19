@@ -9,7 +9,7 @@ const moment = (id: string, extra: Partial<MomentView> = {}): MomentView => ({
 
 const view = (extra: Partial<SessionView> = {}): SessionView => ({
   id: "s1", title: "t", intent: { goal: "g", familiarity: "new", minutes: 10, demo: true }, status: "active",
-  createdAt: 0, endsAt: 600_000, transcript: [], moments: {}, bosses: {}, chapters: {}, ...extra,
+  createdAt: 0, endsAt: 600_000, transcript: [], moments: {}, bosses: {}, chapters: {}, storyEnabled: false, ...extra,
 });
 
 const boss = (extra: Partial<BossView> = {}): BossView => ({

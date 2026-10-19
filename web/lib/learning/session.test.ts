@@ -16,7 +16,7 @@ describe("createSession", () => {
       status: "active",
       fileIds: [],
       demoFileAttached: false,
-      story: { chapters: [] },
+      story: { enabled: false, chapters: [] },
       engine: { momentsShownAt: [], conceptsSinceBoss: [], bosses: [], recentOutcomes: [], turnsSinceMoment: 0 },
     });
     expect(session?.title.length).toBeLessThanOrEqual(40);
@@ -59,6 +59,17 @@ describe("enrichSession", () => {
     expect(s).toMatchObject({ title: "Churn model", containerId: "cont_1", fileIds: ["f1"], engine: { turnsSinceMoment: 3 } });
     expect(s?.sketch?.title).toBe("Churn model");
     expect(s?.story.bible?.genre).toBe("sky-pirate romp");
+  });
+
+  it("skips the story bible when the session's mode has no story (Co-learn)", async () => {
+    const deps = makeDeps();
+    await seedSession(deps, { story: { enabled: false, chapters: [] } });
+    await enrichSession(deps, "s1");
+    const s = await deps.store.getSession("s1");
+    expect(s?.sketch?.title).toBe("Churn model");
+    expect(s?.story.bible).toBeUndefined();
+    expect(deps.content.generateStoryBible).not.toHaveBeenCalled();
+    expect(deps.store.events.find((e) => e.name === "error")).toBeUndefined();
   });
 
   it("keeps whatever succeeded and logs the failure", async () => {

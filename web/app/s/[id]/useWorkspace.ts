@@ -314,9 +314,15 @@ export function useWorkspace(sessionId: string) {
   );
 
   // ---- moments ----
+  const storyEnabled = view?.storyEnabled ?? false;
   const onBossFinished = useCallback(
     async (res: GradeResponse) => {
       if (!res.boss) return;
+      // Without a story (Co-learn), the work resumes right away.
+      if (!storyEnabled) {
+        if (res.continueWith) await send(res.continueWith);
+        return;
+      }
       setStoryWaiting(true);
       const chapter = await waitForChapter(bossTrigger(res.boss.bossId));
       setStoryWaiting(false);
@@ -326,7 +332,7 @@ export function useWorkspace(sessionId: string) {
       }
       if (res.continueWith) await send(res.continueWith);
     },
-    [send, update, waitForChapter],
+    [send, storyEnabled, update, waitForChapter],
   );
 
   const askHelp = useCallback(

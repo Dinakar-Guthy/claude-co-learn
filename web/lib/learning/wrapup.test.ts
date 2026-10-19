@@ -34,6 +34,18 @@ describe("handleWrapUp", () => {
     expect(deps.store.events.filter((e) => e.name === "session_wrapped")).toHaveLength(1);
   });
 
+  it("has no final chapter when the session's mode has no story (Co-learn)", async () => {
+    const deps = makeDeps();
+    await seedSession(deps, { story: { enabled: false, chapters: [] } });
+    await seedMoment(deps, { status: "answered", verdict: "correct" });
+    const { body } = await handleWrapUp(deps, ANON, "s1");
+    expect(body.chapter).toBeUndefined();
+    expect(body.codex.length).toBeGreaterThan(0);
+    expect(deps.content.generateStoryBible).not.toHaveBeenCalled();
+    expect(deps.content.generateChapter).not.toHaveBeenCalled();
+    expect((await deps.store.getTranscript("s1")).some((i) => i.kind === "story")).toBe(false);
+  });
+
   it("falls back to a deterministic codex and no chapter when generation fails", async () => {
     const deps = makeDeps(
       mockContent({

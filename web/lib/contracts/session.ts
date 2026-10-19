@@ -59,6 +59,8 @@ export interface StoryChapter {
 }
 
 export interface StoryState {
+  /** Set from the mode at creation (lib/modes.ts). Missing on older sessions: treated as off. */
+  enabled?: boolean;
   bible?: StoryBible;
   chapters: StoryChapter[];
 }

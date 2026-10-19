@@ -42,6 +42,8 @@ export interface SessionView {
   moments: Record<string, MomentView>;
   bosses: Record<string, BossView>;
   chapters: Record<string, StoryChapter>;
+  /** Whether this session earns story chapters (off in Co-learn; see lib/modes.ts). */
+  storyEnabled: boolean;
   /** A boss is due: show the "Take it on / Keep working" offer. */
   bossOfferPending?: boolean;
   primer?: PrimerView;

@@ -66,12 +66,13 @@ describe("Track D routes", () => {
     await flush();
   });
 
-  it("runs a full session: create → view → boss → grade → story → wrap-up", async () => {
+  it("runs a full Co-learn session: create → view → boss → grade → wrap-up, with no story", async () => {
     const created = (await (await createSession(post({ intent }))).json()) as CreateSessionResponse;
     await flush();
     const view = (await (await getSession(new Request("http://test"), { params: Promise.resolve({ id: created.sessionId }) })).json()) as SessionView;
     expect(view.title).toBe("Churn model");
     expect(view.sketch).toBeDefined();
+    expect(view.storyEnabled).toBe(false);
 
     state.anonId = "33333333-3333-4333-8333-333333333333";
     expect((await getSession(new Request("http://test"), { params: Promise.resolve({ id: created.sessionId }) })).status).toBe(404);
@@ -91,12 +92,12 @@ describe("Track D routes", () => {
     await flush();
 
     const chapter = await (await story(new Request(`http://test/api/story?sessionId=${created.sessionId}&trigger=boss:${started.boss.id}`))).json();
-    expect(chapter.chapter).toMatchObject({ title: "Chapter" });
+    expect(chapter.chapter).toBeNull();
     expect((await story(new Request(`http://test/api/story?sessionId=${created.sessionId}`))).status).toBe(400);
 
     const wrapped = (await (await wrapup(post({ sessionId: created.sessionId }))).json()) as WrapUpResponse;
     expect(wrapped.sessionXp).toBe(15 + 15 + 75 + 30);
-    expect(wrapped.chapter?.trigger).toBe("wrapup");
+    expect(wrapped.chapter).toBeUndefined();
     expect(wrapped.user.level.level).toBe(2);
   });
 

@@ -31,7 +31,7 @@ export function fallbackChapter(beat: "boss" | "wrapup", performance?: BossOutco
 
 /**
  * Generates and appends the chapter for `trigger` (idempotent per trigger), generating the bible
- * first if the background job hasn't produced one yet.
+ * first if the background job hasn't produced one yet. Null when the session's mode has no story.
  */
 export async function addChapter(
   deps: LearningDeps,
@@ -41,7 +41,7 @@ export async function addChapter(
   performance?: BossOutcome,
 ): Promise<StoryChapter | null> {
   const session = await deps.store.getSession(sessionId);
-  if (!session) return null;
+  if (!session?.story.enabled) return null;
   const existing = session.story.chapters.find((c) => c.trigger === trigger);
   if (existing) return existing;
 

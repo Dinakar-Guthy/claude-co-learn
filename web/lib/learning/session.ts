@@ -1,8 +1,9 @@
-/** Session creation and background enrichment (sketch + story bible). */
+/** Session creation and background enrichment (sketch, story bible when the mode has a story, primer). */
 import { z } from "zod";
 import type { CreateSessionResponse } from "@/lib/contracts/api";
 import { initialEngineState } from "@/lib/contracts/engine";
 import type { Intent, Session } from "@/lib/contracts/session";
+import { MODES } from "@/lib/modes";
 import type { HandlerResult, LearningDeps } from "./deps";
 import { patchSession } from "./sessionStore";
 
@@ -35,7 +36,7 @@ export async function createSession(deps: LearningDeps, anonId: string, intent: 
     demoFileAttached: false,
     status: "active",
     engine: initialEngineState(),
-    story: { chapters: [] },
+    story: { enabled: MODES["co-learn"].story, chapters: [] },
   };
   await deps.store.putSession(session);
   await deps.store.putTranscript(session.id, []);
@@ -59,7 +60,7 @@ export async function enrichSession(deps: LearningDeps, sessionId: string): Prom
       : Promise.resolve(null);
   const [sketch, bible, primer] = await Promise.allSettled([
     deps.content.generateSketch({ intent: session.intent }),
-    session.story.bible ? Promise.resolve(session.story.bible) : deps.content.generateStoryBible({ intent: session.intent }),
+    !session.story.enabled || session.story.bible ? Promise.resolve(session.story.bible) : deps.content.generateStoryBible({ intent: session.intent }),
     primerTask,
   ]);
   await patchSession(deps, sessionId, (latest) => ({

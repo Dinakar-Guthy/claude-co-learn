@@ -128,9 +128,11 @@ export async function advanceBoss(deps: LearningDeps, session: Session, bossId: 
     xp = await awardXp(deps, session.anonId, session.id, [{ kind: "boss_outcome", outcome }], BOSS_OUTCOME_LABEL[outcome]);
     await patchSession(deps, session.id, (latest) => ({ engine: recordBossFinished(latest.engine, bossId, outcome) }));
     await deps.store.logEvent({ at: deps.now(), anonId: session.anonId, sessionId: session.id, name: "boss_finished", props: { bossId, outcome, hits, maxHp: updated.maxHp } });
-    background.push(async () => {
-      await addChapter(deps, session.id, `boss:${bossId}`, "boss", outcome);
-    });
+    if (session.story.enabled) {
+      background.push(async () => {
+        await addChapter(deps, session.id, `boss:${bossId}`, "boss", outcome);
+      });
+    }
   }
   await deps.store.putBoss(updated);
 

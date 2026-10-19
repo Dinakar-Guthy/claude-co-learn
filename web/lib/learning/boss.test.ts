@@ -7,7 +7,7 @@ import { bossConcepts, mergeAwards, skipBoss, startBoss } from "./boss";
 import { handleGrade } from "./grade";
 import { ANON, candidate, makeDeps, mockContent, seedSession } from "./test-helpers";
 
-async function bossSetup(grades: ("correct" | "partial" | "incorrect")[] = []) {
+async function bossSetup(grades: ("correct" | "partial" | "incorrect")[] = [], story = true) {
   const queue = [...grades];
   const content = mockContent({
     gradeAnswer: vi.fn(async () => ({ verdict: queue.shift() ?? "correct", why: "ok", missingPoints: [] })),
@@ -15,6 +15,7 @@ async function bossSetup(grades: ("correct" | "partial" | "incorrect")[] = []) {
   const deps = makeDeps(content);
   const session = await seedSession(deps, {
     engine: { ...initialEngineState(), conceptsSinceBoss: ["class imbalance", "metric choice", "data leakage"] },
+    story: { enabled: story, chapters: [] },
   });
   await deps.store.putTranscript("s1", [
     { kind: "assistant_text", id: "a1", text: "Trained logistic regression." },
@@ -104,6 +105,20 @@ describe("boss hits and outcome", () => {
     expect(after?.story.bible?.genre).toBe("sky-pirate romp");
     expect(after?.story.chapters).toEqual([expect.objectContaining({ trigger: `boss:${boss.id}`, title: "Chapter" })]);
     expect((await deps.store.getTranscript("s1")).at(-1)).toMatchObject({ kind: "story", chapterId: after?.story.chapters[0].id });
+  });
+
+  it("with the story off (Co-learn), a finished boss writes no chapter and the work resumes", async () => {
+    const { deps, content, boss } = await bossSetup(["correct", "correct"], false);
+    const [q1, q2] = boss.momentIds;
+    await handleGrade(deps, ANON, grade(q1, { action: "submit", answer: "overfitting" }));
+    const second = await handleGrade(deps, ANON, grade(q2, { action: "submit", answer: "recall" }));
+    expect(second.body.boss).toMatchObject({ done: true, outcome: "flawless" });
+    expect(second.body.xp?.amount).toBe(15 + 75);
+    expect(second.body.continueWith).toEqual({ sessionId: "s1", kind: "boss_result", bossId: boss.id });
+    expect(second.background).toHaveLength(0);
+    expect(content.generateStoryBible).not.toHaveBeenCalled();
+    expect(content.generateChapter).not.toHaveBeenCalled();
+    expect((await deps.store.getSession("s1"))?.story.chapters).toEqual([]);
   });
 
   it("partial and MC answers land half hits; MC is offered on a boss miss", async () => {

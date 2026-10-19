@@ -178,7 +178,7 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
         {ws.streaming && ws.status && <StatusLine text={STATUS_LABEL[ws.status]} />}
 
         {view.bossOfferPending && !ws.streaming && ws.bossState !== "loading" && !boss && (
-          <BossOffer onTake={ws.takeBoss} onDecline={ws.declineBoss} />
+          <BossOffer onTake={ws.takeBoss} onDecline={ws.declineBoss} story={view.storyEnabled} />
         )}
 
         {ws.bossState === "loading" && (

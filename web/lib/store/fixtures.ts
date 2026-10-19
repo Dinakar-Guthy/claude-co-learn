@@ -13,7 +13,7 @@ export function makeSession(id: string, anonId: string, createdAt: number, overr
     demoFileAttached: true,
     status: "active",
     engine: initialEngineState(),
-    story: { chapters: [] },
+    story: { enabled: true, chapters: [] },
     ...overrides,
   };
 }

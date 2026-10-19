@@ -91,7 +91,7 @@ export async function seedSession(deps: LearningDeps, overrides: Partial<Session
     demoFileAttached: false,
     status: "active",
     engine: initialEngineState(),
-    story: { chapters: [] },
+    story: { enabled: true, chapters: [] },
     ...overrides,
   };
   await deps.store.putSession(session);
