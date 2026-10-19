@@ -23,7 +23,7 @@ import type { WorkDeps } from "./deps";
 import { sessionEndsAt } from "./context";
 import type { TurnState } from "./state";
 import { LEARNING_MOMENT, MILESTONE_REACHED, RESOLVE_PREDICTION, SET_LEARNING_PATH, TEACH } from "./tools";
-import { isWebUrl, normUrl, searchResultUrls } from "@/lib/sources";
+import { alignCitations, isWebUrl, normUrl, searchResultUrls } from "@/lib/sources";
 
 export type PauseReason = "awaiting_learner" | "boss_due";
 
@@ -256,17 +256,19 @@ function advancePath(ctx: ToolContext, path: LearningPath): string | null {
 
 /**
  * Learn mode: shows a lesson chunk verbatim as Claude's message (text written between tool calls comes back hidden,
- * so lessons go through this tool). Sources are kept only if their URL came back from a web search in the session.
+ * so lessons go through this tool). Sources are kept only if their URL came back from a web search in the session,
+ * and the lesson's [n] markers are renumbered to match the sources shown.
  */
 function teach(ctx: ToolContext, block: Anthropic.Beta.BetaToolUseBlock): ToolOutcome {
   const parsed = TeachInputSchema.safeParse(block.input);
   if (!parsed.success) return invalid(parsed.error);
-  const lesson = parsed.data.lesson.trim();
-  if (!lesson) return { content: "Invalid input: the lesson is empty.", isError: true };
-  const found = new Set(ctx.state.messages().flatMap((m) => (m.role === "assistant" && Array.isArray(m.content) ? searchResultUrls(m.content) : [])).map(normUrl));
-  const sources = parsed.data.sources
-    .filter((s) => isWebUrl(s.url) && found.has(normUrl(s.url)))
-    .map((s) => ({ url: s.url.trim(), title: s.title.trim() || s.url.trim() }));
+  if (!parsed.data.lesson.trim()) return { content: "Invalid input: the lesson is empty.", isError: true };
+  const searches = ctx.state.messages().map((m) => (m.role === "assistant" && Array.isArray(m.content) ? searchResultUrls(m.content) : []));
+  const found = new Set(searches.flat().map(normUrl));
+  const keep = parsed.data.sources.map((s) => isWebUrl(s.url) && found.has(normUrl(s.url)));
+  const sources = parsed.data.sources.filter((_, i) => keep[i]).map((s) => ({ url: s.url.trim(), title: s.title.trim() || s.url.trim() }));
+  const latestResults = searches.findLast((urls) => urls.length) ?? [];
+  const lesson = alignCitations(parsed.data.lesson.trim(), parsed.data.sources, keep, latestResults);
   const itemId = `lesson:${block.id}`;
   ctx.state.addItem({ kind: "assistant_text", id: itemId, text: lesson, ...(sources.length ? { sources } : {}) });
   ctx.outbox.push({ type: "text_delta", itemId, text: lesson });

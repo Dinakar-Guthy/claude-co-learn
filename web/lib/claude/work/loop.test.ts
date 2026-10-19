@@ -298,7 +298,7 @@ describe("runTurn", () => {
       expect(JSON.parse(String(((await t.store.getApiMessages(t.session.id)).find((m) => JSON.stringify(m).includes("current_part"))!.content as Anthropic.ToolResultBlockParam[])[0].content))).toEqual({ status: "ok", current_part: "Rome in 133 BC" });
     });
 
-    it("teach shows the lesson verbatim, keeping only sources that came back from a search", async () => {
+    it("teach shows the lesson, keeping only sources that came back from a search and dropping markers to the rest", async () => {
       const t = await setup({ session: { ...learnSession, path: { topic: "Rome", parts: [{ title: "A", summary: "a", status: "current" }] } } });
       const search = { type: "server_tool_use", id: "srv_s", name: "web_search", input: { query: "Gracchi" } } as unknown as Anthropic.Beta.BetaContentBlock;
       const results = { type: "web_search_tool_result", tool_use_id: "srv_s", content: [{ type: "web_search_result", url: "https://www.britannica.com/biography/Tiberius-Sempronius-Gracchus", title: "Tiberius Gracchus", encrypted_content: "e", page_age: null }] } as unknown as Anthropic.Beta.BetaContentBlock;
@@ -307,11 +307,12 @@ describe("runTurn", () => {
         fakeMessage([search, results, toolUse("teach", { lesson, sources: [{ title: "Tiberius Gracchus", url: "https://www.britannica.com/biography/Tiberius-Sempronius-Gracchus/" }, { title: "Invented", url: "https://made-up.example/x" }] }, "toolu_t"), toolUse("learning_moment", momentInput())], "tool_use"),
       );
       const events = await t.send({ kind: "message", text: "go on" });
-      expect(events).toContainEqual({ type: "text_delta", itemId: "lesson:toolu_t", text: lesson });
+      const shown = "In 133 BC Tiberius Gracchus proposed a land law [1]. Senators feared him.";
+      expect(events).toContainEqual({ type: "text_delta", itemId: "lesson:toolu_t", text: shown });
       expect(events).toContainEqual({ type: "sources", itemId: "lesson:toolu_t", sources: [{ title: "Tiberius Gracchus", url: "https://www.britannica.com/biography/Tiberius-Sempronius-Gracchus/" }] });
       expect(events.filter((e) => e.type === "moment")).toHaveLength(1);
       const transcript = await t.store.getTranscript(t.session.id);
-      expect(transcript.find((i) => i.id === "lesson:toolu_t")).toMatchObject({ kind: "assistant_text", text: lesson, sources: [{ title: "Tiberius Gracchus" }] });
+      expect(transcript.find((i) => i.id === "lesson:toolu_t")).toMatchObject({ kind: "assistant_text", text: shown, sources: [{ title: "Tiberius Gracchus" }] });
       const ack = (await t.store.getApiMessages(t.session.id)).flatMap((m) => (Array.isArray(m.content) ? m.content : [])).find((b) => b.type === "tool_result" && b.tool_use_id === "toolu_t") as Anthropic.ToolResultBlockParam;
       expect(JSON.parse(String(ack.content))).toEqual({ status: "shown", note: "1 source(s) dropped: only URLs from your search results can be cited." });
     });
