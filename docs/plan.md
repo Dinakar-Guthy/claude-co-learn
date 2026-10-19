@@ -95,11 +95,11 @@ with the browser driver before moving on; new judgment calls marked "pending Din
 ## Learn mode + sources build (decided 2026-10-18 evening; decisions in docs/decision-log.md)
 Order: Phase 1 helps both modes (and the Co-learn hero), so it goes first. Each phase ends green (typecheck, test, lint, build), deployed, and checked live in a test-mode tab.
 
-### Phase 1: sources and "Learn more" (both modes)
-- [ ] Web search in the work loop: `web_search_20250305` (direct; it can sit next to the code sandbox), at most 2 searches per response. Prompt: cite authoritative sources (official docs, textbooks, reputable references) when teaching or stating facts the learner may rely on; don't search for what the code output already shows.
-- [ ] Citations: capture `citations_delta` into assistant text items (url, title); render small numbered source links under the message. Search results are kept unchanged in history (required by the API).
-- [ ] "Learn more" at wrap-up: a separate Sonnet call with web search (no structured output; citations and structured outputs don't mix) returns 3-5 readings (title, site, one line on why) for the session's concepts. Only URLs that came back from a search are kept, so there are no made-up links. Saved with the session (shown again on reload).
-- [ ] Spend: search count recorded on the existing spend-cap path ($10 per 1,000).
+### Phase 1: sources and "Learn more" (both modes) — done 2026-10-19, verified live
+- [x] Web search in the work loop: `web_search_20250305` (direct; it can sit next to the code sandbox), at most 2 searches per response. Prompt: cite authoritative sources (official docs, textbooks, reputable references) when teaching or stating facts the learner may rely on; don't search for what the code output already shows.
+- [x] Citations: capture `citations_delta` into assistant text items (url, title); render small numbered source links under the message. Search results are kept unchanged in history (required by the API).
+- [x] "Learn more" at wrap-up: a separate Sonnet call with web search (no structured output; citations and structured outputs don't mix) returns 3-5 readings (title, site, one line on why) for the session's concepts. Only URLs that came back from a search are kept, so there are no made-up links. Saved with the session (shown again on reload).
+- [x] Spend: search count recorded on the existing spend-cap path ($10 per 1,000).
 
 ### Phase 2: Learn mode core
 - [ ] `mode` on the intent and session (`co-learn` | `learn`; missing = `co-learn`), from `lib/modes.ts` (story on for Learn). `/learn` unlock phrase; mode switch on the intent screen ("What do you want to learn?"); "▶ Try a sample: the fall of the Roman Republic".
