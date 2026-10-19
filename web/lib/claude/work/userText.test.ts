@@ -21,7 +21,7 @@ describe("momentResponseText", () => {
     expect(t).toContain("Grade: correct.");
     expect(t).toContain("Why: Missing churners is costly.");
     expect(t).toContain("decide · metric choice");
-    expect(t).toContain("Continue the work, building on their choice: first run what's now settled");
+    expect(t).toContain("Continue the work, building on their choice: first run code for what's now settled");
     expect(t).toContain("decide moment");
   });
 
