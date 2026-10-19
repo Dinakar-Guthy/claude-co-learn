@@ -15,6 +15,8 @@ Last updated: 2026-10-18 afternoon. **Start with §0 Current status** (the most 
   - **Production data cleared** by Dinakar (2026-10-18).
   - **Compaction status line:** while a long history is summarized (several seconds), the status reads "Tidying up my notes so far… (a few extra seconds)". Verified locally with a lowered threshold (~13s summary). Background compaction and a recap card are in `docs/backlog.md`.
   - **Repo:** decided to make it public at submission time; history secret scan is clean (2026-10-18).
+  - **Questions land at the real fork:** after an answer, Claude runs the settled steps and any work that doesn't depend on the next decision before asking again (verified live: drop column → encode → split → then "which metric?"). Parallel-moment ideas B–E are in `docs/backlog.md`.
+  - **Placeholder milestones ignored:** Claude sometimes called `milestone_reached` with label "x" next to a question (a stray "◆ x" divider); those are no longer shown.
   - **Story removed from Co-learn** (Dinakar, after playtesting): no story bible, boss chapters or final chapter; boss wins give bonus XP and confetti, and the work resumes right away. Switched off per mode in `lib/modes.ts` for the future Learn mode; P2 updated.
   - **Repo** renamed.
 - **Decisions:** all reviewed with Dinakar on 2026-10-18 (the "primer details as built" entry was accepted later that day). See `docs/decision-log.md`.
