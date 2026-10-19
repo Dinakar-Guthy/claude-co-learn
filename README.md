@@ -27,7 +27,6 @@ and turns the work into a short challenge the learner solves themselves. The lea
 - **Game layer:**
   - XP and levels (themes and sound packs unlock).
   - Optional **boss** challenges at milestones ("Take it on / Keep working", or "Skip this boss").
-  - A story told across chapters.
   - A wrap-up with a quiz of saved questions, a Codex of concepts, and suggestions for next time.
 - **Across sessions:**
   - The **Codex** (`/codex`) tracks every concept.

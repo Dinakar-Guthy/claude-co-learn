@@ -114,7 +114,8 @@ _(your words)_
 - **Interleaving:** bosses mix concepts from the session.
 - **Spaced review:** concepts you struggled with come back in a later session.
 - **Scaffolding without spoon-feeding:** hints → lesson with a worked example → ask; less credit after help; reveal only after an attempt.
-- **Motivation without punishment:** proportional rewards (XP, sounds, story); wrong answers get a soft sound and encouraging copy (P2).
+- **Motivation without punishment:** proportional rewards (XP, sounds, confetti, level-ups that unlock themes); wrong answers get a soft sound and encouraging copy (P2).
+- **Cut after playtesting (2026-10-18):** serialized story chapters (after bosses and at wrap-up). Dinakar couldn't follow them while working, and in Co-learn the work itself is what engages people, so the story competed with it (and added a wait of up to 25s after each boss). It's switched off per mode, not deleted, and planned for Learn mode, where there's no real work to carry engagement.
 - **Code paces, Claude creates (P8):** a small deterministic engine decides when and how hard; Claude writes the questions and grades the answers.
 
 **Draft:**

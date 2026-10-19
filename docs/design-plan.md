@@ -4,6 +4,8 @@ Drafted by Claude with Dinakar, 2026-10-17. This is the build blueprint. It impl
 `docs/product-vision.md`, `docs/design-principles.md`, `docs/context-persistence.md`, and `docs/decision-log.md`.
 Items marked **(proposed)** are new design choices made in this plan and need Dinakar's sign-off (see §17).
 
+> **Update 2026-10-18:** story chapters (story bible, boss chapters, final chapter) are **off in Co-learn** and planned for Learn mode (`lib/modes.ts`, decision log). Story mentions below describe the original plan.
+
 ---
 
 ## 1. What we're building

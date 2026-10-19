@@ -32,8 +32,8 @@ standalone web app that emulates that mode on the Claude API.
    - then Claude continues the work, using the user's answer where it applies.
 4. **Milestone bosses.** When a chunk of work completes (data prepared, first model trained), a short boss challenge
    recombines the concepts from recent moments, e.g., "Train accuracy is 99% and validation is 61%. What's happening, and what's the first thing you'd change?"
-5. **Wrap-up.** A recap "codex" of concepts learned this session, XP and level progress, a story chapter (a surprise,
-   lightly themed to the work), and suggestions for what to explore next. Concepts from past sessions come back later
+5. **Wrap-up.** A recap "codex" of concepts learned this session, XP and level progress, and suggestions for what to
+   explore next. (Story chapters were cut from Co-learn on 2026-10-18 and moved to the planned Learn mode.) Concepts from past sessions come back later
    as spaced review.
 
 ## Learning moment types
@@ -88,7 +88,7 @@ itself, we show it. No fixed budget or cooldown by default.
 
 ## Rewards and look
 - **Permanent XP bar and player level** across all sessions. Levels unlock visual themes and sound packs (settings behind the gear; P1).
-- Story chapters as milestone rewards: surprise genre, lightly themed to the work.
+- ~~Story chapters as milestone rewards~~: cut from Co-learn on 2026-10-18 (the work itself carries engagement; the story competed with it). Planned for Learn mode instead.
 - ASCII characters: guide reactions (Pip the robot), bosses (`reference/ascii-characters.md`).
 - "Frost" theme (light blue / white / silver), Nunito font, Kenney CC0 sounds, minimal on-screen clutter.
 

@@ -20,7 +20,8 @@ Each item: what it is, why it might matter, open questions.
 
 ## Learn mode (topic learning without a work task)
 - **What:** a second mode on the same system for "teach me about X" (Dinakar's real use case: learning history).
-  - **Reused unchanged (about 90%):** question cards, pacing engine, help tools, bosses, story, XP, Codex, and cross-session review.
+  - **Reused unchanged (about 90%):** question cards, pacing engine, help tools, bosses, XP, Codex, and cross-session review.
+  - **Story chapters:** cut from Co-learn on 2026-10-18 but kept in the code, switched off per mode (`web/lib/modes.ts`). Learn mode turns them back on: with no real work to carry engagement, a serialized story (a chapter per boss, a final chapter at wrap-up) gives a reason to keep going. Revisit how chapters are paced and shown, since Dinakar found them hard to follow alongside the work.
   - **What changes:**
     1. Intent offers the mode.
     2. The background sketch plans a short **learning path** (4–6 chapters) instead of work milestones; the learner can pick or reorder chapters.

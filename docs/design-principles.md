@@ -1,7 +1,7 @@
 # Design principles
 
 Authored by Dinakar (2026-10-17). Revisions are proposed in "Pending" below and only merged once he accepts them.
-History: v0 as stated → v1 merged the P2/P5 revisions and added P8/P9 → v2 (2026-10-17) added the feedback rule to P3/P4 and re-scoped P7.
+History: v0 as stated → v1 merged the P2/P5 revisions and added P8/P9 → v2 (2026-10-17) added the feedback rule to P3/P4 and re-scoped P7 → v3 (2026-10-18) made story chapters in P2 mode-dependent.
 
 1. **Simplicity first: minimal clutter, maximal focus.**
    Simplicity is about what's *on screen*, not about dumbing down content. The UI should never distract.
@@ -10,8 +10,10 @@ History: v0 as stated → v1 merged the P2/P5 revisions and added P8/P9 → v2 (
 
 2. **It should feel like a video game, with proportional rewards that never punish.**
    Small rewards for each successful interaction (a soft sound, a micro-animation, XP). Larger rewards for bigger
-   milestones (a jingle, a story chapter, a level-up), with boss wins the rarest and biggest. Wrong answers get a soft
+   milestones (a jingle, bonus XP, a level-up), with boss wins the rarest and biggest. Wrong answers get a soft
    sound and encouraging copy, never red flashes or buzzers. One celebration per milestone.
+   - Story chapters belong in Learn mode, where there's no real work to carry engagement. In Co-learn the work itself
+     is engaging, so a story would only compete with it.
 
 3. **Teach in small doses, then apply, and always explain why.**
    Short exposition first, immediately followed by a question where the user applies it. After enough small doses,

@@ -15,6 +15,7 @@ Last updated: 2026-10-18 afternoon. **Start with §0 Current status** (the most 
   - **Production data cleared** by Dinakar (2026-10-18).
   - **Compaction status line:** while a long history is summarized (several seconds), the status reads "Tidying up my notes so far… (a few extra seconds)". Verified locally with a lowered threshold (~13s summary). Background compaction and a recap card are in `docs/backlog.md`.
   - **Repo:** decided to make it public at submission time; history secret scan is clean (2026-10-18).
+  - **Story removed from Co-learn** (Dinakar, after playtesting): no story bible, boss chapters or final chapter; boss wins give bonus XP and confetti, and the work resumes right away. Switched off per mode in `lib/modes.ts` for the future Learn mode; P2 updated.
   - **Repo** renamed.
 - **Decisions:** all reviewed with Dinakar on 2026-10-18 (the "primer details as built" entry was accepted later that day). See `docs/decision-log.md`.
 - **Remaining work for Dinakar:** the checklist in `docs/plan.md` → "Remaining for Dinakar":
@@ -398,7 +399,7 @@ Use https://anthropic-take-home-10-17-26.vercel.app/?test=1 with the site passwo
    - **Expect:** feedback stays until "Next question →".
 5. Click "Skip this boss".
    - **Expect:** "You let … go. It'll be back another time." and Claude resumes right away.
-   - **Or:** win it for confetti, a story chapter, and bonus XP.
+   - **Or:** win it for bonus XP (confetti if flawless). The work resumes right away (no story chapter in Co-learn).
 6. Settings → "Offer boss challenges" off.
    - **Expect:** no more offers.
 
@@ -409,7 +410,7 @@ Use https://anthropic-take-home-10-17-26.vercel.app/?test=1 with the site passwo
    - **Expect:**
      - The quick quiz, where the saved predict question is now "what actually happened, and why?".
      - "See where this came up ↑" scrolls to and highlights the original spot.
-     - The Codex card, XP summary, final story chapter, and suggestions.
+     - The Codex card, XP summary, and suggestions (no story chapter).
      - "Did you learn something?" 👍 / 👎.
 3. Click a suggestion.
    - **Expect:** a fresh intent screen prefilled with that goal (no stale form).
