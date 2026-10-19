@@ -340,7 +340,7 @@ describe("runTurn", () => {
       expect(events).toContainEqual(expect.objectContaining({ type: "path", path: expect.objectContaining({ parts: [expect.objectContaining({ status: "done" }), expect.objectContaining({ status: "current" }), expect.objectContaining({ status: "todo" })] }) }));
       expect((await t.store.getSession(t.session.id))?.path?.parts.map((p) => p.status)).toEqual(["done", "current", "todo"]);
       const results = t.calls.at(-1)!.messages.flatMap((m) => (Array.isArray(m.content) ? m.content : [])).filter((b) => b.type === "tool_result");
-      expect(JSON.parse(String((results.at(-1) as Anthropic.ToolResultBlockParam).content))).toEqual({ boss_due: false, next_part: "The Gracchi" });
+      expect(JSON.parse(String((results.at(-1) as Anthropic.ToolResultBlockParam).content))).toMatchObject({ boss_due: false, next_part: "The Gracchi", instruction: expect.stringContaining("Go straight on") });
     });
 
     it("a revised path keeps finished parts done", async () => {

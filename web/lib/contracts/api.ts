@@ -131,6 +131,9 @@ export interface WrapUpResponse {
   levelUps: { from: number; to: number; rewards: LevelReward[] }[];
 }
 
+// POST /api/session/[id]/path { from, to } → the reordered learning path (Learn mode)
+export interface PathResponse { path: LearningPath }
+
 // POST /api/reading { sessionId } → the "Learn more" readings (generated once, after wrap-up)
 export interface ReadingResponse { reading: Reading[] }
 

@@ -232,7 +232,12 @@ async function milestone(ctx: ToolContext, block: Anthropic.Beta.BetaToolUseBloc
   }
   state.addItem({ kind: "milestone", id: block.id, label: parsed.data.label });
   ctx.outbox.push({ type: "milestone", itemId: block.id, label: parsed.data.label, bossDue });
-  const pathNote = next === undefined ? {} : { next_part: next ?? "none: every part is done" };
+  const pathNote =
+    next === undefined
+      ? {}
+      : next === null
+        ? { next_part: "none: every part is done", instruction: "Recap the topic in a few lines and suggest where to go next; the learner can wrap up." }
+        : { next_part: next, ...(bossDue ? {} : { instruction: "Go straight on to this part in this response: search, teach its first chunk, then ask. Don't stop to announce it." }) };
   return bossDue
     ? { content: json({ boss_due: true, instruction: BOSS_INSTRUCTION, ...pathNote }), pause: "boss_due" }
     : { content: json({ boss_due: false, ...pathNote }) };

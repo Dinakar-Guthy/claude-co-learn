@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChatRequest, GradeRequest, GradeResponse, HelpRequest, HelpResponse, PrimerResponse, PrimerView, ReadingResponse, SessionView, SkipBossResponse, StartBossResponse, UserView, WrapUpResponse } from "@/lib/contracts/api";
+import type { ChatRequest, GradeRequest, GradeResponse, HelpRequest, HelpResponse, PathResponse, PrimerResponse, PrimerView, ReadingResponse, SessionView, SkipBossResponse, StartBossResponse, UserView, WrapUpResponse } from "@/lib/contracts/api";
 import type { LevelReward, UserSettings } from "@/lib/contracts/engine";
 import type { Reading, StoryChapter, SessionSummary } from "@/lib/contracts/session";
 import type { ChatStreamEvent, TurnEndReason, XpAward } from "@/lib/contracts/stream";
@@ -424,6 +424,23 @@ export function useWorkspace(sessionId: string) {
     }
   }, [sessionId, update, wrap.loading]);
 
+  // ---- learning path (Learn mode) ----
+  const [pathBusy, setPathBusy] = useState(false);
+  const movePart = useCallback(
+    async (from: number, to: number) => {
+      setPathBusy(true);
+      try {
+        const res = await apiPost<PathResponse>(`/api/session/${sessionId}/path`, { from, to });
+        update((v) => ({ ...v, path: res.path }));
+      } catch {
+        /* the order stays as it was */
+      } finally {
+        setPathBusy(false);
+      }
+    },
+    [sessionId, update],
+  );
+
   // ---- settings ----
   const changeSettings = useCallback(async (patch: Partial<UserSettings>) => {
     setUser((u) => (u ? { ...u, settings: { ...u.settings, ...patch, guardrails: { ...u.settings.guardrails, ...patch.guardrails } } } : u));
@@ -478,6 +495,8 @@ export function useWorkspace(sessionId: string) {
     showBossQuestion,
     wrapUp,
     reading,
+    movePart,
+    pathBusy,
     changeSettings,
     loadSessions,
   };

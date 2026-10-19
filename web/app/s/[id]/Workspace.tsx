@@ -171,7 +171,11 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
       )}
 
       <main className="mx-auto w-full max-w-[720px] flex-1 space-y-5 px-4 pt-6 pb-10">
-        {view.path && <div className="sticky top-14 z-20"><PathCard path={view.path} /></div>}
+        {view.path && (
+          <div className="sticky top-14 z-20">
+            <PathCard path={view.path} onMove={wrapped ? undefined : (from, to) => void ws.movePart(from, to)} busy={ws.pathBusy} />
+          </div>
+        )}
         {view.primer && !view.primer.dismissed && (
           <PrimerCard primer={view.primer} xp={ws.primerXp} busy={ws.primerBusy} onAnswer={ws.answerPrimer} onDismiss={ws.dismissPrimer} />
         )}
