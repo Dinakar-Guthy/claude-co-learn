@@ -92,6 +92,29 @@ with the browser driver before moving on; new judgment calls marked "pending Din
   - "Skip" persists across reloads.
   - The work model is told which basics it covered.
 
+## Learn mode + sources build (decided 2026-10-18 evening; decisions in docs/decision-log.md)
+Order: Phase 1 helps both modes (and the Co-learn hero), so it goes first. Each phase ends green (typecheck, test, lint, build), deployed, and checked live in a test-mode tab.
+
+### Phase 1: sources and "Learn more" (both modes)
+- [ ] Web search in the work loop: `web_search_20250305` (direct; it can sit next to the code sandbox), at most 2 searches per response. Prompt: cite authoritative sources (official docs, textbooks, reputable references) when teaching or stating facts the learner may rely on; don't search for what the code output already shows.
+- [ ] Citations: capture `citations_delta` into assistant text items (url, title); render small numbered source links under the message. Search results are kept unchanged in history (required by the API).
+- [ ] "Learn more" at wrap-up: a separate Sonnet call with web search (no structured output; citations and structured outputs don't mix) returns 3-5 readings (title, site, one line on why) for the session's concepts. Only URLs that came back from a search are kept, so there are no made-up links. Saved with the session (shown again on reload).
+- [ ] Spend: search count recorded on the existing spend-cap path ($10 per 1,000).
+
+### Phase 2: Learn mode core
+- [ ] `mode` on the intent and session (`co-learn` | `learn`; missing = `co-learn`), from `lib/modes.ts` (story on for Learn). `/learn` unlock phrase; mode switch on the intent screen ("What do you want to learn?"); "▶ Try a sample: the fall of the Roman Republic".
+- [ ] Tutor prompt: ~120 words of teaching, then a question, every chunk; question types reworded for topics (Take a position / What happened next? / Spot the myth / Explain it back / Fill the gap); no code sandbox; web search on.
+- [ ] The path: the tutor calls `set_learning_path` in its first response (3 parts for 10 min, 4 for 20, 5-6 for 30); `milestone_reached` marks the current part done. Turn context shows the path and the current part.
+- [ ] Predict questions are graded right away. Bosses are offered at the end of a part when the existing rule allows (≥3 concepts since the last one). Story chapters on.
+- [ ] Mode-aware wording: boss, help, grading, wrap-up suggestions, summarizing (compaction), primer off in Learn mode, mode badge in the top bar, `sessionMode` on events.
+
+### Phase 3: path card
+- [ ] Path card at the top: parts with done / now / next; pick what's next or move parts up/down (saved; the tutor is told next turn); collapses to one line while reading.
+
+### Phase 4: polish and checks
+- [ ] Sources on question cards (concept cards) and "Teach me the idea first" lessons, if time allows.
+- [ ] Live runs of both modes; docs (HANDOFF §0, testing guide, README).
+
 ## Remaining for Dinakar (before the Oct 21, 9:00 AM PT deadline)
 - [ ] **Manual testing:** follow HANDOFF §8 "Manual testing guide" (Chrome, Safari, phone, sound on), and iterate on what you find.
 - [ ] **Written design rationale** (`docs/design-rationale.md`, in your voice). The scaffold has headers, questions, and raw material. Run `/rationale-coach` in Claude Code for a guided, section-by-section session.
