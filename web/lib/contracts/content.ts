@@ -3,7 +3,7 @@
  * Each function makes one structured Claude call (messages.parse + zodOutputFormat).
  */
 import type { LearningMomentInput, Verdict } from "./moment";
-import type { Intent, Primer, SessionSketch, StoryBible, StoryChapter } from "./session";
+import type { Intent, Primer, Reading, SessionSketch, Source, StoryBible, StoryChapter } from "./session";
 import type { BossOutcome, Familiarity } from "./engine";
 
 export interface GradeResult {
@@ -78,6 +78,8 @@ export interface ContentApi {
     beat: "boss" | "wrapup";
     performance?: BossOutcome;
   }): Promise<Omit<StoryChapter, "id" | "createdAt" | "trigger">>;
+  /** "Learn more": 3-5 real readings (from web search) that go one step deeper than the session. */
+  generateFurtherReading(input: { intent: Intent; concepts: string[]; cited: Source[] }): Promise<Reading[]>;
   generateWrapUp(input: {
     intent: Intent;
     outcomes: { concept: string; type: string; score: number }[];

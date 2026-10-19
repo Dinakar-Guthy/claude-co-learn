@@ -81,8 +81,36 @@ describe("transcriptFromContent", () => {
     expect(transcriptFromContent("msg_9", content)).toEqual([
       { kind: "assistant_text", id: "msg_9:0", text: "Loading." },
       { kind: "code_run", id: "srv_1", language: "python", code: "python3 -c 'print(0.15)'", stdout: "0.15\n", stderr: "", returnCode: 0, fileIds: ["f1"] },
-      { kind: "assistant_text", id: "msg_9:4", text: "Churn is 15%." },
+      { kind: "assistant_text", id: "msg_9:3", text: "Churn is 15%." },
     ]);
     expect(fileIdsFromContent(content)).toEqual(["f1"]);
+  });
+
+  it("joins a cited answer's text blocks into one item with numbered sources", () => {
+    const cite = (url: string, title: string | null) => ({ type: "web_search_result_location" as const, url, title, cited_text: "x", encrypted_index: "e" });
+    const cited = (t: string, ...c: ReturnType<typeof cite>[]) => ({ type: "text", text: t, citations: c }) as Anthropic.Beta.BetaContentBlock;
+    const search = { type: "server_tool_use", id: "srv_s", name: "web_search", input: { query: "q" } } as unknown as Anthropic.Beta.BetaContentBlock;
+    const content = [
+      text("Let me check."),
+      search,
+      { type: "web_search_tool_result", tool_use_id: "srv_s", content: [] } as unknown as Anthropic.Beta.BetaContentBlock,
+      text("Per the docs, "),
+      cited("balanced weights reweight classes", cite("https://scikit-learn.org/a", "LogisticRegression")),
+      text(" and "),
+      cited("shift the scores", cite("https://www.example.com/b", null), cite("https://scikit-learn.org/a", "LogisticRegression")),
+      text("."),
+    ];
+    expect(transcriptFromContent("m", content)).toEqual([
+      { kind: "assistant_text", id: "m:0", text: "Let me check." },
+      {
+        kind: "assistant_text",
+        id: "m:3",
+        text: "Per the docs, balanced weights reweight classes [1] and shift the scores [2][1].",
+        sources: [
+          { url: "https://scikit-learn.org/a", title: "LogisticRegression" },
+          { url: "https://www.example.com/b", title: "example.com" },
+        ],
+      },
+    ]);
   });
 });

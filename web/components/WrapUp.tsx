@@ -4,7 +4,9 @@ import { useState } from "react";
 
 import type { WrapUpResponse } from "@/lib/contracts/api";
 import type { MomentView } from "@/lib/contracts/moment";
+import type { Reading } from "@/lib/contracts/session";
 import type { XpAward } from "@/lib/contracts/stream";
+import { hostOf } from "@/lib/sources";
 import type { HelpBusy } from "./MomentHelp";
 import { MomentCard, momentHandlers, type MomentAction } from "./MomentCard";
 import { StoryChapterCard } from "./StoryChapterCard";
@@ -36,10 +38,12 @@ export interface WrapUpProps {
   onShowContext?: (momentId: string) => void;
   /** "Did you learn something?" thumbs; omit to hide. */
   onFeedback?: (helpful: boolean) => void;
+  /** "Learn more" further reading (fetched after the wrap-up); omit to hide. */
+  reading?: { loading: boolean; items: Reading[] };
 }
 
-/** End-of-session sequence: deferred quiz → Codex → XP → story → suggestions → new session. */
-export function WrapUp({ data, moments, gradingMomentId, helpBusy, xpByMoment, onMomentAction, chapterLoading = false, onTryTheme, onSuggestion, onNewSession, onShowContext, onFeedback }: WrapUpProps) {
+/** End-of-session sequence: deferred quiz → Codex → XP → story → learn more → suggestions → new session. */
+export function WrapUp({ data, moments, gradingMomentId, helpBusy, xpByMoment, onMomentAction, chapterLoading = false, onTryTheme, onSuggestion, onNewSession, onShowContext, onFeedback, reading }: WrapUpProps) {
   const { level } = data.user;
   const rewards = data.levelUps.flatMap((l) => l.rewards);
   const pct = Math.round(levelProgress(level) * 100);
@@ -127,6 +131,8 @@ export function WrapUp({ data, moments, gradingMomentId, helpBusy, xpByMoment, o
 
       {(data.chapter || chapterLoading) && <StoryChapterCard chapter={data.chapter} loading={chapterLoading && !data.chapter} live />}
 
+      {reading && (reading.loading || reading.items.length > 0) && <LearnMore {...reading} />}
+
       {data.suggestions.length > 0 && (
         <Card aria-label="Next time">
           <h3 className="mb-3 text-lg font-extrabold">Next time you could…</h3>
@@ -144,6 +150,31 @@ export function WrapUp({ data, moments, gradingMomentId, helpBusy, xpByMoment, o
         <Button variant="primary" onClick={onNewSession}>Start a new session</Button>
       </div>
     </div>
+  );
+}
+
+/** Further reading for the learner's own reference: real pages from web search, never links written from memory. */
+function LearnMore({ loading, items }: { loading: boolean; items: Reading[] }) {
+  return (
+    <Card aria-label="Learn more" aria-busy={loading || undefined}>
+      <h3 className="text-lg font-extrabold">Learn more</h3>
+      <p className="mb-3 text-sm text-muted">Further reading on what you practised, to keep for reference.</p>
+      {loading ? (
+        <p role="status" className="text-sm text-muted motion-safe:animate-pulse">Finding good reading for you…</p>
+      ) : (
+        <ul className="space-y-3">
+          {items.map((r) => (
+            <li key={r.url}>
+              <a href={r.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline decoration-primary/30 underline-offset-2 hover:decoration-primary">
+                {r.title}
+              </a>
+              <span className="ml-1.5 text-xs text-muted">{hostOf(r.url)}</span>
+              <p className="text-sm text-muted">{r.why}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   );
 }
 

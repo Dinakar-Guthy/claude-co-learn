@@ -33,9 +33,10 @@ describe("work tools", () => {
     }
   });
 
-  it("are strict function tools plus code execution, in a stable order", () => {
-    expect(WORK_TOOLS.map((t) => (t as { name: string }).name)).toEqual(["code_execution", "learning_moment", "resolve_prediction", "milestone_reached"]);
-    for (const tool of WORK_TOOLS.slice(1)) expect(tool).toMatchObject({ strict: true });
+  it("are code execution, web search, and strict function tools, in a stable order", () => {
+    expect(WORK_TOOLS.map((t) => (t as { name: string }).name)).toEqual(["code_execution", "web_search", "learning_moment", "resolve_prediction", "milestone_reached"]);
+    expect(WORK_TOOLS[1]).toMatchObject({ type: "web_search_20250305", max_uses: 2, allowed_callers: ["direct"] });
+    for (const tool of WORK_TOOLS.slice(2)) expect(tool).toMatchObject({ strict: true });
   });
 
   it("fixture is a valid moment", () => {

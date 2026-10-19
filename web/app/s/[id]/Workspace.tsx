@@ -33,6 +33,7 @@ import { useWorkspace, type Workspace as WorkspaceApi } from "./useWorkspace";
 const STATUS_LABEL = {
   thinking: "Claude is thinking…",
   summarizing: "Tidying up my notes so far… (a few extra seconds)",
+  searching: "Looking up sources…",
   running_code: "Running code…",
   preparing_moment: "Preparing a question for you…",
 } as const;
@@ -249,6 +250,7 @@ function WorkspaceBody({ ws, view }: { ws: WorkspaceApi; view: SessionView }) {
               onNewSession={() => router.push("/?start=1")}
               onShowContext={(momentId) => showContext(view, momentId)}
               onFeedback={(helpful) => void apiPost("/api/feedback", { sessionId: view.id, helpful }).catch(() => undefined)}
+              reading={ws.reading}
             />
           </div>
         )}
@@ -320,7 +322,7 @@ function TranscriptEntry({
     case "user":
       return <UserMessage text={item.text} />;
     case "assistant_text":
-      return <AssistantMessage text={item.text} streaming={ws.streaming && last} />;
+      return <AssistantMessage text={item.text} sources={item.sources} streaming={ws.streaming && last} />;
     case "code_run":
       return (
         <CodeRunBlock

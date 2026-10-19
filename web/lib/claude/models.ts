@@ -2,6 +2,8 @@
  * Model routing — the single place to change models/effort (and the seam for model-agnosticism, P1).
  * Decisions: docs/decision-log.md (high effort for planning, medium for per-turn execution).
  */
+import type Anthropic from "@anthropic-ai/sdk";
+
 export type Effort = "low" | "medium" | "high" | "xhigh" | "max";
 
 export interface ModelRoute {
@@ -19,6 +21,8 @@ export const MODELS = {
   boss: { model: "claude-sonnet-5-5", effort: "high", maxTokens: 16000 },
   story: { model: "claude-sonnet-5-5", effort: "medium", maxTokens: 8000 },
   wrapup: { model: "claude-sonnet-5-5", effort: "medium", maxTokens: 8000 },
+  /** "Learn more" further reading at wrap-up (with web search). */
+  reading: { model: "claude-sonnet-5-5", effort: "low", maxTokens: 4000 },
   /** Fast structured calls. Switch grade to Sonnet if testing shows mis-grades. */
   grade: { model: "claude-haiku-5-5", effort: "low", maxTokens: 4000 },
   verify: { model: "claude-haiku-5-5", effort: "low", maxTokens: 4000 },
@@ -43,3 +47,12 @@ export const PRICES: Record<string, { input: number; output: number; cacheRead: 
 
 /** Code execution tool version used by the work loop. */
 export const CODE_EXECUTION_TOOL = { type: "code_execution_20260521", name: "code_execution" } as const;
+
+/**
+ * Web search for sources (P9). The basic version, called directly: the newer dynamic-filtering versions run their
+ * own code sandbox, which the docs warn confuses the model next to ours. Citations come back on text blocks.
+ */
+export const WEB_SEARCH_TOOL: Anthropic.Beta.BetaWebSearchTool20250305 = { type: "web_search_20250305", name: "web_search", max_uses: 2, allowed_callers: ["direct"] };
+
+/** Web search price: $10 per 1,000 searches, in micro-USD per search. */
+export const WEB_SEARCH_MICRO_USD = 10_000;

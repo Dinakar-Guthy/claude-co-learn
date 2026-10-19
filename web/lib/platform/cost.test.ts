@@ -28,6 +28,11 @@ describe("estimateCostMicroUsd", () => {
     expect(estimateCostMicroUsd("claude-sonnet-5-5", usage)).toBe(9000);
   });
 
+  it("adds $10 per 1,000 web searches", () => {
+    expect(estimateCostMicroUsd("claude-sonnet-5-5", { ...base, server_tool_use: { web_search_requests: 2 } })).toBe(20_000);
+    expect(estimateCostMicroUsd("claude-sonnet-5-5", { ...base, server_tool_use: null })).toBe(0);
+  });
+
   it("treats null cache fields as zero", () => {
     const usage = { ...base, input_tokens: 10, cache_read_input_tokens: null, cache_creation_input_tokens: null, cache_creation: null };
     expect(estimateCostMicroUsd("claude-haiku-5-5", usage)).toBe(1);

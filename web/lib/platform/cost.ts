@@ -1,5 +1,5 @@
 /** Spend estimate for one Claude response, in micro-USD (integer, rounded up). */
-import { PRICES } from "@/lib/claude/models";
+import { PRICES, WEB_SEARCH_MICRO_USD } from "@/lib/claude/models";
 
 type Price = (typeof PRICES)[string];
 
@@ -10,6 +10,7 @@ export interface UsageLike {
   cache_read_input_tokens?: number | null;
   cache_creation_input_tokens?: number | null;
   cache_creation?: { ephemeral_1h_input_tokens?: number; ephemeral_5m_input_tokens?: number } | null;
+  server_tool_use?: { web_search_requests?: number | null } | null;
 }
 
 /** Field-wise maximum across the price table: the conservative price for unknown models. */
@@ -43,6 +44,7 @@ export function estimateCostMicroUsd(model: string, usage: UsageLike): number {
     usage.output_tokens * p.output +
     (usage.cache_read_input_tokens ?? 0) * p.cacheRead +
     (cacheWrite - oneHour) * p.cacheWrite +
-    oneHour * p.input * 2;
+    oneHour * p.input * 2 +
+    (usage.server_tool_use?.web_search_requests ?? 0) * WEB_SEARCH_MICRO_USD;
   return Math.ceil(Math.round(micro * 1e6) / 1e6); // strip float noise (e.g. 1000 × 0.2) before rounding up
 }

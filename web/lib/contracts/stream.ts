@@ -4,6 +4,7 @@
  */
 import type { MomentView, Verdict } from "./moment";
 import type { LevelInfo, LevelReward } from "./engine";
+import type { Source } from "./session";
 
 export interface XpAward {
   amount: number;
@@ -21,8 +22,10 @@ export type TurnEndReason =
   | "error";
 
 export type ChatStreamEvent =
-  | { type: "status"; status: "thinking" | "summarizing" | "running_code" | "preparing_moment" } // summarizing: compacting a long history before the turn
+  | { type: "status"; status: "thinking" | "summarizing" | "searching" | "running_code" | "preparing_moment" } // summarizing: compacting a long history before the turn
   | { type: "text_delta"; itemId: string; text: string }
+  /** The full, numbered source list of a text item so far (replaces the previous one). */
+  | { type: "sources"; itemId: string; sources: Source[] }
   | { type: "code_start"; itemId: string; language: "bash" | "python" | "file"; code: string }
   | { type: "code_result"; itemId: string; stdout: string; stderr: string; returnCode: number; fileIds: string[] }
   | { type: "moment"; itemId: string; moment: MomentView }

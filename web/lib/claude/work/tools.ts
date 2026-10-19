@@ -5,7 +5,7 @@
  * (with the full constraints), and tools.test.ts keeps the two in sync.
  */
 import type Anthropic from "@anthropic-ai/sdk";
-import { CODE_EXECUTION_TOOL } from "@/lib/claude/models";
+import { CODE_EXECUTION_TOOL, WEB_SEARCH_TOOL } from "@/lib/claude/models";
 import { MOMENT_TYPES } from "@/lib/contracts/moment";
 
 export const LEARNING_MOMENT = "learning_moment";
@@ -76,6 +76,7 @@ const functionTool = (name: string, description: string, schema: JsonSchema): An
 /** Stable, deterministic tool list (rendered first in the prompt, so it must never vary between requests). */
 export const WORK_TOOLS: Anthropic.Beta.BetaToolUnion[] = [
   CODE_EXECUTION_TOOL,
+  WEB_SEARCH_TOOL,
   functionTool(
     LEARNING_MOMENT,
     "Pause the work and give the learner a short challenge about what is happening in their work right now. " +

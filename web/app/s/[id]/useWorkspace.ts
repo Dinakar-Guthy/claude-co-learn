@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChatRequest, GradeRequest, GradeResponse, HelpRequest, HelpResponse, PrimerResponse, PrimerView, SessionView, SkipBossResponse, StartBossResponse, UserView, WrapUpResponse } from "@/lib/contracts/api";
+import type { ChatRequest, GradeRequest, GradeResponse, HelpRequest, HelpResponse, PrimerResponse, PrimerView, ReadingResponse, SessionView, SkipBossResponse, StartBossResponse, UserView, WrapUpResponse } from "@/lib/contracts/api";
 import type { LevelReward, UserSettings } from "@/lib/contracts/engine";
-import type { StoryChapter, SessionSummary } from "@/lib/contracts/session";
+import type { Reading, StoryChapter, SessionSummary } from "@/lib/contracts/session";
 import type { ChatStreamEvent, TurnEndReason, XpAward } from "@/lib/contracts/stream";
 import type { MomentAction } from "@/components/MomentCard";
 import type { HelpBusy } from "@/components/MomentHelp";
@@ -77,6 +77,7 @@ export function useWorkspace(sessionId: string) {
   const [storyWaiting, setStoryWaiting] = useState(false);
 
   const [wrap, setWrap] = useState<{ loading: boolean; data?: WrapUpResponse; error?: string }>({ loading: false });
+  const [reading, setReading] = useState<{ loading: boolean; items: Reading[] } | undefined>(undefined);
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
 
   const streamingRef = useRef(false);
@@ -405,6 +406,11 @@ export function useWorkspace(sessionId: string) {
       const data = await apiPost<WrapUpResponse>("/api/wrapup", { sessionId });
       setWrap({ loading: false, data });
       setUser(data.user);
+      // "Learn more" loads after the wrap-up shows (it searches the web, so it takes a few seconds).
+      setReading((r) => r ?? { loading: true, items: [] });
+      void apiPost<ReadingResponse>("/api/reading", { sessionId })
+        .then((res) => setReading({ loading: false, items: res.reading }))
+        .catch(() => setReading({ loading: false, items: [] }));
       update((v) => mergeMoments({ ...v, status: "wrapped" }, data.deferred));
       if (data.chapter) setLiveIds((s) => new Set(s).add(data.chapter!.id));
       const last = data.levelUps.at(-1);
@@ -471,6 +477,7 @@ export function useWorkspace(sessionId: string) {
     skipBoss,
     showBossQuestion,
     wrapUp,
+    reading,
     changeSettings,
     loadSessions,
   };

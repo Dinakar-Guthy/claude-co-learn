@@ -12,6 +12,7 @@ import { generateChapter } from "./chapter";
 import { generateWrapUp } from "./wrapup";
 import { askTutor, generateHint, teachConcept } from "./help";
 import { generatePrimer } from "./primer";
+import { generateFurtherReading } from "./reading";
 
 export const content: ContentApi = {
   gradeAnswer,
@@ -25,6 +26,7 @@ export const content: ContentApi = {
   generateStoryBible: (input) => generateStoryBible(input),
   generateChapter,
   generateWrapUp,
+  generateFurtherReading,
 };
 
 export { ContentError, ContentRefusalError, ContentShapeError, ContentTruncatedError } from "./errors";

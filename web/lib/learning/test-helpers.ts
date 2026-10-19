@@ -70,6 +70,7 @@ export function mockContent(overrides: Partial<ContentApi> = {}): ContentApi {
       codex: outcomes.map((o) => ({ concept: o.concept, summary: "Learned it.", result: "strong" as const })),
       suggestions: ["Next time you could tune thresholds."],
     })),
+    generateFurtherReading: vi.fn(async () => [{ title: "Class imbalance", url: "https://example.org/imbalance", why: "Goes deeper on metrics for rare classes." }]),
   };
   return { ...base, ...overrides };
 }

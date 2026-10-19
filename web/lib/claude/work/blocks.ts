@@ -4,7 +4,8 @@
  * text → `${messageId}:${blockIndex}`, code run → the server_tool_use block id.
  */
 import type Anthropic from "@anthropic-ai/sdk";
-import type { TranscriptItem } from "@/lib/contracts/session";
+import type { Source, TranscriptItem } from "@/lib/contracts/session";
+import { hostOf, isWebUrl } from "@/lib/sources";
 
 type Block = Anthropic.Beta.BetaContentBlock;
 type CodeRun = Extract<TranscriptItem, { kind: "code_run" }>;
@@ -17,6 +18,49 @@ const cap = (s: string) => (s.length > MAX_OUTPUT_CHARS ? `${s.slice(0, MAX_OUTP
 export const textItemId = (messageId: string, index: number) => `${messageId}:${index}`;
 
 export const isCodeToolName = (name: string) => name === "bash_code_execution" || name === "text_editor_code_execution";
+
+/** Web search citations of a text block (other citation kinds have no link). */
+export function webCitations(citations: readonly Anthropic.Beta.BetaTextCitation[] | null | undefined): Source[] {
+  return (citations ?? []).flatMap((c) => (c.type === "web_search_result_location" && isWebUrl(c.url) ? [{ url: c.url, title: c.title?.trim() || hostOf(c.url) }] : []));
+}
+
+
+/**
+ * Groups consecutive text blocks into one transcript item (web search splits a cited answer into many blocks) and
+ * numbers their sources. Shared by the live stream and the persisted transcript, so both produce the same text.
+ */
+export class TextGroups {
+  private groupId: string | null = null;
+  private sources: Source[] = [];
+  constructor(private readonly messageId: string) {}
+
+  /** Call at every block start, in order; returns the item id for a text block, null otherwise. */
+  start(index: number, isText: boolean): string | null {
+    if (!isText) {
+      this.groupId = null;
+      return null;
+    }
+    if (!this.groupId) {
+      this.groupId = textItemId(this.messageId, index);
+      this.sources = [];
+    }
+    return this.groupId;
+  }
+
+  /** At the end of a text block: the marker to append (e.g. " [1][2]") and the group's numbered sources so far. */
+  cite(citations: Source[]): { marker: string; sources: Source[] } {
+    const numbers: number[] = [];
+    for (const c of citations) {
+      let at = this.sources.findIndex((s) => s.url === c.url);
+      if (at === -1) {
+        this.sources = [...this.sources, c];
+        at = this.sources.length - 1;
+      }
+      if (!numbers.includes(at + 1)) numbers.push(at + 1);
+    }
+    return { marker: numbers.length ? ` ${numbers.map((n) => `[${n}]`).join("")}` : "", sources: this.sources };
+  }
+}
 
 const HEREDOC = /^\s*python3?\s*(?:-\s*)?<<-?\s*['"]?(\w+)['"]?[^\n]*\n([\s\S]*?)\n\s*\1\s*$/;
 const RUNS_PYTHON = /(^|[\s;&|(])python3?(\s|$)/;
@@ -85,9 +129,19 @@ export function codeResult(block: Block): CodeResult | null {
 export function transcriptFromContent(messageId: string, content: Block[]): TranscriptItem[] {
   const items: TranscriptItem[] = [];
   const runs = new Map<string, CodeRun>();
+  const groups = new TextGroups(messageId);
   content.forEach((block, index) => {
+    const groupId = groups.start(index, block.type === "text");
     if (block.type === "text") {
-      if (block.text) items.push({ kind: "assistant_text", id: textItemId(messageId, index), text: block.text });
+      const { marker, sources } = groups.cite(webCitations(block.citations));
+      const text = block.text + marker;
+      const item = items.find((i) => i.id === groupId);
+      if (item?.kind === "assistant_text") {
+        item.text += text;
+        if (sources.length) item.sources = sources;
+      } else if (text) {
+        items.push({ kind: "assistant_text", id: groupId!, text, ...(sources.length ? { sources } : {}) });
+      }
     } else if (block.type === "server_tool_use" && isCodeToolName(block.name)) {
       const run: CodeRun = { kind: "code_run", id: block.id, ...describeCode(block.name, block.input), fileIds: [] };
       runs.set(block.id, run);

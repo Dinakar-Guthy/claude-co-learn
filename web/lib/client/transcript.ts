@@ -27,6 +27,13 @@ export function applyEvent(items: TranscriptItem[], event: ChatStreamEvent): Tra
         () => ({ kind: "assistant_text", id: event.itemId, text: event.text }),
         (item) => (item.kind === "assistant_text" ? { ...item, text: item.text + event.text } : item),
       );
+    case "sources":
+      return upsert(
+        items,
+        event.itemId,
+        () => ({ kind: "assistant_text", id: event.itemId, text: "", sources: event.sources }),
+        (item) => (item.kind === "assistant_text" ? { ...item, sources: event.sources } : item),
+      );
     case "code_start":
       return upsert(
         items,

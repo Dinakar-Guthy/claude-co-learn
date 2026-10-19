@@ -4,7 +4,7 @@
  */
 import type { MomentView, Verdict } from "./moment";
 import type { LevelInfo, LevelReward, UserSettings, BossOutcome } from "./engine";
-import type { Intent, SessionSketch, SessionSummary, StoryChapter, TranscriptItem } from "./session";
+import type { Intent, Reading, SessionSketch, SessionSummary, StoryChapter, TranscriptItem } from "./session";
 import type { XpAward } from "./stream";
 
 export const ANON_COOKIE = "cl_anon";
@@ -127,6 +127,9 @@ export interface WrapUpResponse {
   suggestions: string[];
   levelUps: { from: number; to: number; rewards: LevelReward[] }[];
 }
+
+// POST /api/reading { sessionId } → the "Learn more" readings (generated once, after wrap-up)
+export interface ReadingResponse { reading: Reading[] }
 
 // GET /api/story?sessionId=&trigger=  → { chapter: StoryChapter | null } (null = still generating)
 

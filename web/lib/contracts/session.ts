@@ -49,6 +49,17 @@ export interface Primer {
   answer?: { choice: number; correct: boolean };
 }
 
+/** A web page Claude cited (from web search). Numbered in order of first citation within a message. */
+export interface Source {
+  url: string;
+  title: string;
+}
+
+/** One "Learn more" reading at the end of a session: a real page from web search, with why it's worth reading. */
+export interface Reading extends Source {
+  why: string;
+}
+
 export interface StoryChapter {
   id: string;
   trigger: string; // e.g. "boss:<id>" | "wrapup"
@@ -81,6 +92,8 @@ export interface Session {
   story: StoryState;
   /** Novice primer ("New to this" only), generated in the background with the sketch. */
   primer?: Primer;
+  /** "Learn more" readings, generated once when the session is wrapped up. */
+  furtherReading?: Reading[];
 }
 
 /** Full server-side record of a moment (contains answer keys; never sent to the client as-is). */
@@ -124,7 +137,7 @@ export interface BossState {
 /** Renderable transcript item (UI history; separate from the raw API message list). */
 export type TranscriptItem =
   | { kind: "user"; id: string; text: string; at: number }
-  | { kind: "assistant_text"; id: string; text: string }
+  | { kind: "assistant_text"; id: string; text: string; sources?: Source[] }
   | {
       kind: "code_run";
       id: string; // server_tool_use block id

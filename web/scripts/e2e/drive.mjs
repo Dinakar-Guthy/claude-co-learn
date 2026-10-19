@@ -51,7 +51,7 @@ switch (cmd) {
   }
   case "idle": { // waits until no spinner/status "thinking" and input enabled
     const t0 = Date.now(); const lim = Number(args[0] ?? 240) * 1000;
-    for (;;) { const busy = await evaluate(`!!document.querySelector('[aria-busy="true"]') || /Claude is thinking|Tidying up my notes|Running code|Preparing a question|A boss approaches|tallying|Checking your answer|being written|Writing/.test(document.body.innerText.slice(-1500))`);
+    for (;;) { const busy = await evaluate(`!!document.querySelector('[aria-busy="true"]') || /Claude is thinking|Tidying up my notes|Looking up sources|Finding good reading|Running code|Preparing a question|A boss approaches|tallying|Checking your answer|being written|Writing/.test(document.body.innerText.slice(-1500))`);
       if (!busy) { await sleep(1500); const still = await evaluate(`!!document.querySelector('[aria-busy="true"]')`); if (!still) { out(`idle after ${Math.round((Date.now()-t0)/1000)}s`); break; } }
       if (Date.now() - t0 > lim) { out("TIMEOUT"); break; } await sleep(2000); }
     break;

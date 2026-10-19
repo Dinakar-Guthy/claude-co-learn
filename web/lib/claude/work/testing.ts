@@ -57,11 +57,12 @@ export function rawEvents(message: Anthropic.Beta.BetaMessage): RawEvent[] {
   const events: RawEvent[] = [{ type: "message_start", message: { ...message, content: [], stop_reason: null } }];
   message.content.forEach((block, index) => {
     if (block.type === "text") {
-      events.push({ type: "content_block_start", index, content_block: { ...block, text: "" } });
+      events.push({ type: "content_block_start", index, content_block: { ...block, text: "", citations: block.citations ? [] : null } });
       const mid = Math.ceil(block.text.length / 2);
       for (const part of [block.text.slice(0, mid), block.text.slice(mid)]) {
         if (part) events.push({ type: "content_block_delta", index, delta: { type: "text_delta", text: part } });
       }
+      for (const citation of block.citations ?? []) events.push({ type: "content_block_delta", index, delta: { type: "citations_delta", citation } });
     } else if (block.type === "tool_use" || block.type === "server_tool_use") {
       events.push({ type: "content_block_start", index, content_block: { ...block, input: {} } } as RawEvent);
       events.push({ type: "content_block_delta", index, delta: { type: "input_json_delta", partial_json: JSON.stringify(block.input) } });
