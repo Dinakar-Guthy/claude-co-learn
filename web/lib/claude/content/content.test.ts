@@ -6,7 +6,7 @@ import { normalizeBoss } from "./boss";
 import { chapterPrompt } from "./chapter";
 import { ContentShapeError } from "./errors";
 import { asData } from "./prompt";
-import { GENRES, pickSeeds } from "./seeds";
+import { TWISTS, pickSeeds } from "./seeds";
 import { normalizeSketch } from "./sketch";
 import { generateStoryBible } from "./storyBible";
 import { fakeClient } from "./test-client";
@@ -175,20 +175,25 @@ describe("generateBoss", () => {
 });
 
 describe("story", () => {
-  it("picks seeds deterministically from the local lists", () => {
-    const seeds = pickSeeds(() => 0);
-    expect(seeds.genre).toBe(GENRES[0]);
-    expect(pickSeeds(() => 0.9999).genre).toBe(GENRES.at(-1));
+  it("picks the twist card deterministically from the local list", () => {
+    expect(pickSeeds(() => 0).twist).toBe(TWISTS[0]);
+    expect(pickSeeds(() => 0.9999).twist).toBe(TWISTS.at(-1));
   });
 
-  it("builds the bible around code-picked seeds", async () => {
-    fake.queue({ json: { tone: "warm", setting: "a cloud harbor", protagonist: "Ada", motif: "a compass that learns", arc: ["a", "b", "c"] } });
+  it("builds the world from the topic, with a code-picked twist", async () => {
+    fake.queue({ json: { genre: "forum intrigue fable", narrator: "a retired legion scribe", tone: "warm", setting: "a hill city of senators", protagonist: "Ada", motif: "a cracked bronze tablet", arc: ["a", "b", "c"] } });
     const bible = await generateStoryBible({ intent }, () => 0.5);
-    const seeds = pickSeeds(() => 0.5);
-    expect(bible.genre).toBe(seeds.genre);
-    expect(bible.seeds).toEqual({ narrator: seeds.narrator, twist: seeds.twist });
-    expect(userText(lastRequest("betaCreate"))).toContain(seeds.twist);
-    expect(lastRequest("betaCreate").system).toMatch(/all ages/i);
+    const { twist } = pickSeeds(() => 0.5);
+    expect(bible.genre).toBe("forum intrigue fable");
+    expect(bible.seeds).toEqual({ narrator: "a retired legion scribe", twist });
+    const user = userText(lastRequest("betaCreate"));
+    expect(user).toContain(twist);
+    expect(user).toContain(intent.goal.slice(0, 20));
+    expect(user).not.toMatch(/Genre:/);
+    const system = lastRequest("betaCreate").system;
+    expect(system).toMatch(/all ages/i);
+    expect(system).toMatch(/Build the world from what the learner is studying/);
+    expect(system).toMatch(/don't retell the real history/);
   });
 
   const bible: StoryBible = { genre: "seaside mystery", tone: "warm", setting: "s", protagonist: "p", motif: "m", arc: ["a"], seeds: { narrator: "n", twist: "t" } };
