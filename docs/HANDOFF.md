@@ -4,7 +4,14 @@ Last updated: 2026-10-18 afternoon. **Start with §0 Current status** (the most 
 **Next: P3 (Dinakar's playthrough, pending decisions, prompt polish) and P4 (rationale, video, transcripts).**
 §3 below is the P2 checklist as it was planned (now done; kept for reference).
 
-## 0. Current status (2026-10-18, latest)
+## 0. Current status (2026-10-19, latest)
+**Next session, in order** (details below and in `docs/plan.md`):
+1. Dinakar's manual testing (§8 guide, now with H. Learn mode and a sources check); fix what he reports.
+2. Open items: Learn-mode stories closer to the topic (plan.md Phase 4); source quality in Learn lessons (Dinakar to choose: leave / prompt prefers encyclopedias, .edu, museums, .gov (recommended) / domain allowlist); first Learn question takes ~35s.
+3. `/rationale-coach` for `docs/design-rationale.md`, then the video script, shot list, and pre-staged demo sessions (test-mode tabs).
+4. Pre-submission: make the repo public (history scan was clean; re-scan transcripts after collecting), collect transcripts, final health check, Greenhouse text.
+- Known API behavior: on Sonnet 5.5, text written between two tool calls comes back as a hidden thinking block. Learn lessons go through the `teach` tool for that reason; Co-learn explanations written between two code runs may be hidden too (final answers show).
+
 - **The prototype is feature-complete for the submission** and deployed:
   - https://anthropic-take-home-10-17-26.vercel.app
   - Repo: https://github.com/Dinakar-Guthy/claude-co-learn (private; renamed from `anthropic-take-home-10-17-26`; Vercel still deploys from it).
