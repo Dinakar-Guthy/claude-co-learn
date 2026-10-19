@@ -54,6 +54,12 @@ Each item: what it is, why it might matter, open questions.
 - **E: typing doesn't skip.** A message sent while a question is open leaves it open instead of skipping it.
 - C and D look the most promising.
 
+## Evals for question and answer quality (long-term scaling)
+- **What:** a proper eval suite for what Claude generates: learning moments (is the question valuable, unambiguous, answerable from what the learner saw, not spoiled; is the multiple-choice key right and are the options balanced), grading (agreement with expert graders on correct / partial / incorrect, including defensible "decide" answers), help (hints and lessons that teach without leaking), Learn-mode lessons (accuracy against their sources), and further reading (relevance, source quality).
+- **How:** a labeled set of real (anonymized) moments and answers from usage, plus synthetic edge cases; model-graded checks calibrated against human labels; run on every prompt or model change, with regressions blocking release. Track the in-app signals alongside (report rate, "Did you learn something?", accuracy against the P5 bands, delayed retention).
+- **Why:** at millions of users, small error rates in questions or grading mean many learners taught or marked wrongly (P9). Today quality rests on prompt rules, a blind verification pass, and live spot checks.
+- Noted by Dinakar (2026-10-19) as a long-term scaling item; also material for the rationale's scaling section.
+
 ## Cross-device resume
 - **What:** continue your progress in another browser (resume code or accounts).
 - **Open question:** resume codes are effectively bearer tokens, a security trade-off; accounts add sign-up friction for reviewers.

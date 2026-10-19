@@ -112,6 +112,7 @@ Order: Phase 1 helps both modes (and the Co-learn hero), so it goes first. Each 
 - [x] Path card at the top: parts with done / now / next; pick what's next or move parts up/down (saved; the tutor is told next turn); collapses to one line while reading.
 
 ### Phase 4: polish and checks
+- [ ] **Stories closer in theme to the topic** (Dinakar, 2026-10-19): the Learn-mode story bible should echo the topic being studied (e.g. Roman history → a world with senators, legions, a contested city), not a random genre (the live run got an unrelated camel race). Keep chapters short and easy to follow; don't retell the real history.
 - Note: lessons go through a `teach` tool (Sonnet 5.5 hides text written between tool calls), with sources kept only if their URL came back from a search.
 - [ ] Sources on question cards (concept cards) and "Teach me the idea first" lessons, if time allows.
 - [ ] Live runs of both modes; docs (HANDOFF §0, testing guide, README).
