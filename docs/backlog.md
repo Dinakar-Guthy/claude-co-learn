@@ -46,6 +46,14 @@ Each item: what it is, why it might matter, open questions.
   - Why: turns a technical step into retrieval practice (P3/P4). Open questions: pacing (it shouldn't interrupt flow), and whether the API summary is written for the learner or for Claude (probably needs its own learner-facing summary).
 - Alternatives considered at the time: a one-off transcript note ("I summarized our earlier work"), rejected as an implementation detail that clutters the chat.
 
+## Parallel learning moments (work continues while a question is open)
+- **Today (2026-10-18):** a shown question pauses the work until it's answered. The prompt now has Claude finish all work that doesn't depend on the answer first, so questions land at the real fork (option A).
+- **B: questions that don't block.** Each question is marked blocking (decide, predict) or not (concept checks). A non-blocking card stays open while the work streams on; the answer reaches Claude on its next turn. Risks: the ongoing work gives away the answer, split attention, answers arriving mid-response.
+- **C: hidden results for predictions.** Run the revealing code while the learner thinks and hold the output back; reveal it instantly when the prediction is locked in. Removes the wait after answering.
+- **D: ask ahead.** Ask about an upcoming decision early (e.g. "which metric?" while cleaning data) so the answer is ready at the fork. Needs B.
+- **E: typing doesn't skip.** A message sent while a question is open leaves it open instead of skipping it.
+- C and D look the most promising.
+
 ## Cross-device resume
 - **What:** continue your progress in another browser (resume code or accounts).
 - **Open question:** resume codes are effectively bearer tokens, a security trade-off; accounts add sign-up friction for reviewers.
