@@ -1,7 +1,7 @@
 # Design principles
 
 Authored by Dinakar (2026-10-17). Revisions are proposed in "Pending" below and only merged once he accepts them.
-History: v0 as stated → v1 merged the P2/P5 revisions and added P8/P9 → v2 (2026-10-17) added the feedback rule to P3/P4 and re-scoped P7 → v3 (2026-10-18) made story chapters in P2 mode-dependent.
+History: v0 as stated → v1 merged the P2/P5 revisions and added P8/P9 → v2 (2026-10-17) added the feedback rule to P3/P4 and re-scoped P7 → v3 (2026-10-18) made story chapters in P2 mode-dependent → v4 (2026-10-18) added P10 (protect the flow of work).
 
 1. **Simplicity first: minimal clutter, maximal focus.**
    Simplicity is about what's *on screen*, not about dumbing down content. The UI should never distract.
@@ -45,6 +45,11 @@ History: v0 as stated → v1 merged the P2/P5 revisions and added P8/P9 → v2 (
 
 9. **Trustworthy content.**
    Generated questions and answer keys are checked before being shown, and users can flag a bad question.
+
+10. **Protect the flow of work (Co-learn).**
+   In Co-learn we don't want to interrupt a user's flow state; learning moments should be as unintrusive as possible,
+   so the work flows as though Co-learn weren't on. For example, Claude does the work that doesn't depend on an answer
+   before asking, so a question never holds up work it isn't about.
 
 ## Pending
 _(none)_
