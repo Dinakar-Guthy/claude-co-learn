@@ -7,7 +7,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import type { ChatStreamEvent } from "@/lib/contracts/stream";
 import { codeResult, describeCode, isCodeToolName, TextGroups, webCitations } from "./blocks";
 import type { Source } from "@/lib/contracts/session";
-import { LEARNING_MOMENT } from "./tools";
+import { LEARNING_MOMENT, TEACH } from "./tools";
 
 export type Emit = (event: ChatStreamEvent) => void;
 
@@ -50,6 +50,8 @@ export async function consumeStream(stream: ModelStream, emit: Emit, onFirstEven
           pendingCode.set(event.index, { id: block.id, name: block.name, json: "", input: block.input });
         } else if (block.type === "tool_use" && block.name === LEARNING_MOMENT) {
           emit({ type: "status", status: "preparing_moment" });
+        } else if (block.type === "tool_use" && block.name === TEACH) {
+          emit({ type: "status", status: "teaching" });
         } else {
           const result = codeResult(block);
           if (result) {

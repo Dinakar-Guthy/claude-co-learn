@@ -12,6 +12,7 @@ export const LEARNING_MOMENT = "learning_moment";
 export const RESOLVE_PREDICTION = "resolve_prediction";
 export const MILESTONE_REACHED = "milestone_reached";
 export const SET_LEARNING_PATH = "set_learning_path";
+export const TEACH = "teach";
 
 type JsonSchema = Record<string, unknown>;
 
@@ -59,6 +60,15 @@ export const resolvePredictionSchema = obj({
   actual_result: str("The real result from the code you just ran, in one or two sentences with the key number(s)."),
   verdict: { type: "string", enum: ["correct", "partial", "incorrect"], description: "How the learner's prediction compares to the real result." },
   why: str("1-2 friendly sentences explaining why the result came out this way."),
+});
+
+export const teachSchema = obj({
+  lesson: str("The lesson chunk the learner reads (markdown, about 120 words). Mark cited claims with [1], [2]… matching the sources list."),
+  sources: {
+    type: "array",
+    description: "Pages from your web search results that the lesson cites, in [n] order (0-4). Only URLs that appeared in search results.",
+    items: obj({ title: str("The page title."), url: str("The page URL, exactly as in the search result.") }),
+  },
 });
 
 export const setLearningPathSchema = obj({
@@ -112,6 +122,12 @@ export const WORK_TOOLS: Anthropic.Beta.BetaToolUnion[] = [
 /** Learn mode's tools: no code sandbox and no prediction reveal (predictions are graded right away). Stable order. */
 export const LEARN_TOOLS: Anthropic.Beta.BetaToolUnion[] = [
   WEB_SEARCH_TOOL,
+  functionTool(
+    TEACH,
+    "Show the learner one lesson chunk, exactly as written, with the sources it cites. Every lesson goes through this " +
+      "tool: the learner doesn't see text you write between tool calls. Call it before the learning_moment about it.",
+    teachSchema,
+  ),
   functionTool(
     LEARNING_MOMENT,
     "Give the learner a short question about what you just taught (or what comes next). Call it after each teaching " +

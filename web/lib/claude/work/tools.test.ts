@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { LearningMomentInputSchema, MilestoneInputSchema, ResolvePredictionInputSchema, SetLearningPathInputSchema } from "@/lib/contracts/moment";
-import { LEARN_TOOLS, learningMomentSchema, milestoneSchema, resolvePredictionSchema, setLearningPathSchema, WORK_TOOLS } from "./tools";
+import { LearningMomentInputSchema, MilestoneInputSchema, ResolvePredictionInputSchema, SetLearningPathInputSchema, TeachInputSchema } from "@/lib/contracts/moment";
+import { LEARN_TOOLS, learningMomentSchema, milestoneSchema, resolvePredictionSchema, setLearningPathSchema, teachSchema, WORK_TOOLS } from "./tools";
 import { momentInput } from "./testing";
 
 type Schema = { type?: string; properties?: Record<string, Schema>; required?: string[]; additionalProperties?: boolean; items?: Schema };
@@ -26,10 +26,12 @@ describe("work tools", () => {
     expectInSync(MilestoneInputSchema, milestoneSchema as Schema);
     expectInSync(SetLearningPathInputSchema, setLearningPathSchema as Schema);
     expectInSync(SetLearningPathInputSchema.shape.parts.element, (setLearningPathSchema as Schema).properties!.parts.items!);
+    expectInSync(TeachInputSchema, teachSchema as Schema);
+    expectInSync(TeachInputSchema.shape.sources.element, (teachSchema as Schema).properties!.sources.items!);
   });
 
   it("Learn mode: web search plus strict tools, no code sandbox or prediction reveal", () => {
-    expect(LEARN_TOOLS.map((t) => (t as { name: string }).name)).toEqual(["web_search", "learning_moment", "set_learning_path", "milestone_reached"]);
+    expect(LEARN_TOOLS.map((t) => (t as { name: string }).name)).toEqual(["web_search", "teach", "learning_moment", "set_learning_path", "milestone_reached"]);
     for (const tool of LEARN_TOOLS.slice(1)) expect(tool).toMatchObject({ strict: true });
     expect(JSON.stringify(LEARN_TOOLS)).not.toMatch(/minLength|maxLength|minItems|maxItems/);
   });

@@ -35,6 +35,7 @@ const STATUS_LABEL = {
   thinking: "Claude is thinking…",
   summarizing: "Tidying up my notes so far… (a few extra seconds)",
   searching: "Looking up sources…",
+  teaching: "Writing your next lesson…",
   running_code: "Running code…",
   preparing_moment: "Preparing a question for you…",
 } as const;

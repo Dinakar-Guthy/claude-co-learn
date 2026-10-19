@@ -22,7 +22,7 @@ export type TurnEndReason =
   | "error";
 
 export type ChatStreamEvent =
-  | { type: "status"; status: "thinking" | "summarizing" | "searching" | "running_code" | "preparing_moment" } // summarizing: compacting a long history before the turn
+  | { type: "status"; status: "thinking" | "summarizing" | "searching" | "teaching" | "running_code" | "preparing_moment" } // summarizing: compacting a long history before the turn
   | { type: "text_delta"; itemId: string; text: string }
   /** The full, numbered source list of a text item so far (replaces the previous one). */
   | { type: "sources"; itemId: string; sources: Source[] }

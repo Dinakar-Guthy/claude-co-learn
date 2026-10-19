@@ -50,6 +50,13 @@ export const MilestoneInputSchema = z.object({
 });
 export type MilestoneInput = z.infer<typeof MilestoneInputSchema>;
 
+/** Input for `teach` (Learn mode): a lesson chunk shown to the learner verbatim, with the sources it cites as [n]. */
+export const TeachInputSchema = z.object({
+  lesson: z.string().max(4000),
+  sources: z.array(z.object({ title: z.string().max(200), url: z.string().max(2000) })).max(6),
+});
+export type TeachInput = z.infer<typeof TeachInputSchema>;
+
 /** Input for `set_learning_path` (Learn mode): the tutor's plan for the topic. */
 export const SetLearningPathInputSchema = z.object({
   topic: z.string().max(80),

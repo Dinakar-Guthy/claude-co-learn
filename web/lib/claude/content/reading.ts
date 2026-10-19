@@ -7,7 +7,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { anthropic } from "@/lib/claude/client";
 import { MODELS, WEB_SEARCH_TOOL } from "@/lib/claude/models";
 import type { Intent, Reading, Source } from "@/lib/contracts/session";
-import { isWebUrl } from "@/lib/sources";
+import { isWebUrl, normUrl as norm, searchResultUrls } from "@/lib/sources";
 import { FALLBACK_BETA } from "./call";
 import { ContentRefusalError } from "./errors";
 import { asData, bullets, DATA_RULE, truncate } from "./prompt";
@@ -34,7 +34,6 @@ export function readingPrompt(intent: Intent, concepts: string[], cited: Source[
 }
 
 const LINE = /^\s*[-*]\s*\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)\s*[|—–-]+\s*(.+?)\s*$/;
-const norm = (url: string) => url.replace(/#.*$/, "").replace(/\/+$/, "");
 
 /** Parses the reply, keeping only allowed URLs (deduped, at most MAX_READINGS). */
 export function parseReadings(text: string, allowed: ReadonlySet<string>): Reading[] {
@@ -50,10 +49,7 @@ export function parseReadings(text: string, allowed: ReadonlySet<string>): Readi
   return out;
 }
 
-/** URLs of every web search result in the response content. */
-export function searchResultUrls(content: readonly Anthropic.Beta.BetaContentBlock[]): string[] {
-  return content.flatMap((b) => (b.type === "web_search_tool_result" && Array.isArray(b.content) ? b.content.map((r) => r.url) : []));
-}
+export { searchResultUrls };
 
 export async function generateFurtherReading({ intent, concepts, cited }: { intent: Intent; concepts: string[]; cited: Source[] }): Promise<Reading[]> {
   const route = MODELS.reading;

@@ -10,6 +10,7 @@ import {
   MilestoneInputSchema,
   ResolvePredictionInputSchema,
   SetLearningPathInputSchema,
+  TeachInputSchema,
   type LearningMomentInput,
 } from "@/lib/contracts/moment";
 import type { GateContext, GateDecision, MasteryMap } from "@/lib/contracts/engine";
@@ -21,14 +22,15 @@ import { modeOf } from "@/lib/modes";
 import type { WorkDeps } from "./deps";
 import { sessionEndsAt } from "./context";
 import type { TurnState } from "./state";
-import { LEARNING_MOMENT, MILESTONE_REACHED, RESOLVE_PREDICTION, SET_LEARNING_PATH } from "./tools";
+import { LEARNING_MOMENT, MILESTONE_REACHED, RESOLVE_PREDICTION, SET_LEARNING_PATH, TEACH } from "./tools";
+import { isWebUrl, normUrl, searchResultUrls } from "@/lib/sources";
 
 export type PauseReason = "awaiting_learner" | "boss_due";
 
 /** Learn mode: shortest visible lesson text (or predict setup) a question may follow. */
 export const MIN_LESSON_CHARS = 200;
 export const TEACH_FIRST =
-  "Not shown: the learner sees only the text you write, and this response had no lesson before the question. Write the lesson (about 120 words, from your search) as text now, then ask again.";
+  "Not shown: this response had no lesson before the question, and the learner doesn't see text written between tool calls. Call teach with the lesson (about 120 words, citing your search), then ask again.";
 
 export interface ToolOutcome {
   content: string;
@@ -40,6 +42,8 @@ export class ToolContext {
   readonly outbox: ChatStreamEvent[] = [];
   /** Characters of visible text Claude wrote in the response whose tools are being handled (set by the loop). */
   responseTextChars = 0;
+  /** Learn mode: a lesson was shown (via `teach`) in the response whose tools are being handled. */
+  taught = false;
   private mastery?: MasteryMap;
   readonly deps: WorkDeps;
   readonly state: TurnState;
@@ -89,6 +93,8 @@ export async function handleTool(ctx: ToolContext, block: Anthropic.Beta.BetaToo
       return milestone(ctx, block);
     case SET_LEARNING_PATH:
       return setLearningPath(ctx, block);
+    case TEACH:
+      return teach(ctx, block);
     default:
       return { content: `Unknown tool: ${block.name}`, isError: true };
   }
@@ -110,7 +116,7 @@ async function learningMoment(ctx: ToolContext, block: Anthropic.Beta.BetaToolUs
   const candidate = parsed.data;
   const { deps, state } = ctx;
   // Learn mode: the learner only sees Claude's text, so a question needs the lesson written before it.
-  if (modeOf(state.session.intent) === "learn" && ctx.responseTextChars < MIN_LESSON_CHARS) {
+  if (modeOf(state.session.intent) === "learn" && !ctx.taught && ctx.responseTextChars < MIN_LESSON_CHARS) {
     return { content: json({ status: "skip", reason: "teach_first", instruction: TEACH_FIRST }) };
   }
   const now = deps.now();
@@ -241,6 +247,28 @@ function advancePath(ctx: ToolContext, path: LearningPath): string | null {
   ctx.state.setPath(next);
   ctx.outbox.push({ type: "path", path: next });
   return at === -1 ? null : parts[at].title;
+}
+
+/**
+ * Learn mode: shows a lesson chunk verbatim as Claude's message (text written between tool calls comes back hidden,
+ * so lessons go through this tool). Sources are kept only if their URL came back from a web search in the session.
+ */
+function teach(ctx: ToolContext, block: Anthropic.Beta.BetaToolUseBlock): ToolOutcome {
+  const parsed = TeachInputSchema.safeParse(block.input);
+  if (!parsed.success) return invalid(parsed.error);
+  const lesson = parsed.data.lesson.trim();
+  if (!lesson) return { content: "Invalid input: the lesson is empty.", isError: true };
+  const found = new Set(ctx.state.messages().flatMap((m) => (m.role === "assistant" && Array.isArray(m.content) ? searchResultUrls(m.content) : [])).map(normUrl));
+  const sources = parsed.data.sources
+    .filter((s) => isWebUrl(s.url) && found.has(normUrl(s.url)))
+    .map((s) => ({ url: s.url.trim(), title: s.title.trim() || s.url.trim() }));
+  const itemId = `lesson:${block.id}`;
+  ctx.state.addItem({ kind: "assistant_text", id: itemId, text: lesson, ...(sources.length ? { sources } : {}) });
+  ctx.outbox.push({ type: "text_delta", itemId, text: lesson });
+  if (sources.length) ctx.outbox.push({ type: "sources", itemId, sources });
+  ctx.taught = true;
+  const dropped = parsed.data.sources.length - sources.length;
+  return { content: json({ status: "shown", ...(dropped ? { note: `${dropped} source(s) dropped: only URLs from your search results can be cited.` } : {}) }) };
 }
 
 /** Learn mode: the tutor's plan (first response), or a revision that keeps finished parts (matched by title) done. */

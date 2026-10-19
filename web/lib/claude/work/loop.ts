@@ -127,6 +127,7 @@ export async function runTurn(deps: WorkDeps, plan: TurnPlan, emit: Emit, signal
       }
 
       ctx.responseTextChars = message.content.reduce((n, b) => n + (b.type === "text" ? b.text.trim().length : 0), 0);
+      ctx.taught = false;
       const pause = await runTools(ctx, toolUses, message.stop_reason === "max_tokens");
       state.commit();
       if (pause) return await end(pause);
