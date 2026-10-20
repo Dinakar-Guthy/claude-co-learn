@@ -132,6 +132,7 @@ Last updated: 2026-10-18 afternoon. **Start with §0 Current status** (the most 
 - Track C's engine stand-in era: pickers should pass the user's `level` to `isUnlocked`.
 
 ## 5. Environment
+- **Repo location:** `~/code/claude-co-learn` (moved out of iCloud Drive on 2026-10-19: iCloud was creating `* 2` conflict copies of build files and of `.git/index`). Open Claude Code from there. `web/.env.local` now lives only on this laptop, so keep a copy in a password manager.
 - `web/.env.local` (gitignored) needs `ANTHROPIC_API_KEY`, `KV_REST_API_URL`, `KV_REST_API_TOKEN` (`SITE_PASSWORD` is already set).
   Vercel marks these sensitive, so `vercel env pull` returns `[SENSITIVE]` placeholders. They must be pasted by hand. Never print them.
 - Vercel env (Production + Preview): `ANTHROPIC_API_KEY`, Upstash `KV_*`, `SITE_PASSWORD`, `DEMO_FILE_ID=file_011sXmXa8xPyMUpzmefpD5FP`.
