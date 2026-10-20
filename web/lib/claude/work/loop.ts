@@ -11,10 +11,10 @@ import { COMPACTION_BETA, hasCompactionBlock, maybeCompact } from "./compact";
 import type { ModelParams, WorkDeps } from "./deps";
 import { demoDataNote, renderContext } from "./context";
 import { describeError, isAbort, isContainerError, REFUSAL_ERROR, toErrorEvent } from "./errors";
-import { handleTool, ToolContext, type PauseReason, type ToolOutcome } from "./handlers";
+import { handleTool, showLessonEarly, ToolContext, type PauseReason, type ToolOutcome } from "./handlers";
 import type { TurnPlan } from "./prepare";
 import { TurnState, type ApiMessage } from "./state";
-import { consumeStream, type Emit } from "./stream";
+import { consumeStream, type Emit, type OnTeach } from "./stream";
 import { bossDeclinedText, CONTAINER_RESET_NOTE, skippedPendingNote } from "./userText";
 import { modeOf, type SessionMode } from "@/lib/modes";
 import { modeSetup } from "./modeSetup";
@@ -72,6 +72,14 @@ export async function runTurn(deps: WorkDeps, plan: TurnPlan, emit: Emit, signal
   const flush = () => {
     for (const event of ctx.outbox.splice(0)) emit(event);
   };
+  // Lessons shown while streaming whose `teach` call then never ran (cut off, refused, failed) are taken back down.
+  const unshowEarly = () => {
+    for (const id of ctx.shownEarly) emit({ type: "remove_item", itemId: `lesson:${id}` });
+    ctx.shownEarly.clear();
+  };
+  const onTeach: OnTeach = (block, searches) => {
+    for (const event of showLessonEarly(ctx, block, searches)) emit(event);
+  };
   const end = async (reason: TurnEndReason) => {
     // Persist before the browser hears about a moment or boss: the grade/boss routes read this state next.
     await state.persist();
@@ -94,7 +102,7 @@ export async function runTurn(deps: WorkDeps, plan: TurnPlan, emit: Emit, signal
       let message: Anthropic.Beta.BetaMessage;
       try {
         const stream = deps.startStream(buildParams(state.messages(), session.containerId, modeOf(session.intent)), signal);
-        message = await consumeStream(stream, emit, () => (started = true));
+        message = await consumeStream(stream, emit, () => (started = true), onTeach);
       } catch (err) {
         if (started || resetTried || !session.containerId || !isContainerError(err)) throw err;
         resetTried = true;
@@ -109,6 +117,7 @@ export async function runTurn(deps: WorkDeps, plan: TurnPlan, emit: Emit, signal
 
       if (message.stop_reason === "refusal") {
         // Nothing from a refused response is kept; earlier committed steps stay.
+        unshowEarly();
         emit(REFUSAL_ERROR);
         return await end("refusal");
       }
@@ -129,12 +138,14 @@ export async function runTurn(deps: WorkDeps, plan: TurnPlan, emit: Emit, signal
       ctx.responseTextChars = message.content.reduce((n, b) => n + (b.type === "text" ? b.text.trim().length : 0), 0);
       ctx.taught = false;
       const pause = await runTools(ctx, toolUses, message.stop_reason === "max_tokens");
+      unshowEarly();
       state.commit();
       if (pause) return await end(pause);
       flush();
     }
   } catch (err) {
     if (signal.aborted || isAbort(err)) return;
+    unshowEarly();
     console.error("work turn failed:", describeError(err));
     await ctx.log("error", { where: "chat", error: describeError(err).slice(0, 200) }).catch(() => {});
     // Save committed progress before the client can retry.

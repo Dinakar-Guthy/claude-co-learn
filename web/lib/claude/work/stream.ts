@@ -1,13 +1,15 @@
 /**
  * Consumes one streamed model response and forwards what the browser should see live:
  * text deltas (consecutive text blocks grouped, with numbered source markers), code starts (once the command is
- * complete), code results, and web search status.
+ * complete), code results, and web search status. Completed `teach` calls are handed to `onTeach` so the lesson can
+ * be shown before the response ends.
  */
 import type Anthropic from "@anthropic-ai/sdk";
 import type { ChatStreamEvent } from "@/lib/contracts/stream";
 import { codeResult, describeCode, isCodeToolName, TextGroups, webCitations } from "./blocks";
 import type { Source } from "@/lib/contracts/session";
 import { LEARNING_MOMENT, TEACH } from "./tools";
+import { searchResultUrls } from "@/lib/sources";
 
 export type Emit = (event: ChatStreamEvent) => void;
 
@@ -19,11 +21,16 @@ export interface ModelStream extends AsyncIterable<Anthropic.Beta.BetaRawMessage
  * Iterates the stream, emitting events, and resolves with the final message.
  * `onFirstEvent` fires when the first stream event arrives (used to decide whether a failure is retryable).
  */
-export async function consumeStream(stream: ModelStream, emit: Emit, onFirstEvent?: () => void): Promise<Anthropic.Beta.BetaMessage> {
+export type OnTeach = (block: { id: string; input: unknown }, searches: string[][]) => void;
+
+export async function consumeStream(stream: ModelStream, emit: Emit, onFirstEvent?: () => void, onTeach?: OnTeach): Promise<Anthropic.Beta.BetaMessage> {
   let messageId = "";
   let started = false;
   let groups = new TextGroups("");
   const pendingCode = new Map<number, { id: string; name: string; json: string; input: unknown }>();
+  const pendingTeach = new Map<number, { id: string; json: string }>();
+  /** Web search result URLs streamed so far in this response, one list per search. */
+  const searches: string[][] = [];
   /** Open text blocks: their item id and the web citations seen so far. */
   const openText = new Map<number, { itemId: string; citations: Source[] }>();
 
@@ -52,6 +59,9 @@ export async function consumeStream(stream: ModelStream, emit: Emit, onFirstEven
           emit({ type: "status", status: "preparing_moment" });
         } else if (block.type === "tool_use" && block.name === TEACH) {
           emit({ type: "status", status: "teaching" });
+          if (onTeach) pendingTeach.set(event.index, { id: block.id, json: "" });
+        } else if (block.type === "web_search_tool_result") {
+          searches.push(searchResultUrls([block]));
         } else {
           const result = codeResult(block);
           if (result) {
@@ -68,8 +78,8 @@ export async function consumeStream(stream: ModelStream, emit: Emit, onFirstEven
         } else if (event.delta.type === "citations_delta") {
           openText.get(event.index)?.citations.push(...webCitations([event.delta.citation]));
         } else if (event.delta.type === "input_json_delta") {
-          const code = pendingCode.get(event.index);
-          if (code) code.json += event.delta.partial_json;
+          const partial = pendingCode.get(event.index) ?? pendingTeach.get(event.index);
+          if (partial) partial.json += event.delta.partial_json;
         }
         break;
       case "content_block_stop": {
@@ -86,6 +96,11 @@ export async function consumeStream(stream: ModelStream, emit: Emit, onFirstEven
         if (code) {
           pendingCode.delete(event.index);
           emit({ type: "code_start", itemId: code.id, ...describeCode(code.name, parseInput(code.json, code.input)) });
+        }
+        const teach = pendingTeach.get(event.index);
+        if (teach && onTeach) {
+          pendingTeach.delete(event.index);
+          onTeach({ id: teach.id, input: parseInput(teach.json, undefined) }, searches);
         }
         break;
       }

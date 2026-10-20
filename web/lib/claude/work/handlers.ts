@@ -44,6 +44,8 @@ export class ToolContext {
   responseTextChars = 0;
   /** Learn mode: a lesson was shown (via `teach`) in the response whose tools are being handled. */
   taught = false;
+  /** Learn mode: `teach` calls whose lesson was already shown while the response streamed (tool_use ids). */
+  readonly shownEarly = new Set<string>();
   private mastery?: MasteryMap;
   readonly deps: WorkDeps;
   readonly state: TurnState;
@@ -254,6 +256,36 @@ function advancePath(ctx: ToolContext, path: LearningPath): string | null {
   return at === -1 ? null : parts[at].title;
 }
 
+/** A `teach` call's lesson as shown: sources kept only if a search returned their URL, [n] markers renumbered to match. */
+function prepareLesson(input: z.infer<typeof TeachInputSchema>, searches: string[][]) {
+  const found = new Set(searches.flat().map(normUrl));
+  const keep = input.sources.map((s) => isWebUrl(s.url) && found.has(normUrl(s.url)));
+  const sources = input.sources.filter((_, i) => keep[i]).map((s) => ({ url: s.url.trim(), title: s.title.trim() || s.url.trim() }));
+  const latestResults = searches.findLast((urls) => urls.length) ?? [];
+  return { lesson: alignCitations(input.lesson.trim(), input.sources, keep, latestResults), sources, dropped: input.sources.length - sources.length };
+}
+
+const lessonItemId = (toolUseId: string) => `lesson:${toolUseId}`;
+const historySearches = (ctx: ToolContext) => ctx.state.messages().map((m) => (m.role === "assistant" && Array.isArray(m.content) ? searchResultUrls(m.content) : []));
+
+/** The events that show a lesson. */
+function lessonEvents(itemId: string, lesson: string, sources: { url: string; title: string }[]): ChatStreamEvent[] {
+  return [{ type: "text_delta", itemId, text: lesson }, ...(sources.length ? [{ type: "sources" as const, itemId, sources }] : [])];
+}
+
+/**
+ * Learn mode: shows a lesson as soon as its `teach` block has streamed, instead of when the whole response (often
+ * ending in a long question) is done (Dinakar, 2026-10-19). `searches` are the result URLs streamed so far in this
+ * response. The handler later records it without showing it again; the loop removes it if the handler never runs.
+ */
+export function showLessonEarly(ctx: ToolContext, block: { id: string; input: unknown }, searches: string[][]): ChatStreamEvent[] {
+  const parsed = TeachInputSchema.safeParse(block.input);
+  if (!parsed.success || !parsed.data.lesson.trim()) return [];
+  const { lesson, sources } = prepareLesson(parsed.data, [...historySearches(ctx), ...searches]);
+  ctx.shownEarly.add(block.id);
+  return lessonEvents(lessonItemId(block.id), lesson, sources);
+}
+
 /**
  * Learn mode: shows a lesson chunk verbatim as Claude's message (text written between tool calls comes back hidden,
  * so lessons go through this tool). Sources are kept only if their URL came back from a web search in the session,
@@ -263,18 +295,11 @@ function teach(ctx: ToolContext, block: Anthropic.Beta.BetaToolUseBlock): ToolOu
   const parsed = TeachInputSchema.safeParse(block.input);
   if (!parsed.success) return invalid(parsed.error);
   if (!parsed.data.lesson.trim()) return { content: "Invalid input: the lesson is empty.", isError: true };
-  const searches = ctx.state.messages().map((m) => (m.role === "assistant" && Array.isArray(m.content) ? searchResultUrls(m.content) : []));
-  const found = new Set(searches.flat().map(normUrl));
-  const keep = parsed.data.sources.map((s) => isWebUrl(s.url) && found.has(normUrl(s.url)));
-  const sources = parsed.data.sources.filter((_, i) => keep[i]).map((s) => ({ url: s.url.trim(), title: s.title.trim() || s.url.trim() }));
-  const latestResults = searches.findLast((urls) => urls.length) ?? [];
-  const lesson = alignCitations(parsed.data.lesson.trim(), parsed.data.sources, keep, latestResults);
-  const itemId = `lesson:${block.id}`;
+  const { lesson, sources, dropped } = prepareLesson(parsed.data, historySearches(ctx));
+  const itemId = lessonItemId(block.id);
   ctx.state.addItem({ kind: "assistant_text", id: itemId, text: lesson, ...(sources.length ? { sources } : {}) });
-  ctx.outbox.push({ type: "text_delta", itemId, text: lesson });
-  if (sources.length) ctx.outbox.push({ type: "sources", itemId, sources });
+  if (!ctx.shownEarly.delete(block.id)) ctx.outbox.push(...lessonEvents(itemId, lesson, sources));
   ctx.taught = true;
-  const dropped = parsed.data.sources.length - sources.length;
   return { content: json({ status: "shown", ...(dropped ? { note: `${dropped} source(s) dropped: only URLs from your search results can be cited.` } : {}) }) };
 }
 

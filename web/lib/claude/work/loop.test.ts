@@ -311,10 +311,25 @@ describe("runTurn", () => {
       expect(events).toContainEqual({ type: "text_delta", itemId: "lesson:toolu_t", text: shown });
       expect(events).toContainEqual({ type: "sources", itemId: "lesson:toolu_t", sources: [{ title: "Tiberius Gracchus", url: "https://www.britannica.com/biography/Tiberius-Sempronius-Gracchus/" }] });
       expect(events.filter((e) => e.type === "moment")).toHaveLength(1);
+      // Shown once, as soon as its block streamed: before the question is even being prepared.
+      const lessonAt = events.findIndex((e) => e.type === "text_delta" && e.itemId === "lesson:toolu_t");
+      expect(events.filter((e) => e.type === "text_delta" && e.itemId === "lesson:toolu_t")).toHaveLength(1);
+      expect(lessonAt).toBeLessThan(events.findIndex((e) => e.type === "status" && e.status === "preparing_moment"));
+      expect(events.some((e) => e.type === "remove_item")).toBe(false);
       const transcript = await t.store.getTranscript(t.session.id);
       expect(transcript.find((i) => i.id === "lesson:toolu_t")).toMatchObject({ kind: "assistant_text", text: shown, sources: [{ title: "Tiberius Gracchus" }] });
       const ack = (await t.store.getApiMessages(t.session.id)).flatMap((m) => (Array.isArray(m.content) ? m.content : [])).find((b) => b.type === "tool_result" && b.tool_use_id === "toolu_t") as Anthropic.ToolResultBlockParam;
       expect(JSON.parse(String(ack.content))).toEqual({ status: "shown", note: "1 source(s) dropped: only URLs from your search results can be cited." });
+    });
+
+    it("a lesson shown while streaming is taken back down if the response is cut off before its tools run", async () => {
+      const t = await setup({ session: { ...learnSession, path: { topic: "Rome", parts: [{ title: "A", summary: "a", status: "current" }] } } });
+      t.replies.push(fakeMessage([toolUse("teach", { lesson: "A lesson.", sources: [] }, "toolu_cut")], "max_tokens"), fakeMessage([text("Done.")]));
+      const events = await t.send({ kind: "message", text: "go on" });
+      const shown = events.findIndex((e) => e.type === "text_delta" && e.itemId === "lesson:toolu_cut");
+      expect(shown).toBeGreaterThan(-1);
+      expect(events.findIndex((e) => e.type === "remove_item" && e.itemId === "lesson:toolu_cut")).toBeGreaterThan(shown);
+      expect((await t.store.getTranscript(t.session.id)).some((i) => i.id === "lesson:toolu_cut")).toBe(false);
     });
 
     it("a question with no lesson written before it is sent back with 'teach first'", async () => {

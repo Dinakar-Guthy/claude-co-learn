@@ -29,6 +29,15 @@ describe("consumeStream", () => {
     ]);
   });
 
+  it("hands a completed teach call to onTeach with the search results streamed so far", async () => {
+    const search = { type: "server_tool_use", id: "srv_s", name: "web_search", input: { query: "q" } } as unknown as Anthropic.Beta.BetaContentBlock;
+    const results = { type: "web_search_tool_result", tool_use_id: "srv_s", content: [{ type: "web_search_result", url: "https://a.org/x", title: "A", encrypted_content: "e", page_age: null }] } as unknown as Anthropic.Beta.BetaContentBlock;
+    const input = { lesson: "L [1]", sources: [{ title: "A", url: "https://a.org/x" }] };
+    const calls: unknown[] = [];
+    await consumeStream(fakeStream(fakeMessage([search, results, toolUse("teach", input, "toolu_t"), toolUse("learning_moment", { a: 1 })], "tool_use")), () => {}, undefined, (block, searches) => calls.push({ block, searches: [...searches] }));
+    expect(calls).toEqual([{ block: { id: "toolu_t", input }, searches: [["https://a.org/x"]] }]);
+  });
+
   it("streams a cited answer as one item with source markers, matching the persisted transcript", async () => {
     const cite = (url: string) => ({ type: "web_search_result_location" as const, url, title: "Docs", cited_text: "x", encrypted_index: "e" });
     const block = (t: string, ...c: ReturnType<typeof cite>[]) => ({ type: "text", text: t, citations: c.length ? c : null }) as Anthropic.Beta.BetaContentBlock;
