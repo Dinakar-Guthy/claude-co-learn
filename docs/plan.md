@@ -115,7 +115,7 @@ Order: Phase 1 helps both modes (and the Co-learn hero), so it goes first. Each 
 - [x] **Stories closer in theme to the topic** (Dinakar, 2026-10-19; done the same day, verified with a live bible + chapter): the Learn-mode story bible should echo the topic being studied (e.g. Roman history → a world with senators, legions, a contested city), not a random genre (the live run got an unrelated camel race). Keep chapters short and easy to follow; don't retell the real history.
 - [x] **Source quality** (Dinakar, 2026-10-19): the tutor prefers encyclopedias, .edu, museums, .gov, primary-source archives; avoids content farms. Live: Britannica, a university PDF, Wikipedia.
 - [x] **Citation numbering bug** (live, 2026-10-19): markers followed search-result order ([5], [8] with 4 sources); `teach` now renumbers them to the sources shown.
-- [ ] **Show each lesson as soon as it's written** (Dinakar, 2026-10-19): today the lesson and question appear together when the response ends (~25s); target ~15s for the first lesson.
+- [x] **Show each lesson as soon as it's written** (Dinakar, 2026-10-19): live on production, path card 7s, first lesson 14s (was ~25s), question 24s; citation markers [1]-[4] all match their links.
 - Note: lessons go through a `teach` tool (Sonnet 5.5 hides text written between tool calls), with sources kept only if their URL came back from a search.
 - [ ] Sources on question cards (concept cards) and "Teach me the idea first" lessons, if time allows.
 - [ ] Live runs of both modes; docs (HANDOFF §0, testing guide, README).

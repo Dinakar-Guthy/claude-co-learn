@@ -61,7 +61,7 @@ Start: "▶ Try the demo" → "Some experience" → 10 min → "Let's go".
 
 ### H. Learn mode (the coda in the video)
 Start: `/learn` → "▶ Try a sample: the fall of the Roman Republic" → a familiarity → 10 min → "Let's go".
-- [ ] **H1.** **Expect:** the "Your path · Part 1 of 3" card within ~7s; the first lesson around 15s *(once the "lesson as soon as it's written" change ships; until then ~25s, together with the question)*; then the question card.
+- [ ] **H1.** **Expect:** the "Your path · Part 1 of 3" card within ~7s; the first lesson around 15s, on its own; then the question card about 10s later.
 - [ ] **H2. Lesson quality:** about 120 words, concrete (people, causes, a telling detail), pitched at your familiarity, and with no question repeated inside it.
 - [ ] **H3. Sources:** [n] markers in the lesson, numbered links underneath. Check: every marker number has a matching link (no [5] when only 4 are listed); the links load; they're mostly encyclopedias, university, museum, or government pages rather than blogs.
 - [ ] **H4.** Question types vary across the session: Take a position, What happened next?, Spot the myth, Explain it back, Fill the gap. A "What happened next?" answer is graded right away against what really happened.

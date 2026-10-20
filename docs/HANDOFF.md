@@ -7,7 +7,7 @@ Last updated: 2026-10-18 afternoon. **Start with §0 Current status** (the most 
 ## 0. Current status (2026-10-19, latest)
 **Next session, in order** (details below and in `docs/plan.md`):
 1. Dinakar's manual testing with **`docs/testing-guide.md`** (tiers 1-3); fix what he reports.
-2. Open items done 2026-10-19: Learn stories built from the topic; Learn lessons prefer strong sources; citation markers renumbered to match the sources shown (live bug). In progress: show each Learn lesson as soon as it's written (first lesson ~15s instead of ~25s; Dinakar chose this).
+2. Open items done 2026-10-19: Learn stories built from the topic; Learn lessons prefer strong sources; citation markers renumbered to match the sources shown (live bug). Each Learn lesson now shows as soon as it's written (live: path 7s, first lesson 14s instead of ~25s, question 24s).
 3. `/rationale-coach` for `docs/design-rationale.md`, then the video script, shot list, and pre-staged demo sessions (test-mode tabs).
 4. Pre-submission: make the repo public (history scan was clean; re-scan transcripts after collecting), collect transcripts, final health check, Greenhouse text.
 - Known API behavior: on Sonnet 5.5, text written between two tool calls comes back as a hidden thinking block. Learn lessons go through the `teach` tool for that reason; Co-learn explanations written between two code runs may be hidden too (final answers show).
