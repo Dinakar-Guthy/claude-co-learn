@@ -15,8 +15,27 @@ import shutil
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-SRC = Path.home() / ".claude" / "projects" / ("-" + str(REPO).strip("/").replace("/", "-").replace("_", "-"))
+PROJECTS = Path.home() / ".claude" / "projects"
 OUT = REPO / "transcripts"
+
+
+def slug(path: Path) -> str:
+    """Claude Code's transcript folder name for a working directory."""
+    return re.sub(r"[^A-Za-z0-9]", "-", str(path))
+
+
+# Claude Code files transcripts by working-directory path, and this repo has lived in several places
+# (~/Documents/coding/anthropic_take_home, the same folder inside iCloud Drive, ~/code/claude-co-learn).
+# Collect from every folder for any of them, plus wherever the repo is now.
+FOLDER_NAMES = ("anthropic-take-home", "claude-co-learn")
+
+
+def sources() -> list[Path]:
+    found = {d for d in PROJECTS.iterdir() if d.is_dir() and d.name.endswith(FOLDER_NAMES)} if PROJECTS.exists() else set()
+    current = PROJECTS / slug(REPO)
+    if current.exists():
+        found.add(current)
+    return sorted(found)
 
 SECRET_PATTERNS = [
     (re.compile(r"sk-ant-[A-Za-z0-9_\-]{20,}"), "sk-ant-<REDACTED>"),
@@ -74,25 +93,29 @@ def render(jsonl: Path) -> tuple[str, str]:
 
 
 def main() -> None:
-    if not SRC.exists():
-        raise SystemExit(f"No transcripts found at {SRC}")
+    srcs = sources()
+    if not srcs:
+        raise SystemExit(f"No transcripts found under {PROJECTS}")
     raw_dir = OUT / "raw"
     raw_dir.mkdir(parents=True, exist_ok=True)
     count = 0
-    for path in sorted(SRC.rglob("*.jsonl")):
-        rel = path.relative_to(SRC)
-        dest = raw_dir / rel
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        dest.write_text(redact(path.read_text(errors="replace")))
-        count += 1
-        if len(rel.parts) == 1:  # main session: also render markdown
-            ts, md = render(path)
-            (OUT / f"{(ts[:10] or 'undated')}-{path.stem[:8]}.md").write_text(md)
-    for meta in SRC.rglob("*.meta.json"):
-        dest = raw_dir / meta.relative_to(SRC)
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(meta, dest)
-    print(f"Collected {count} transcript files into {OUT.relative_to(REPO)}/")
+    for src in srcs:
+        for path in sorted(src.rglob("*.jsonl")):
+            rel = path.relative_to(src)
+            dest = raw_dir / rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text(redact(path.read_text(errors="replace")))
+            count += 1
+            if len(rel.parts) == 1:  # main session: also render markdown
+                ts, md = render(path)
+                (OUT / f"{(ts[:10] or 'undated')}-{path.stem[:8]}.md").write_text(md)
+        for meta in src.rglob("*.meta.json"):
+            dest = raw_dir / meta.relative_to(src)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(meta, dest)
+    print(f"Collected {count} transcript files from {len(srcs)} folder(s) into {OUT.relative_to(REPO)}/")
+    for src in srcs:
+        print(f"  {src.name}")
 
 
 if __name__ == "__main__":
