@@ -17,7 +17,7 @@ These are very different flow states with different needs. Someone in the middle
 
 ## 2. Design and prototyping process
 
-I started from my own understanding of how people learn. It comes from my background as a professional tutor and a long-standing personal interest in education and what actually helps people learn. I wrote that down as nine design principles. Then I had Claude check each one against peer-reviewed research, so the foundation rested on evidence and not only my experience.
+I started from my own understanding of how people learn. It comes from my background as a professional tutor and a long-standing personal interest in education and what actually helps people learn. I wrote that down as ten design principles. Then I had Claude check each one against peer-reviewed research, so the foundation rested on evidence and not only my experience.
 
 Next, I designed the product experience myself and shared it with Claude. We went back and forth on whether it made sense, and I made the final calls. Every meaningful choice went into a decision log with the alternatives I considered (60+ entries).
 
