@@ -1,16 +1,14 @@
-# Co-learn: Anthropic Education Labs take-home (Full Stack Engineer)
+# Co-learn
 
 **Co-learn** is a Claude mode where a professional does real work with Claude and comes out more capable.
 Claude collaborates on the task normally, including running real code. At high-value moments it pauses
 and turns the work into a short challenge the learner solves themselves. The learner's answers steer the work.
 
-- **Live prototype:** https://anthropic-take-home-10-17-26.vercel.app (the access password is in the submission)
+- **Live prototype:** https://anthropic-take-home-10-17-26.vercel.app (password-protected)
 - **Try it:**
   1. Type `/co-learn`.
   2. Click **Try the demo: train a churn model** and pick a familiarity and time (10 min).
   3. Or type `/learn` for **Learn mode** (study a topic with Claude as a tutor) and try the sample: the fall of the Roman Republic.
-- **Option chosen:** B, learning through collaboration with Claude
-- **Deadline:** Oct 21, 2026, 9:00 AM PT
 
 ## What's in the prototype
 - **The work loop:**
@@ -45,17 +43,16 @@ and turns the work into a short challenge the learner solves themselves. The lea
 | Path | Purpose |
 |------|---------|
 | `web/` | The app (Next.js 16, TypeScript, Tailwind v4, `@anthropic-ai/sdk`, Upstash Redis); see `web/README.md` |
-| `docs/design-rationale.md` | Written design rationale (deliverable) |
+| `docs/design-rationale.md` | Written design rationale |
 | `docs/decision-log.md` | Every meaningful decision, the alternatives, and the reasoning |
 | `docs/design-principles.md` | The design principles the product is built on |
 | `docs/design-plan.md` | Build blueprint: architecture, work loop, moments, engine, data model |
 | `docs/product-vision.md`, `docs/context-persistence.md` | Product vision; storage and model-context plan |
 | `docs/plan.md`, `docs/HANDOFF.md` | Timeline and checklists; session handoffs (including a manual testing guide) |
 | `docs/backlog.md` | Untriaged ideas for later |
-| `docs/assignment-brief.md` | Summary of the assignment |
 | `reference/` | Research reports and reference sheets |
-| `transcripts/` | Claude Code transcripts (required for submission) |
-| `alternative-projects/` | Earlier ideas, not part of the submission |
+| `transcripts/` | Claude Code transcripts of the build |
+| `alternative-projects/` | Earlier ideas, not built |
 | `CLAUDE.md` | Context and working agreements for Claude Code |
 
 ## Run locally
@@ -67,10 +64,3 @@ npm run dev                  # http://localhost:3000
 npm run typecheck && npm test && npm run lint && npm run build
 ```
 
-## Deliverables checklist
-- [x] Deployed, working prototype using the Claude API
-- [x] Code in this GitHub repo
-- [ ] Written design rationale (`docs/design-rationale.md`)
-- [ ] Video walkthrough, ≤ 8 minutes, with screenshare
-- [ ] Complete Claude transcripts (`transcripts/`)
-- [ ] Submitted via Greenhouse
