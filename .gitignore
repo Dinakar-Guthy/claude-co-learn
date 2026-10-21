@@ -21,5 +21,3 @@ venv/
 # Claude Code agent worktrees
 .claude/worktrees/
 
-# Raw transcripts: committed once at final submission (large, regenerated each session)
-transcripts/raw/
