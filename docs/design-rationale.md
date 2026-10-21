@@ -1,204 +1,84 @@
 # Co-learn: design rationale
 
-> **Status:** sample draft scaffold.
-> **How to fill it in:** each section lists what the brief asks, the questions to answer, and raw material (facts and sources), followed by an empty **Draft** for your own words. Run the guided session with `/rationale-coach` in Claude Code. It walks you through one section at a time, asks for your reasoning, and drafts in your voice for you to edit.
-> **Target length:** about 2–3 pages in total (≈150–300 words per section). The video carries the demo, so this doc carries the *why*.
->
-> Prototype: https://anthropic-take-home-10-17-26.vercel.app · Repo: this one · Decisions in full: `docs/decision-log.md`
-
----
+Dinakar Guthy · Full Stack Engineer, Education Labs take-home.
+Prototype: https://anthropic-take-home-10-17-26.vercel.app · Decisions in full: `docs/decision-log.md` · Video walkthrough: _(link)_
 
 ## 1. Option chosen and why
 
-**The brief asks:** which option, and why.
+I chose Option B for two reasons. First, I'm not a Claude Code expert, so I wouldn't have the depth to design something like Option A well. Second, Option B's broader ambition excited me more, because it's something I would actually use myself.
 
-**Questions to answer:**
-- Why Option B over Option A, in your own words?
-- What made you re-scope from a "topic-to-game tutor" to Co-learn?
-- Who is the user, and why that journey (a working professional training a churn model in ~10 minutes)?
+That second point shaped the demo too. I picked a working professional training a churn model because it's a real use case for me. Training models is part of my job, and learning the concepts behind them would help me. Being a customer of my own product made the customer journey much easier to understand.
 
-**Raw material:**
-- Option B: broader and more open-ended (learning anything while working with Claude, not just Claude itself).
-- It plays to your strengths: you're not a Claude power user, so you couldn't build as detailed an Option A; B lets you apply learning-design ideas to real work.
-- You started from a topic-to-game tutor idea, then realized B is about learning *through AI-assisted work*, and re-scoped to Co-learn (the original is archived in `alternative-projects/learning-quest/`).
-- Target user: a working professional. Demo journey: training a churn model. Default session: 10 minutes, so reviewers can finish a full session.
-- Sources: `docs/decision-log.md` (2026-10-17 rows "Choose Option B", "Re-scope to Co-learn", "Target user").
+My first design was a topic tutor: pick a subject and Claude teaches it. That's the version I'd use most. But the prompt left open whether the tool had to teach people *while* they work with Claude. Rather than guess, I split the product into two modes:
+- **Co-learn:** you do real work with Claude, and short, game-like learning moments come out of that work.
+- **Learn:** you name a topic and Claude plans a short path of cited lessons and questions.
 
-**Draft:**
-
-_(your words)_
-
----
+These are very different flow states with different needs. Someone in the middle of a task wants learning that stays out of the way, while someone studying wants structure. So users choose the mode that fits.
 
 ## 2. Design and prototyping process
 
-**The brief asks:** your design and prototyping process.
+I started from my own understanding of how people learn. It comes from my background as a professional tutor and a long-standing personal interest in education and what actually helps people learn. I wrote that down as nine design principles. Then I had Claude check each one against peer-reviewed research, so the foundation rested on evidence and not only my experience.
 
-**Questions to answer:**
-- What did you decide *before* building, and why principles first?
-- How did you work with Claude: what did you delegate, what did you decide yourself, and how did you check its output?
-- What changed after you played with it yourself (your playthrough feedback)?
-- One or two moments where live testing changed the design.
+Next, I designed the product experience myself and shared it with Claude. We went back and forth on whether it made sense, and I made the final calls. Every meaningful choice went into a decision log with the alternatives I considered (60+ entries).
 
-**Raw material:**
-- **Order of work:**
-  1. Research.
-  2. Nine design principles (`docs/design-principles.md`).
-  3. Product vision.
-  4. Design plan.
-  5. Contracts-first parallel build (5 worktree tracks).
-  6. Integration.
-  7. Live testing in a real browser.
-  8. Your playthrough.
-  9. A second build round.
-- **Decision log:** every meaningful decision with the alternatives considered (`docs/decision-log.md`, 60+ rows). Claude proposed options; you chose.
-- **Live testing changed the design:**
-  - Claude explained the "leak" before asking about it, so we added a "don't spoil moments" rule.
-  - No boss appeared within 10 minutes, so we added the milestone nudge.
-  - The miss feedback gave the answer away before the options, so it's now a hint first.
-- **Your playthrough:** "if I don't know the answer… there aren't mechanisms for me to learn." That led to the help tools (hints, Teach me, Ask Claude), less credit after help, and reveal only after an attempt.
-- **Your other playthrough changes:**
-  - **Boss exits:** the opt-in offer and Skip.
-  - **Saved questions:** they now stand on their own.
-  - **Primer:** for newcomers.
-  - **Reset:** start over easily as a new user.
-  - **Test-traffic tagging:** your own testing stays out of the numbers.
-- Transcripts of every session are in `transcripts/`.
+Then I wrote a high-level engineering plan, drawing on my experience as a Staff engineer planning software projects: the architecture, shared contracts, and a build order that let parts of the work run in parallel. Claude carried out that plan and wrote most of the code.
 
-**Draft:**
-
-_(your words)_
-
----
+Finally, I tested the experience myself in a real browser and played through it as a user. As AI takes on more of the intermediate work, I think the most important thing for a person to check is the final result, so that's where I spent my review time. Those playthroughs drove a second build round. The biggest change came when I got a question I couldn't answer and the product had no way to help me learn it. So I added hints, "Teach me", and "Ask Claude" to every question; slightly less credit after help; and the answer revealed only after you've tried. Now people at any level can take part, not just those who already know.
 
 ## 3. How it enhances, not replaces, human agency
 
-**The brief asks:** how the design keeps the human an active participant.
+At its core, what I built is an interactive question-and-answer system woven into real work. As you work with Claude, it stops at meaningful points and asks you a question: a decision to make, a prediction, a concept to apply. The questions get harder as you get them right, because the engine aims for about 80% success. Each stretch of work builds to a boss battle, a short run of tougher questions on what you've just done. So at the heart of the experience, the person has to take agency, answering harder and harder problems instead of watching Claude solve them.
 
-**Questions to answer:**
-- Where does the learner make the real decisions in the work?
-- What can the learner always control or opt out of?
-- Why do it this way instead of having Claude just explain things?
+The design follows two of my core principles: "active application is the core" and "the user stays the decision-maker." The learner should be thinking about the problem, not receiving a firehose of information. At real forks, like which metric to optimize or where to set a threshold, Claude asks instead of deciding. Then it builds on the answer: "You picked recall, so I scored the models on that." Making decisions uses a different part of the brain than taking in facts. It leaves people feeling empowered, not like a store of knowledge, and storing knowledge is something AI is increasingly good at anyway.
 
-**Raw material:**
-- **P7 "The user stays the decision-maker":** at real forks (which metric, where to set the threshold), Claude asks with a *decide* moment and then builds on the answer ("You picked recall, so I scored the models on that").
-- **Structural pause:** a learning moment is a tool call that ends Claude's turn, so Claude *cannot* answer its own question.
-- **Learning by consequence:** if a choice is weak but safe, Claude follows it and lets the real results show the effect.
-- **Control:**
-  - Skip, "Quiz me later", or report any question.
-  - Optional guardrails (Light / Balanced / Strict).
-  - Bosses are opt-in ("Take it on / Keep working"), can be skipped, or turned off.
-  - Typing past a question simply skips it.
-- **Help is learner-initiated:** hints, Teach me, and Ask Claude. The answer appears only after an attempt (or after asking twice), so the learner still does the thinking.
-- Sources: `docs/design-principles.md` P7, P8; `docs/design-plan.md` §3, §15.
+Some of this is enforced by design, not left to the prompt. A learning moment is a tool call that ends Claude's turn, so Claude can't answer its own question.
 
-**Draft:**
-
-_(your words)_
-
----
+The control I care about most is that help only comes when you ask for it. Hints, "Teach me", and "Ask Claude" are always there, but nothing appears unless the learner reaches for it, and the answer is revealed only after an attempt. That puts the learner in control of the difficulty, including the choice to struggle through a problem on their own. Everything else is opt-out too: skip a question, save it with "Quiz me later", turn down a boss, or keep typing and the question steps aside.
 
 ## 4. Learning principles behind the decisions
 
-**The brief asks:** the learning principles behind your decisions.
+Three principles matter most to me, and each shows up directly in the product.
 
-**Questions to answer:**
-- Which 3–5 principles matter most to you, and where does each show up in the product?
-- Which research findings shaped specific numbers or rules?
+**1. Practice.** People learn by applying knowledge, not by reading about it. This principle covers several research findings at once, and it's why questions are the backbone of both modes. Learners recall the answer themselves before seeing options; multiple choice is only a fallback. Every answer, right or wrong, gets an immediate "why", because mistakes only help when they're explained right away (Kornell, Hays & Bjork, 2009). Bosses mix concepts from across the session, and concepts you struggled with come back in a later session.
 
-**Raw material:**
-- **Retrieval practice:** free recall first, with multiple choice only as a fallback.
-- **Immediate explanatory feedback:** every answer gets a "why". Mistakes help only with an immediate explanation (Kornell, Hays & Bjork 2009).
-- **Desirable difficulty, banded:** target success rates are first exposure 85–90%, practice 75–85%, boss 65–80%. Elo-style mastery backs off fast after misses and ramps up slowly (P5, `reference/research/01-challenge-ratio.md`).
-- **Just-in-time learning:** moments are triggered by the learner's own work and data, not a curriculum.
-- **Interleaving:** bosses mix concepts from the session.
-- **Spaced review:** concepts you struggled with come back in a later session.
-- **Scaffolding without spoon-feeding:** hints → lesson with a worked example → ask; less credit after help; reveal only after an attempt.
-- **Motivation without punishment:** proportional rewards (XP, sounds, confetti, level-ups that unlock themes); wrong answers get a soft sound and encouraging copy (P2).
-- **Cut after playtesting (2026-10-18):** serialized story chapters (after bosses and at wrap-up). Dinakar couldn't follow them while working, and in Co-learn the work itself is what engages people, so the story competed with it (and added a wait of up to 25s after each boss). It's switched off per mode, not deleted, and planned for Learn mode, where there's no real work to carry engagement.
-- **Code paces, Claude creates (P8):** a small deterministic engine decides when and how hard; Claude writes the questions and grades the answers.
+**2. Adaptive difficulty.** Difficulty has a huge effect on engagement. People want material that feels hard enough to be worth overcoming, but not so hard that they give up, and the job is finding that balance for each person. The engine targets success rates by question type: 85–90% the first time you meet a concept, 75–85% in practice, 65–80% in a boss. It steps down quickly after a miss and ramps up slowly after successes. When a question is still too hard, help steps in: a hint, then a short lesson, then the question again.
 
-**Draft:**
-
-_(your words)_
-
----
+**3. Reward.** Hard work should feel rewarded. XP, sounds, confetti, and level-ups that unlock themes celebrate success in proportion to the effort. Wrong answers get a soft sound and encouragement, never a penalty. In Learn mode, a serialized story adds a reason to keep going. Together they keep a positive feedback loop running: effort leads to reward, which leads to more effort.
 
 ## 5. Measuring success
 
-**The brief asks:** how you'd measure success.
+For the product, success means it actually helps people learn. By the end of a session, people should be able to answer questions and apply the knowledge the product tests them on. The best measure of that is how often people answer correctly, especially at the end of a session in the boss battle, which mixes concepts from the whole session into harder questions. A strong boss score is good evidence that the material actually stuck. Alongside that, I'd measure how confident people feel about what they learned with a short survey. The wrap-up already asks a quick "Did you learn something?"
 
-**Questions to answer:**
-- What does "success" mean for a learner (in the session and later), and for the product?
-- Which metrics would you watch first, and what would make you change the design?
+For users, success also includes how they feel: whether they enjoyed it and want to keep using it. At scale, that's daily active users and return rates.
 
-**Raw material:**
-- **`/insights`** (built; anonymous; test traffic excluded) shows:
-  - answer, skip, defer and reveal rates
-  - help usage, and scores with vs without help
-  - accuracy against the P5 bands (too easy / in band / too hard)
-  - boss offered / declined / skipped / outcomes
-  - pacing-gate decisions
-  - wrap-up "Did you learn something?" 👍 rate
-  - **delayed retention** (score on the same concept in later sessions vs the first)
-  - daily totals
-- **Most important:** delayed retention, plus task completion (people still finish their work). Session XP is not a success metric.
-- **Early signal from testing:** questions landed *above* the target band (too easy), which is a tuning input.
-- **Future:** A/B the guardrail defaults; tune boss frequency from offered/declined rates.
+The first thing I'd check is adoption: whether people actually want to use it, and whether those who try it once come back. A learning tool nobody returns to can't teach anyone much. Next, I'd look at signals inside the session, which the `/insights` dashboard already tracks:
+- **Accuracy against the difficulty bands:** consistently above target means questions are too easy; below means too hard. Early testing showed questions landing above the band, so they need to get harder.
+- **Boss engagement:** how often people take a boss on versus decline or skip it.
+- **Help usage:** how often people reach for hints, "Teach me", or "Ask Claude", and how they score with help versus without.
 
-**Draft:**
-
-_(your words)_
-
----
+Together these show where to tune the experience to be easier or harder. The dashboard also measures delayed retention, comparing scores on a concept in a later session with the first, which is the clearest test of whether learning lasted.
 
 ## 6. Scaling to millions of users
 
-**The brief asks:** how this would scale.
+The hardest part of scaling isn't infrastructure; it's that every learner is different. People need Claude to sound and speak to them differently, and they differ in how hard the content should be and how fast it should ramp up. One model serving everyone the same way won't work. The prototype already adapts difficulty per person with a small engine, but at scale I'd push further. First, I'd prompt the model to adapt as much as possible to each user. Then I'd add persistent personalization that carries across sessions, potentially using lightweight fine-tuning such as LoRA if prompting isn't enough.
 
-**Questions to answer:**
-- What's expensive, and how does the design keep it cheap?
-- What would have to change for a real launch?
+The architecture is a reasonable starting point. The server routes are stateless, so they scale out easily; each user's state is a small JSON record in Upstash Redis. Costs stay low through prompt caching, a cheaper model (Haiku) for grading and hints, a pacing engine that is plain code with no model calls, and automatic summarizing of long sessions. A 10-minute session costs about $0.20–0.30 today. Rate limits and daily spend caps protect against abuse.
 
-**Raw material:**
-- **Stateless serverless routes:** the server owns state in Redis; per-user state is small JSON.
-- **Cost controls:**
-  - Prompt caching on the system prompt, tools and history.
-  - Cheap fast models where possible (Haiku for grading, verification and hints).
-  - The pacing engine is deterministic code (no model cost).
-  - Long sessions use the API's on-demand compaction.
-- **Measured cost:** about $0.20–0.30 per 10-minute demo session.
-- **Abuse protection:** rate limits (20 per minute per browser, 60 per IP), daily spend caps ($5 / $25 / $75), and limits that fail open with an owner alert.
-- **The sandbox is Anthropic-managed:** each session gets its own code-execution container.
-- **For a real launch:**
-  - accounts instead of anonymous cookies (cross-device)
-  - relax the demo-only boss nudge
-  - tune defaults from data
-  - more surfaces (see §7)
-- Sources: `docs/design-plan.md` §9.3, §11, §15; `docs/backlog.md`.
-
-**Draft:**
-
-_(your words)_
-
----
+For a real launch, I'd change four things:
+- **Infrastructure:** move off the free tiers of Vercel and Upstash Redis, either to paid plans or, more naturally, onto Anthropic's own infrastructure. Then load-test with many people using it at once.
+- **Where it lives:** either build it directly into Claude's own products or ship it as a standalone product, not a separate demo site.
+- **UX polish:** refine the design so each element sits in the ideal spot.
+- **Model quality:** iterate on every stage of the experience so the questions, hints, and explanations are as good as they can be.
 
 ## 7. Getting a sister team to adopt it long-term
 
-**The brief asks:** how a sister team would adopt this.
+I read this question two ways: a sister team *using* Co-learn in their own work, or a sister team *building it into* their own product. I'll answer both.
 
-**Questions to answer:**
-- What is the reusable piece another Claude surface could adopt?
-- What would you hand them (contract, engine, UI), and how would you make adoption low-effort?
-- How would you keep it working over time (shared mastery, metrics, ownership)?
+**Using it.** I'd start by learning what the team works on and asking them to share a recent problem that was complex or ambiguous. Then I'd build a demo showing how Co-learn would have helped them work through that problem and learn along the way. A demo on their own real problem is far more convincing than a generic pitch.
 
-**Raw material:**
-- **The `learning_moment` tool + pacing engine is a surface-agnostic contract.** Any Claude surface (Claude Code as a `/co-learn` mode, Claude.ai as a toggle) adopts it by adding the tool and rendering the card.
-- The engine is pure, unit-tested TypeScript (`web/lib/engine/`) with a clear API (`EngineApi` in `web/lib/contracts/engine.ts`).
-- A shared mastery profile could follow users across surfaces, so review would work everywhere.
-- Telemetry events + `/insights` give a sister team the same success metrics out of the box.
-- Sources: `docs/design-plan.md` §15; `web/lib/contracts/*`.
+**Building it in.** I'd go first to a team that builds custom Claude interfaces, since that's closest to our own work. My pitch: turning Claude into something game-like is likely to pay off well beyond learning, and every surface that adopts some of it multiplies the benefit. What I'd share:
+- **The question cards** shown to the user, as code they can customize for their surface.
+- **The game layer:** progress tracking, XP, and rewards, run by a pacing engine with a clear, tested interface. Adopting it means adding one tool and rendering the card.
+- **The metrics:** the same telemetry and `/insights` dashboard, so they can measure learning from day one.
 
-**Draft:**
-
-_(your words)_
+**Keeping it working.** I'd offer for our team to keep maintaining the shared infrastructure, while both teams share ownership of the user metrics and of whether learners succeed. Shared goals are what keep an adoption alive after the launch excitement fades.

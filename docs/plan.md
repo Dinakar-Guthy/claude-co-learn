@@ -122,7 +122,7 @@ Order: Phase 1 helps both modes (and the Co-learn hero), so it goes first. Each 
 
 ## Remaining for Dinakar (before the Oct 21, 9:00 AM PT deadline)
 - [ ] **Manual testing:** follow `docs/testing-guide.md` (tiers 1-3; Chrome, Safari, phone, sound on), and iterate on what you find.
-- [ ] **Written design rationale** (`docs/design-rationale.md`, in your voice). The scaffold has headers, questions, and raw material. Run `/rationale-coach` in Claude Code for a guided, section-by-section session.
+- [x] **Written design rationale** (done 2026-10-21) (`docs/design-rationale.md`, in your voice). The scaffold has headers, questions, and raw material. Run `/rationale-coach` in Claude Code for a guided, section-by-section session.
 - [ ] **Video (≤ 8 min screenshare walkthrough):** required by the brief. Claude can write a timed script and shot list, and pre-stage demo sessions.
 - [ ] **Transcripts (required, complete):** run `python3 scripts/collect_transcripts.py` at the very end, un-ignore `transcripts/raw/`, and commit.
 - [x] Repo renamed to `claude-co-learn` (2026-10-18). [ ] **Repo access:** decided to make it public (2026-10-18). History secret scan done and clean (2026-10-18); re-scan the transcripts right before flipping visibility, after they're committed.
