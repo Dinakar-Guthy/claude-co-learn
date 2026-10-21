@@ -4,7 +4,9 @@ Last updated: 2026-10-18 afternoon. **Start with §0 Current status** (the most 
 **Next: P3 (Dinakar's playthrough, pending decisions, prompt polish) and P4 (rationale, video, transcripts).**
 §3 below is the P2 checklist as it was planned (now done; kept for reference).
 
-## 0. Current status (2026-10-19, latest)
+## 0. Current status (2026-10-21, latest)
+**2026-10-21 (submission day):** rationale done (`docs/design-rationale.md`); video recorded by Claude (6:03, synthetic voice, disclosed on the title card; `~/Desktop/co-learn-demo-disclosed.mp4`, build script `/tmp/e2e/v/build.py`); repo public; transcripts committed (scan clean); health check green (553 tests); Greenhouse text at `~/Desktop/greenhouse-submission.md`. Left for Dinakar: upload the video, add the link, submit by 9:00 AM PT.
+
 **Next session, in order** (details below and in `docs/plan.md`):
 1. Dinakar's manual testing with **`docs/testing-guide.md`** (tiers 1-3); fix what he reports.
 2. Open items done 2026-10-19: Learn stories built from the topic; Learn lessons prefer strong sources; citation markers renumbered to match the sources shown (live bug). Each Learn lesson now shows as soon as it's written (live: path 7s, first lesson 14s instead of ~25s, question 24s).
